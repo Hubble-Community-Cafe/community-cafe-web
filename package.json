@@ -1,0 +1,15 @@
+{
+  "name": "community-cafe-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Self-maintained rebuild of hubble.cafe and meteor.cafe with a shared staff/board CMS.",
+  "workspaces": [
+    "shared-web"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "test:run": "npm run test:run --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present"
+  }
+}
