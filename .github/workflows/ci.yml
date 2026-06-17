@@ -13,7 +13,7 @@ jobs:
     name: Backend (Maven · JDK 21)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check backend exists
         id: check
         run: test -f backend/pom.xml && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
@@ -35,7 +35,7 @@ jobs:
       matrix:
         app: [public-hubble, public-meteor, admin, shared-web]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check app exists
         id: check
         run: test -f ${{ matrix.app }}/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
