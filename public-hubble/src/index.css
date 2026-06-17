@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@cafe/shared-web/theme.css";
+
+/*
+ * Hubble's own base styles. Light, bright identity (matches the live site:
+ * dark teal-blue primary on a near-white background, with cyan accents).
+ * The two public sites are intentionally distinct; keep Hubble's look here.
+ */
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background-color: #f6f9fb;
+  color: var(--color-hubble-900);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+}

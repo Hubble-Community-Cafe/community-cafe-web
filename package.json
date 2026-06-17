@@ -5,7 +5,9 @@
   "type": "module",
   "description": "Self-maintained rebuild of hubble.cafe and meteor.cafe with a shared staff/board CMS.",
   "workspaces": [
-    "shared-web"
+    "shared-web",
+    "public-hubble",
+    "public-meteor"
   ],
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",
