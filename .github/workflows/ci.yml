@@ -18,7 +18,7 @@ jobs:
         id: check
         run: test -f backend/pom.xml && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
       - if: steps.check.outputs.present == 'true'
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: temurin
           java-version: "21"
