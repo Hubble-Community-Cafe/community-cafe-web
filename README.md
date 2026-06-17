@@ -29,7 +29,7 @@ is part of each site's code.
 ## Tech stack
 
 React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend),
-MariaDB, Azure AD / Entra auth, Sentry, self-hosted cookieless analytics, Docker / Portainer.
+MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
 
 ## Getting started
 
