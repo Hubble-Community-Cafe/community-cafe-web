@@ -113,11 +113,16 @@ export function Home() {
             loading="lazy"
             className="order-2 aspect-[4/5] w-full rounded-2xl object-cover shadow-lg md:order-1"
           />
-          <p className="order-1 font-title text-2xl font-bold uppercase leading-snug text-meteor-500 md:order-2 md:text-3xl">
-            Run collaboratively by residents, students, and local partners, Meteor operates as a
-            non-profit. All proceeds are reinvested into local innovation, education, and
-            community-building initiatives, fueling the TU/e campus student life.
-          </p>
+          <div className="order-1 md:order-2">
+            <p className="font-title text-xs font-bold uppercase tracking-widest text-meteor-accent">
+              A non-profit
+            </p>
+            <p className="mt-3 text-xl font-semibold leading-relaxed text-meteor-500 md:text-2xl">
+              Run collaboratively by residents, students, and local partners, Meteor operates as a
+              non-profit. All proceeds are reinvested into local innovation, education, and
+              community-building initiatives, fueling the TU/e campus student life.
+            </p>
+          </div>
         </section>
       </div>
     </>
