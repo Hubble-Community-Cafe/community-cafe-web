@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@cafe/shared-web/theme.css";
+
+/*
+ * Meteor's own base styles. Distinct from Hubble: a light, warm identity built
+ * on Meteor's deep green with a gold accent (matches the live site's kit:
+ * #053826 green, #9b8d6f gold, #eaf1e4 tint). Keep the two sites visually apart.
+ */
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background-color: #f4f7f2;
+  color: var(--color-meteor-900);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+}
