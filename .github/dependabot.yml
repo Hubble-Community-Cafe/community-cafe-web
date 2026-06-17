@@ -1,0 +1,97 @@
+version: 2
+updates:
+  # ── Backend (Maven) ──────────────────────────────────────────────────────────
+  - package-ecosystem: "maven"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Europe/Amsterdam"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "PimVanLeeuwen"
+    labels:
+      - "dependencies"
+      - "backend"
+    groups:
+      spring-boot:
+        patterns:
+          - "org.springframework*"
+          - "spring-*"
+      microsoft-azure:
+        patterns:
+          - "com.microsoft*"
+          - "com.azure*"
+
+  # ── Frontends (npm) ──────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/public-hubble"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "frontend", "hubble"]
+    groups:
+      react:
+        patterns: ["react*", "@types/react*", "react-*"]
+      build-tools:
+        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
+
+  - package-ecosystem: "npm"
+    directory: "/public-meteor"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "frontend", "meteor"]
+    groups:
+      react:
+        patterns: ["react*", "@types/react*", "react-*"]
+      build-tools:
+        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
+
+  - package-ecosystem: "npm"
+    directory: "/admin"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "frontend", "admin"]
+    groups:
+      react:
+        patterns: ["react*", "@types/react*", "react-*"]
+      msal:
+        patterns: ["@azure/msal-*"]
+      build-tools:
+        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
+
+  - package-ecosystem: "npm"
+    directory: "/shared-web"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "shared-web"]
+
+  - package-ecosystem: "npm"
+    directory: "/e2e"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "e2e"]
+    groups:
+      playwright:
+        patterns: ["@playwright/*", "playwright*"]
+
+  # ── GitHub Actions ────────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "ci"]
+
+  # ── Docker images (activate once Dockerfiles land) ─────────────────────────────
+  - package-ecosystem: "docker"
+    directories: ["/backend", "/public-hubble", "/public-meteor", "/admin"]
+    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    open-pull-requests-limit: 5
+    reviewers: ["PimVanLeeuwen"]
+    labels: ["dependencies", "docker"]
