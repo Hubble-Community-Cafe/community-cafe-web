@@ -1,89 +1,125 @@
 import { Link } from 'react-router-dom'
-import { CalendarDays, ExternalLink, UtensilsCrossed } from 'lucide-react'
+import { ExternalLink } from 'lucide-react'
 import { EXTERNAL } from '../navigation'
 
 export function Home() {
   return (
     <>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-meteor-500 via-meteor-600 to-meteor-950 text-white">
-        <div className="mx-auto max-w-6xl px-4 py-20 md:py-28">
-          <p className="font-title text-sm uppercase tracking-widest text-meteor-accent">
-            Eindhoven
-          </p>
-          <h1 className="mt-3 max-w-3xl font-title text-4xl font-bold leading-tight md:text-6xl">
+      <section className="bg-meteor-50">
+        <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
+          <h1 className="max-w-3xl font-title text-4xl font-bold uppercase leading-tight text-meteor-500 md:text-6xl">
             Welcome to Meteor
           </h1>
-          <p className="mt-5 max-w-2xl text-lg text-meteor-50/90">
-            A lively cafe and meeting space by day, where people work and connect over coffee. By
-            night, a relaxed, inclusive spot for events and gatherings.
+          <p className="mt-5 max-w-2xl text-lg text-meteor-900/80">
+            Meteor is a lively cafe and meeting space by day, where people work and connect over
+            coffee. By night, it transforms into a relaxed, inclusive spot for events and gatherings.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href={EXTERNAL.reservations}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl bg-meteor-accent px-5 py-3 text-sm font-semibold text-meteor-950 shadow-lg shadow-meteor-950/30 transition hover:brightness-110"
-            >
-              Make a reservation
-              <ExternalLink className="h-4 w-4" />
-            </a>
             <a
               href={EXTERNAL.foodTracker}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 bg-meteor-500 px-5 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-meteor-600"
             >
-              Food tracker
+              Food Tracker
+              <ExternalLink className="h-4 w-4" />
+            </a>
+            <a
+              href={EXTERNAL.reservations}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 bg-meteor-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-950 transition hover:brightness-110"
+            >
+              Reservations
               <ExternalLink className="h-4 w-4" />
             </a>
             <Link
               to="/menu"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/40 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/10"
+              className="inline-flex items-center gap-2 border border-meteor-500 px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-700 transition hover:bg-meteor-100"
             >
               Menu
             </Link>
           </div>
         </div>
+        {/* The signature day/night bears banner. */}
+        <img
+          src="/images/banner.webp"
+          alt="Meteor by day and by night: working over coffee, celebrating at events"
+          className="block w-full"
+        />
       </section>
 
-      {/* Quick links */}
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <div className="grid gap-6 md:grid-cols-3">
-          <Link
-            to="/menu"
-            className="group rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm transition hover:border-meteor-300 hover:shadow-md"
-          >
-            <UtensilsCrossed className="h-8 w-8 text-meteor-400" />
-            <h2 className="mt-4 font-title text-xl font-bold text-meteor-500">Menu</h2>
-            <p className="mt-2 text-sm text-meteor-800/80">
-              Coffee, drinks, and food, with TU/e student pricing and our discount policy.
+      <div className="mx-auto max-w-6xl space-y-16 px-4 py-16">
+        {/* Opening hours */}
+        <section>
+          <h2 className="font-title text-2xl font-bold uppercase text-meteor-500 md:text-3xl">
+            Opening hours
+          </h2>
+          <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
+            <div className="flex items-center justify-between py-3">
+              <dt className="font-bold uppercase tracking-wide text-meteor-700">Monday to Friday</dt>
+              <dd className="text-meteor-900/80">16:00 to 02:00</dd>
+            </div>
+            <div className="flex items-center justify-between py-3">
+              <dt className="font-bold uppercase tracking-wide text-meteor-700">
+                Saturday to Sunday
+              </dt>
+              <dd className="text-meteor-900/80">Closed</dd>
+            </div>
+          </dl>
+          <h3 className="mt-6 font-title text-lg font-bold uppercase text-meteor-500">
+            Alternative hours
+          </h3>
+          <p className="mt-1 text-sm italic text-meteor-text">
+            We are always willing to discuss opening at other times for a reservation.
+          </p>
+        </section>
+
+        {/* About us, with the day interior photo. */}
+        <section className="grid items-center gap-8 md:grid-cols-2">
+          <div>
+            <h2 className="font-title text-2xl font-bold uppercase text-meteor-500 md:text-3xl">
+              About us
+            </h2>
+            <p className="mt-4 text-meteor-900/80">
+              Meteor is more than just a cafe; it is a vibrant meeting point and living lab in the
+              heart of Haven. By day, it is a professional yet welcoming space where students,
+              researchers, residents, and entrepreneurs come together or work on their own over
+              coffee and a small bite. By night, it becomes the living room of Haven: a relaxed,
+              inclusive space for informal gatherings, cultural events, and connections.
             </p>
-          </Link>
-          <Link
-            to="/agenda"
-            className="group rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm transition hover:border-meteor-300 hover:shadow-md"
-          >
-            <CalendarDays className="h-8 w-8 text-meteor-400" />
-            <h2 className="mt-4 font-title text-xl font-bold text-meteor-500">Agenda</h2>
-            <p className="mt-2 text-sm text-meteor-800/80">
-              What's on at Meteor: events, gatherings, and evening programming.
+            <p className="mt-4 text-meteor-900/80">
+              As a multifunctional hub, Meteor hosts business meetups, workshops, community dinners,
+              and resident-led initiatives. It is a stage for new ideas, a testing ground for
+              innovation, and a home for meaningful conversations. From pitch nights to poetry
+              readings, from prototype launches to international evenings: Meteor brings diverse
+              worlds together under one roof.
             </p>
-          </Link>
-          <Link
-            to="/community/board"
-            className="group rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm transition hover:border-meteor-300 hover:shadow-md"
-          >
-            <span className="grid h-8 w-8 place-items-center rounded-lg bg-meteor-500 font-title text-sm font-bold text-meteor-accent">
-              M
-            </span>
-            <h2 className="mt-4 font-title text-xl font-bold text-meteor-500">Community</h2>
-            <p className="mt-2 text-sm text-meteor-800/80">
-              Meet the board and the people who keep Meteor running.
-            </p>
-          </Link>
-        </div>
-      </section>
+          </div>
+          <img
+            src="/images/about-day.webp"
+            alt="Meteor's cafe interior by day"
+            loading="lazy"
+            className="aspect-[4/5] w-full rounded-2xl object-cover shadow-lg"
+          />
+        </section>
+
+        {/* Mission, with the night interior photo. */}
+        <section className="grid items-center gap-8 md:grid-cols-2">
+          <img
+            src="/images/about-night.webp"
+            alt="Meteor's cafe interior by night, lit in blue"
+            loading="lazy"
+            className="order-2 aspect-[4/5] w-full rounded-2xl object-cover shadow-lg md:order-1"
+          />
+          <p className="order-1 font-title text-2xl font-bold uppercase leading-snug text-meteor-500 md:order-2 md:text-3xl">
+            Run collaboratively by residents, students, and local partners, Meteor operates as a
+            non-profit. All proceeds are reinvested into local innovation, education, and
+            community-building initiatives, fueling the TU/e campus student life.
+          </p>
+        </section>
+      </div>
     </>
   )
 }

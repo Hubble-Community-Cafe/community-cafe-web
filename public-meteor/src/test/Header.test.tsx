@@ -15,19 +15,18 @@ function renderHeader() {
 describe('Header', () => {
   it('renders the Meteor brand and primary nav groups', () => {
     renderHeader()
-    expect(screen.getByLabelText('Meteor home')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /meteor community cafe/i })).toBeInTheDocument()
     const primary = screen.getByRole('navigation', { name: 'Primary' })
-    for (const label of ['Home', 'Agenda', 'Community', 'Menu', 'Reservation']) {
+    for (const label of ['Home', 'Agenda', 'Community', 'Menu']) {
       // "Menu" appears twice (the dropdown group plus its overview link), so
       // assert at least one match rather than exactly one.
       expect(within(primary).getAllByText(label).length).toBeGreaterThan(0)
     }
   })
 
-  it('links reservations out to the external app in a new tab', () => {
+  it('links the reservation button out to the external app in a new tab', () => {
     renderHeader()
-    const primary = screen.getByRole('navigation', { name: 'Primary' })
-    const reservation = within(primary).getByRole('link', { name: /reservation/i })
+    const reservation = screen.getAllByRole('link', { name: /reservation/i })[0]
     expect(reservation).toHaveAttribute('href', 'https://harry.hubble.cafe')
     expect(reservation).toHaveAttribute('target', '_blank')
     expect(reservation).toHaveAttribute('rel', expect.stringContaining('noopener'))

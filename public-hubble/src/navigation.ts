@@ -49,7 +49,6 @@ export const NAV: NavGroup[] = [
       { label: 'Discount policy', to: '/cafe/discount-policy' },
     ],
   },
-  { label: 'Events', to: '/events' },
   { label: 'Vacancies', to: '/vacancies' },
   {
     label: 'Contact',

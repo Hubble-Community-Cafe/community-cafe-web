@@ -2,9 +2,9 @@
 @import "@cafe/shared-web/theme.css";
 
 /*
- * Hubble's own base styles. Light, bright identity (matches the live site:
- * dark teal-blue primary on a near-white background, with cyan accents).
- * The two public sites are intentionally distinct; keep Hubble's look here.
+ * Hubble's identity, matching the live site: a dark teal canvas with white
+ * content cards "floating" on it, a white header, AXIS titles, Lato body. The
+ * brand mark is the bath duck (the "floating gold"). Kept distinct from Meteor.
  */
 :root {
   color-scheme: light;
@@ -12,8 +12,9 @@
 
 body {
   margin: 0;
-  background-color: #f6f9fb;
-  color: var(--color-hubble-900);
+  /* Teal canvas; white cards sit on top. */
+  background-color: var(--color-hubble-600);
+  color: #ffffff;
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

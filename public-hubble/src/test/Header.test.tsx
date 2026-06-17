@@ -15,9 +15,9 @@ function renderHeader() {
 describe('Header', () => {
   it('renders the Hubble brand and primary nav groups', () => {
     renderHeader()
-    expect(screen.getByLabelText('Hubble home')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: /hubble community cafe/i })).toBeInTheDocument()
     const primary = screen.getByRole('navigation', { name: 'Primary' })
-    for (const label of ['Home', 'Community', 'Cafe', 'Events', 'Vacancies', 'Contact']) {
+    for (const label of ['Home', 'Community', 'Cafe', 'Vacancies', 'Contact']) {
       expect(within(primary).getByText(label)).toBeInTheDocument()
     }
   })

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ChevronDown, ExternalLink, Menu, X } from 'lucide-react'
 import { cn } from '@cafe/shared-web'
-import { NAV, type NavGroup, type NavLeaf } from '../navigation'
+import { EXTERNAL, NAV, type NavGroup, type NavLeaf } from '../navigation'
 
 /** A single dropdown menu item (internal route or external link). */
 function DesktopLeaf({ leaf }: { leaf: NavLeaf }) {
@@ -30,8 +30,8 @@ function DesktopGroup({ group }: { group: NavGroup }) {
         to={group.to ?? '#'}
         className={({ isActive }) =>
           cn(
-            'rounded-md px-3 py-2 text-sm font-semibold text-hubble-800 hover:text-hubble-600 transition-colors',
-            isActive && 'text-hubble-600',
+            'rounded-md px-3 py-2 text-sm font-semibold text-hubble-900 hover:text-hubble-500 transition-colors',
+            isActive && 'text-hubble-500',
           )
         }
       >
@@ -43,7 +43,7 @@ function DesktopGroup({ group }: { group: NavGroup }) {
     <div className="group relative">
       <button
         type="button"
-        className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold text-hubble-800 hover:text-hubble-600 transition-colors"
+        className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold text-hubble-900 hover:text-hubble-500 transition-colors"
         aria-haspopup="true"
       >
         {group.label}
@@ -65,7 +65,7 @@ function MobileGroup({ group, onNavigate }: { group: NavGroup; onNavigate: () =>
       <NavLink
         to={group.to ?? '#'}
         onClick={onNavigate}
-        className="block px-4 py-3 text-base font-semibold text-hubble-800"
+        className="block px-4 py-3 text-base font-semibold text-hubble-900"
       >
         {group.label}
       </NavLink>
@@ -77,7 +77,7 @@ function MobileGroup({ group, onNavigate }: { group: NavGroup; onNavigate: () =>
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
-        className="flex w-full items-center justify-between px-4 py-3 text-base font-semibold text-hubble-800"
+        className="flex w-full items-center justify-between px-4 py-3 text-base font-semibold text-hubble-900"
       >
         {group.label}
         <ChevronDown className={cn('h-5 w-5 transition-transform', open && 'rotate-180')} />
@@ -117,39 +117,42 @@ function MobileGroup({ group, onNavigate }: { group: NavGroup; onNavigate: () =>
 export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   return (
-    <header className="sticky top-0 z-40 border-b border-hubble-100 bg-white/90 backdrop-blur">
-      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:h-20">
-        <Link to="/" className="flex items-center gap-3" aria-label="Hubble home">
-          <span className="grid h-10 w-10 place-items-center rounded-xl bg-hubble-600 font-title text-xl font-bold text-hubble-200">
-            H
-          </span>
-          <span className="leading-tight">
-            <span className="block font-title text-lg font-bold text-hubble-700 md:text-xl">
-              Hubble
-            </span>
-            <span className="block text-xs text-hubble-500">Community Cafe</span>
-          </span>
+    <header className="sticky top-0 z-40 border-b border-hubble-100 bg-white">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:h-20">
+        <Link to="/" className="flex items-center" aria-label="Hubble Community Cafe home">
+          <img src="/hubble-logo.svg" alt="Hubble Community Cafe" className="h-9 w-auto md:h-11" />
         </Link>
 
-        <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
-          {NAV.map((group) => (
-            <DesktopGroup key={group.label} group={group} />
-          ))}
-        </nav>
+        <div className="flex items-center gap-2">
+          <nav className="hidden items-center gap-1 xl:flex" aria-label="Primary">
+            {NAV.map((group) => (
+              <DesktopGroup key={group.label} group={group} />
+            ))}
+          </nav>
 
-        <button
-          type="button"
-          className="inline-flex items-center justify-center rounded-md p-2 text-hubble-700 lg:hidden"
-          aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-          aria-expanded={mobileOpen}
-          onClick={() => setMobileOpen((v) => !v)}
-        >
-          {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
+          <a
+            href={EXTERNAL.reservations}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden bg-hubble-600 px-4 py-2.5 text-xs font-bold uppercase tracking-wide text-white transition hover:bg-hubble-500 sm:inline-block"
+          >
+            Make a reservation
+          </a>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-md p-2 text-hubble-700 xl:hidden"
+            aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+            aria-expanded={mobileOpen}
+            onClick={() => setMobileOpen((v) => !v)}
+          >
+            {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
+        </div>
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-hubble-100 bg-white lg:hidden">
+        <div className="border-t border-hubble-100 bg-white xl:hidden">
           <nav aria-label="Mobile" className="mx-auto max-w-6xl">
             {NAV.map((group) => (
               <MobileGroup
@@ -158,6 +161,15 @@ export function Header() {
                 onNavigate={() => setMobileOpen(false)}
               />
             ))}
+            <a
+              href={EXTERNAL.reservations}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => setMobileOpen(false)}
+              className="m-4 block bg-hubble-600 px-4 py-3 text-center text-sm font-bold uppercase tracking-wide text-white"
+            >
+              Make a reservation
+            </a>
           </nav>
         </div>
       )}

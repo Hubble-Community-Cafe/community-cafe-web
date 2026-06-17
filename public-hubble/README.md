@@ -1,8 +1,9 @@
 # public-hubble
 
-Vite + React SPA for **hubble.cafe**, Hubble's own design and identity (light, dark teal-blue on
-near-white, AXIS titles + Lato body). Renders the shared CMS content (menu, opening hours, events,
-board, vacancies) plus Hubble's hardcoded page copy. Consumes `@cafe/shared-web`.
+Vite + React SPA for **hubble.cafe**, Hubble's own design and identity: a white header with the
+duck logo, a dark-teal canvas with white "floating" content cards, AXIS titles + Lato body.
+Renders the shared CMS content (menu, opening hours, events, board, vacancies) plus Hubble's
+hardcoded page copy. Consumes `@cafe/shared-web`.
 
 ## Status
 
