@@ -17,9 +17,14 @@ describe('Header', () => {
     renderHeader()
     expect(screen.getByRole('img', { name: /hubble community cafe/i })).toBeInTheDocument()
     const primary = screen.getByRole('navigation', { name: 'Primary' })
-    for (const label of ['Home', 'Community', 'Cafe', 'Vacancies', 'Contact']) {
+    // Top-level groups: Community, Cafe, Contact only (Home removed; Vacancies is under Cafe)
+    for (const label of ['Community', 'Cafe', 'Contact']) {
       expect(within(primary).getByText(label)).toBeInTheDocument()
     }
+    expect(within(primary).queryByText('Home')).not.toBeInTheDocument()
+    // Vacancies lives inside the Cafe dropdown, not as a top-level group button
+    const cafeButton = within(primary).getByRole('button', { name: /cafe/i })
+    expect(cafeButton.closest('div')?.querySelector('a[href="/vacancies"]')).toBeTruthy()
   })
 
   it('links reservations out to the external harry app in a new tab', () => {
