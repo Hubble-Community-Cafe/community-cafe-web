@@ -9,10 +9,13 @@ RUN apk upgrade --no-cache
 
 WORKDIR /app
 
-# Copy manifests first for better layer caching, then install the whole workspace.
+# Copy every workspace manifest first (npm ci validates the whole workspace tree
+# against the lockfile), for better layer caching.
 COPY package.json package-lock.json ./
 COPY shared-web/package.json ./shared-web/
 COPY public-hubble/package.json ./public-hubble/
+COPY public-meteor/package.json ./public-meteor/
+COPY admin/package.json ./admin/
 RUN npm ci --include=optional
 
 # Copy the sources this app needs (the shared package + the app itself).

@@ -1,0 +1,119 @@
+# Local development stack for the Community Cafe Web rebuild.
+# Brings up MariaDB + backend + both public sites + the admin, all wired together.
+# For Portainer/test deployment, use docker-compose.portainer.template.yml instead.
+#
+#   docker compose up --build
+#
+# Real Microsoft (Entra) login works locally: put AZURE_TENANT_ID, AZURE_CLIENT_ID,
+# AZURE_CLIENT_SECRET, INITIAL_ADMIN_OID, VITE_ALLOWED_GROUP_ID in a local .env
+# (copied from .env.example). The admin is served on http://localhost:5173, which
+# is registered as a redirect URI on the Entra app.
+#
+#   Admin   -> http://localhost:5173
+#   Hubble  -> http://localhost:5174
+#   Meteor  -> http://localhost:5175
+#   Backend -> http://localhost:8080  (Swagger UI at /swagger-ui.html)
+
+services:
+  db:
+    image: mariadb:11
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: cafeweb
+      MARIADB_USER: cafeweb
+      MARIADB_PASSWORD: local_dev_password
+    volumes:
+      - cafeweb_db:/var/lib/mysql
+    networks:
+      - cafe
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cafe
+    environment:
+      - TZ=Europe/Amsterdam
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/cafeweb
+      - SPRING_DATASOURCE_USERNAME=cafeweb
+      - SPRING_DATASOURCE_PASSWORD=local_dev_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Entra (JWT validation). The admin gets tokens for this same app.
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-}
+      # Your Azure object id, so your first login becomes ADMIN.
+      - INITIAL_ADMIN_OID=${INITIAL_ADMIN_OID:-}
+      - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175
+      - SENTRY_DSN=${SENTRY_DSN:-}
+
+  public-hubble:
+    build:
+      context: .
+      dockerfile: public-hubble/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5174:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe
+    environment:
+      - API_URL=http://localhost:8080
+      - SENTRY_DSN=${VITE_PUBLIC_HUBBLE_SENTRY_DSN:-}
+
+  public-meteor:
+    build:
+      context: .
+      dockerfile: public-meteor/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5175:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe
+    environment:
+      - API_URL=http://localhost:8080
+      - SENTRY_DSN=${VITE_PUBLIC_METEOR_SENTRY_DSN:-}
+
+  admin:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe
+    environment:
+      - API_URL=http://localhost:8080
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
+      - REDIRECT_URI=http://localhost:5173
+      - ALLOWED_GROUP_ID=${VITE_ALLOWED_GROUP_ID:-}
+      - SENTRY_DSN=${VITE_SENTRY_DSN:-}
+
+volumes:
+  cafeweb_db:
+
+networks:
+  cafe:
