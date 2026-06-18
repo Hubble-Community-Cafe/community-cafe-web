@@ -1,9 +1,7 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.dto.*;
-import cafe.community.backend.model.BarLocation;
-import cafe.community.backend.model.HoursOverride;
-import cafe.community.backend.model.OpeningHours;
+import cafe.community.backend.model.*;
 import cafe.community.backend.repository.HoursOverrideRepository;
 import cafe.community.backend.repository.OpeningHoursRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -27,10 +25,13 @@ public class OpeningHoursService {
 
     private final OpeningHoursRepository hoursRepo;
     private final HoursOverrideRepository overrideRepo;
+    private final AuditService auditService;
 
-    public OpeningHoursService(OpeningHoursRepository hoursRepo, HoursOverrideRepository overrideRepo) {
+    public OpeningHoursService(OpeningHoursRepository hoursRepo, HoursOverrideRepository overrideRepo,
+                               AuditService auditService) {
         this.hoursRepo = hoursRepo;
         this.overrideRepo = overrideRepo;
+        this.auditService = auditService;
     }
 
     /** Weekly schedule for a bar, ordered Monday to Sunday. */
@@ -58,6 +59,7 @@ public class OpeningHoursService {
 
     /** Upsert the standing hours for a specific day. */
     public WeeklyHoursDto upsertDay(BarLocation bar, DayOfWeek day, WeeklyHoursRequest req) {
+        boolean isNew = hoursRepo.findByBarAndDayOfWeek(bar, day).isEmpty();
         OpeningHours hours = hoursRepo.findByBarAndDayOfWeek(bar, day)
                 .orElseGet(() -> {
                     OpeningHours h = new OpeningHours();
@@ -69,12 +71,26 @@ public class OpeningHoursService {
         hours.setClose(LocalTime.parse(req.close(), TIME_FMT));
         hours.setKitchenOpen(req.kitchenOpen() != null ? LocalTime.parse(req.kitchenOpen(), TIME_FMT) : null);
         hours.setKitchenClose(req.kitchenClose() != null ? LocalTime.parse(req.kitchenClose(), TIME_FMT) : null);
-        return WeeklyHoursDto.from(hoursRepo.save(hours));
+        OpeningHours saved = hoursRepo.save(hours);
+        String label = bar.name() + " " + day.name();
+        String summary = (isNew ? "Set hours for " : "Updated hours for ") + label
+                + ": " + req.open() + " - " + req.close();
+        if (isNew) {
+            auditService.recordCreate(AuditEntityType.OPENING_HOURS, saved.getId(), label, List.of(), summary);
+        } else {
+            auditService.recordAction(AuditEntityType.OPENING_HOURS, saved.getId(), label,
+                    AuditAction.UPDATE, List.of(), summary);
+        }
+        return WeeklyHoursDto.from(saved);
     }
 
     /** Mark a day as closed by removing its standing-hours row. */
     public void closeDay(BarLocation bar, DayOfWeek day) {
-        hoursRepo.findByBarAndDayOfWeek(bar, day).ifPresent(hoursRepo::delete);
+        hoursRepo.findByBarAndDayOfWeek(bar, day).ifPresent(h -> {
+            hoursRepo.delete(h);
+            auditService.recordDelete(AuditEntityType.OPENING_HOURS, h.getId(),
+                    bar.name() + " " + day.name(), "Marked closed: " + bar.name() + " " + day.name());
+        });
     }
 
     /** Upcoming (today and future) overrides for a bar. */
@@ -94,12 +110,21 @@ public class OpeningHoursService {
         o.setOpen(req.open() != null ? LocalTime.parse(req.open(), TIME_FMT) : null);
         o.setClose(req.close() != null ? LocalTime.parse(req.close(), TIME_FMT) : null);
         o.setNote(req.note());
-        return HoursOverrideDto.from(overrideRepo.save(o));
+        HoursOverride saved = overrideRepo.save(o);
+        String label = bar.name() + " " + req.date();
+        auditService.recordCreate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, List.of(),
+                "Added override for " + label + ": " + (req.closed() ? "Closed" : "Open")
+                + (req.note() != null ? " (" + req.note() + ")" : ""));
+        return HoursOverrideDto.from(saved);
     }
 
     /** Delete a date override by id. */
     public void deleteOverride(Long id) {
-        if (!overrideRepo.existsById(id)) throw new EntityNotFoundException("Override not found: " + id);
+        HoursOverride override = overrideRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Override not found: " + id));
+        String label = override.getBar().name() + " " + override.getDate();
         overrideRepo.deleteById(id);
+        auditService.recordDelete(AuditEntityType.HOURS_OVERRIDE, id, label,
+                "Deleted override for " + label);
     }
 }

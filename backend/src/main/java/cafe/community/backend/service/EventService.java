@@ -2,9 +2,7 @@ package cafe.community.backend.service;
 
 import cafe.community.backend.dto.EventDto;
 import cafe.community.backend.dto.EventRequest;
-import cafe.community.backend.model.BarLocation;
-import cafe.community.backend.model.Event;
-import cafe.community.backend.model.MediaAsset;
+import cafe.community.backend.model.*;
 import cafe.community.backend.repository.EventRepository;
 import cafe.community.backend.repository.MediaAssetRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -26,10 +24,12 @@ public class EventService {
 
     private final EventRepository eventRepo;
     private final MediaAssetRepository mediaRepo;
+    private final AuditService auditService;
 
-    public EventService(EventRepository eventRepo, MediaAssetRepository mediaRepo) {
+    public EventService(EventRepository eventRepo, MediaAssetRepository mediaRepo, AuditService auditService) {
         this.eventRepo = eventRepo;
         this.mediaRepo = mediaRepo;
+        this.auditService = auditService;
     }
 
     /** Upcoming published events for a bar, from today onwards. */
@@ -49,19 +49,30 @@ public class EventService {
     public EventDto create(EventRequest req) {
         Event event = new Event();
         apply(event, req);
-        return EventDto.from(eventRepo.save(event));
+        Event saved = eventRepo.save(event);
+        auditService.recordCreate(AuditEntityType.EVENT, saved.getId(), saved.getTitle(), List.of(),
+                "Created event: " + saved.getTitle() + " (" + saved.getBar().name() + ", " + saved.getDate() + ")");
+        return EventDto.from(saved);
     }
 
     public EventDto update(Long id, EventRequest req) {
         Event event = eventRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found: " + id));
         apply(event, req);
-        return EventDto.from(eventRepo.save(event));
+        Event saved = eventRepo.save(event);
+        auditService.recordAction(AuditEntityType.EVENT, saved.getId(), saved.getTitle(),
+                AuditAction.UPDATE, List.of(),
+                "Updated event: " + saved.getTitle() + " (" + saved.getBar().name() + ", " + saved.getDate() + ")");
+        return EventDto.from(saved);
     }
 
     public void delete(Long id) {
-        if (!eventRepo.existsById(id)) throw new EntityNotFoundException("Event not found: " + id);
+        Event event = eventRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found: " + id));
+        String label = event.getTitle();
         eventRepo.deleteById(id);
+        auditService.recordDelete(AuditEntityType.EVENT, id, label,
+                "Deleted event: " + label + " (" + event.getBar().name() + ", " + event.getDate() + ")");
     }
 
     private void apply(Event event, EventRequest req) {
