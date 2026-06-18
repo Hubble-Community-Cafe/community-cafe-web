@@ -17,7 +17,7 @@ export default defineConfig({
       project: 'community-cafe-admin',
       release: { name: version },
       sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
-      disable: !process.env.SENTRY_AUTH_TOKEN,
+      disable: !process.env.SENTRY_AUTH_TOKEN || !process.env.SENTRY_ORG,
     }),
   ],
   define: {

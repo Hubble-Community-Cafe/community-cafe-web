@@ -22,9 +22,11 @@ RUN npm ci --include=optional
 COPY shared-web/ ./shared-web/
 COPY public-hubble/ ./public-hubble/
 
-# Build (SENTRY_AUTH_TOKEN enables source map upload when present).
+# Build (SENTRY_AUTH_TOKEN + SENTRY_ORG enable source map upload when both present).
+ARG SENTRY_ORG
 RUN --mount=type=secret,id=SENTRY_AUTH_TOKEN \
     SENTRY_AUTH_TOKEN=$(cat /run/secrets/SENTRY_AUTH_TOKEN 2>/dev/null) \
+    SENTRY_ORG=${SENTRY_ORG} \
     npm run build --workspace @cafe/public-hubble
 
 # Production stage

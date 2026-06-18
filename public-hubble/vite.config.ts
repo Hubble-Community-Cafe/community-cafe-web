@@ -17,8 +17,8 @@ export default defineConfig({
       project: 'community-cafe-public-hubble',
       release: { name: version },
       sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
-      // Only active when uploading source maps in CI/release (token present).
-      disable: !process.env.SENTRY_AUTH_TOKEN,
+      // Only active when uploading source maps in CI (both token and org present).
+      disable: !process.env.SENTRY_AUTH_TOKEN || !process.env.SENTRY_ORG,
     }),
   ],
   define: {

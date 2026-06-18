@@ -114,6 +114,8 @@ jobs:
             ${{ steps.meta.outputs.image }}:main-${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          build-args: |
+            SENTRY_ORG=stichting-bar-potential
           secrets: |
             SENTRY_AUTH_TOKEN=${{ secrets.SENTRY_AUTH_TOKEN }}
       # Image scanning is best-effort: it must not block a deploy whose images
@@ -168,3 +170,26 @@ jobs:
           gh release create "v${{ steps.version.outputs.version }}" \
             --title "v${{ steps.version.outputs.version }}" \
             --generate-notes
+
+  # ==================== SENTRY RELEASE ====================
+  sentry-release:
+    name: Sentry Release
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Resolve version
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: stichting-bar-potential
+        with:
+          projects: community-cafe-backend community-cafe-public-hubble community-cafe-public-meteor community-cafe-admin
+          version: ${{ steps.version.outputs.version }}
+          environment: production
