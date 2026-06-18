@@ -6,5 +6,8 @@ package cafe.community.backend.model;
  */
 public enum AuditEntityType {
     ADMIN_USER,
-    MEDIA_ASSET
+    MEDIA_ASSET,
+    MENU_CATEGORY,
+    MENU_ITEM,
+    DAILY_DISH
 }
