@@ -11,5 +11,6 @@ public record MenuCategoryRequest(
         @NotNull MenuKind kind,
         @Size(max = 255) String availabilityNote,
         int sortOrder,
-        BarLocation bar
+        BarLocation bar,
+        Long parentId
 ) {}

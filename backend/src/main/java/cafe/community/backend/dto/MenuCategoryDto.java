@@ -10,10 +10,12 @@ public record MenuCategoryDto(
         MenuKind kind,
         String availabilityNote,
         int sortOrder,
-        BarLocation bar
+        BarLocation bar,
+        Long parentId
 ) {
     public static MenuCategoryDto from(MenuCategory c) {
         return new MenuCategoryDto(c.getId(), c.getName(), c.getKind(),
-                c.getAvailabilityNote(), c.getSortOrder(), c.getBar());
+                c.getAvailabilityNote(), c.getSortOrder(), c.getBar(),
+                c.getParent() != null ? c.getParent().getId() : null);
     }
 }

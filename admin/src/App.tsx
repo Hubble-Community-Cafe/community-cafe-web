@@ -9,6 +9,7 @@ import { DashboardPage } from './pages/DashboardPage'
 import { UsersPage } from './pages/UsersPage'
 import { AuditLogPage } from './pages/AuditLogPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
+import { MenuPage } from './pages/MenuPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -88,7 +89,6 @@ function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: R
 }
 
 const CONTENT_MODULES = [
-  { path: 'menu', title: 'Menu' },
   { path: 'hours', title: 'Opening hours' },
   { path: 'events', title: 'Events' },
   { path: 'board', title: 'Board' },
@@ -111,6 +111,14 @@ function App() {
             }
           >
             <Route index element={<DashboardPage />} />
+            <Route
+              path="menu"
+              element={
+                <RequireRole need="editor">
+                  <MenuPage />
+                </RequireRole>
+              }
+            />
             {CONTENT_MODULES.map((m) => (
               <Route
                 key={m.path}

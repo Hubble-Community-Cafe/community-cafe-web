@@ -34,4 +34,12 @@ public class MenuCategory {
     @Enumerated(EnumType.STRING)
     @Column(name = "bar", length = 20)
     private BarLocation bar;
+
+    /**
+     * Parent tab category. Null means this IS a tab (top-level navigation item).
+     * Non-null means this is a sub-heading within a tab; only sub-headings hold items.
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "parent_id")
+    private MenuCategory parent;
 }

@@ -1,10 +1,9 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.dto.DailyDishDto;
-import cafe.community.backend.dto.MenuCategoryWithItemsDto;
+import cafe.community.backend.dto.MenuTabDto;
 import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.service.MenuService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,15 +24,13 @@ public class MenuController {
      * Path values match the {@link BarLocation} enum names.
      */
     @GetMapping("/menu/{bar}")
-    public List<MenuCategoryWithItemsDto> menu(@PathVariable BarLocation bar) {
+    public List<MenuTabDto> menu(@PathVariable BarLocation bar) {
         return menuService.getMenuPage(bar);
     }
 
-    /** Today's daily dinner dish for Hubble, or 404 when none is set. */
+    /** Today's daily dinner dishes for Hubble (empty list when none are set). */
     @GetMapping("/daily-dish/today")
-    public ResponseEntity<DailyDishDto> todaysDish() {
-        return menuService.getTodaysDish()
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public List<DailyDishDto> todaysDishes() {
+        return menuService.getTodaysDishes();
     }
 }

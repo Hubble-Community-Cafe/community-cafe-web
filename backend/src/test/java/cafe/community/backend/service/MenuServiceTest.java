@@ -13,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -29,7 +28,7 @@ class MenuServiceTest {
     @Autowired DailyDishRepository dishRepo;
 
     private MenuCategoryRequest hubbleBeerCategory() {
-        return new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE);
+        return new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null);
     }
 
     private MenuItemRequest basicItem(boolean active) {
@@ -56,7 +55,7 @@ class MenuServiceTest {
         MenuCategoryDto created = menuService.createCategory(hubbleBeerCategory());
 
         MenuCategoryRequest update = new MenuCategoryRequest(
-                "Craft Beers", MenuKind.DRINK, "After 17:00", 1, BarLocation.HUBBLE);
+                "Craft Beers", MenuKind.DRINK, "After 17:00", 1, BarLocation.HUBBLE, null);
         MenuCategoryDto updated = menuService.updateCategory(created.id(), update);
 
         assertThat(updated.name()).isEqualTo("Craft Beers");
@@ -94,28 +93,31 @@ class MenuServiceTest {
 
     @Test
     void getMenuPage_onlyActiveItems() {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
         MenuCategoryDto cat = menuService.createCategory(
-                new MenuCategoryRequest("Food", MenuKind.FOOD, null, 1, BarLocation.HUBBLE));
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
         menuService.createItem(cat.id(), basicItem(true));
         menuService.createItem(cat.id(), new MenuItemRequest(
                 "InactiveItem", null, new BigDecimal("5.00"),
                 null, List.of(), List.of(), List.of(), null, 2, false));
 
-        List<MenuCategoryWithItemsDto> page = menuService.getMenuPage(BarLocation.HUBBLE);
+        List<MenuTabDto> page = menuService.getMenuPage(BarLocation.HUBBLE);
         assertThat(page).hasSize(1);
-        assertThat(page.get(0).items()).hasSize(1);
-        assertThat(page.get(0).items().get(0).name()).isEqualTo("Heineken");
+        assertThat(page.get(0).categories()).hasSize(1);
+        assertThat(page.get(0).categories().get(0).items()).hasSize(1);
+        assertThat(page.get(0).categories().get(0).items().get(0).name()).isEqualTo("Heineken");
     }
 
     @Test
-    void getMenuPage_sharedCategoryAppearsOnBothBars() {
+    void getMenuPage_sharedTabAppearsOnBothBars() {
         menuService.createCategory(new MenuCategoryRequest(
-                "Shared Menu", MenuKind.FOOD, null, 1, null));
+                "Shared Menu", MenuKind.FOOD, null, 1, null, null));
 
         assertThat(menuService.getMenuPage(BarLocation.HUBBLE))
-                .extracting(MenuCategoryWithItemsDto::name).contains("Shared Menu");
+                .extracting(MenuTabDto::name).contains("Shared Menu");
         assertThat(menuService.getMenuPage(BarLocation.METEOR))
-                .extracting(MenuCategoryWithItemsDto::name).contains("Shared Menu");
+                .extracting(MenuTabDto::name).contains("Shared Menu");
     }
 
     @Test
@@ -127,13 +129,23 @@ class MenuServiceTest {
         assertThat(dto.name()).isEqualTo("Pasta Bolognese");
         assertThat(dto.price()).isEqualByComparingTo("8.50");
 
-        Optional<DailyDishDto> today = menuService.getTodaysDish();
-        assertThat(today).isPresent();
-        assertThat(today.get().name()).isEqualTo("Pasta Bolognese");
+        assertThat(menuService.getTodaysDishes())
+                .extracting(DailyDishDto::name)
+                .containsExactly("Pasta Bolognese");
     }
 
     @Test
-    void getTodaysDish_emptyWhenNoneSet() {
-        assertThat(menuService.getTodaysDish()).isEmpty();
+    void getTodaysDishes_emptyWhenNoneSet() {
+        assertThat(menuService.getTodaysDishes()).isEmpty();
+    }
+
+    @Test
+    void getTodaysDishes_returnsMultipleDishesForSameDate() {
+        menuService.createDish(new DailyDishRequest(LocalDate.now(), "Lasagna", null, new BigDecimal("9.49"), null));
+        menuService.createDish(new DailyDishRequest(LocalDate.now(), "Vegan Curry", null, new BigDecimal("8.99"), null));
+
+        assertThat(menuService.getTodaysDishes())
+                .extracting(DailyDishDto::name)
+                .containsExactly("Lasagna", "Vegan Curry");
     }
 }

@@ -12,7 +12,10 @@ public interface MenuCategoryRepository extends JpaRepository<MenuCategory, Long
 
     List<MenuCategory> findAllByOrderBySortOrderAsc();
 
-    /** Categories visible to a given bar: bar-specific plus shared (bar IS NULL). */
-    @Query("SELECT c FROM MenuCategory c WHERE c.bar = :bar OR c.bar IS NULL ORDER BY c.sortOrder ASC")
-    List<MenuCategory> findForBar(@Param("bar") BarLocation bar);
+    /** Top-level tab categories visible to a given bar (parent IS NULL). */
+    @Query("SELECT c FROM MenuCategory c WHERE (c.bar = :bar OR c.bar IS NULL) AND c.parent IS NULL ORDER BY c.sortOrder ASC")
+    List<MenuCategory> findTopLevelForBar(@Param("bar") BarLocation bar);
+
+    /** Sub-heading categories that belong to a given tab, in sort order. */
+    List<MenuCategory> findByParentOrderBySortOrderAsc(MenuCategory parent);
 }

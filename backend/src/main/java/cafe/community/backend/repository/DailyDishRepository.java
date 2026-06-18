@@ -11,5 +11,7 @@ public interface DailyDishRepository extends JpaRepository<DailyDish, Long> {
 
     Optional<DailyDish> findByDate(LocalDate date);
 
+    List<DailyDish> findAllByDateOrderByIdAsc(LocalDate date);
+
     List<DailyDish> findByDateGreaterThanEqualOrderByDateAsc(LocalDate from);
 }

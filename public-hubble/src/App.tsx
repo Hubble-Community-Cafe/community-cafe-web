@@ -2,12 +2,12 @@ import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
 import { PageShell } from './components/PageShell'
 import { Home } from './pages/Home'
+import { MenuPage } from './pages/MenuPage'
+import { DailyDishPage } from './pages/DailyDishPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/cafe', title: 'The Cafe', intro: 'About Hubble Community Cafe.' },
-  { path: '/cafe/daily-dish', title: 'Daily Dinner Dish' },
-  { path: '/cafe/menu', title: 'Menu' },
   { path: '/cafe/discount-policy', title: 'Discount policy' },
   { path: '/community/associations', title: 'Associations' },
   { path: '/community/committees', title: 'Committees' },
@@ -29,6 +29,8 @@ function App() {
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/cafe/menu" element={<MenuPage />} />
+        <Route path="/cafe/daily-dish" element={<DailyDishPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}

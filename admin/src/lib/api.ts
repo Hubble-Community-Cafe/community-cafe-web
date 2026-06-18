@@ -146,3 +146,127 @@ export const updateUserRole = (userId: number, role: AdminRole) =>
 
 export const fetchAuditLog = (page = 0, size = 50) =>
   getJson<Page<AuditLogEntry>>(`/api/admin/audit?page=${page}&size=${size}`)
+
+// ── Menu types ─────────────────────────────────────────────────────────────────
+export type MenuKind = 'DRINK' | 'FOOD'
+export type BarLocation = 'HUBBLE' | 'METEOR'
+
+export interface MenuCategory {
+  id: number
+  name: string
+  kind: MenuKind
+  availabilityNote: string | null
+  sortOrder: number
+  bar: BarLocation | null
+  /** null when this category is a top-level tab; set when it is a sub-heading within a tab. */
+  parentId: number | null
+}
+
+export interface MenuItem {
+  id: number
+  categoryId: number
+  name: string
+  description: string | null
+  regularPrice: number
+  studentPrice: number | null
+  sizeOptions: string[]
+  dietaryTags: string[]
+  allergens: string[]
+  imageUrl: string | null
+  sortOrder: number
+  active: boolean
+}
+
+export interface DailyDish {
+  id: number
+  date: string
+  name: string
+  description: string | null
+  price: number | null
+  imageUrl: string | null
+}
+
+export interface MenuCategoryRequest {
+  name: string
+  kind: MenuKind
+  availabilityNote: string | null
+  sortOrder: number
+  bar: BarLocation | null
+  parentId: number | null
+}
+
+export interface MenuItemRequest {
+  name: string
+  description: string | null
+  regularPrice: number
+  studentPrice: number | null
+  sizeOptions: string[]
+  dietaryTags: string[]
+  allergens: string[]
+  imageId: number | null
+  sortOrder: number
+  active: boolean
+}
+
+export interface DailyDishRequest {
+  date: string
+  name: string
+  description: string | null
+  price: number | null
+  imageId: number | null
+}
+
+// ── Menu endpoints ─────────────────────────────────────────────────────────────
+export const fetchMenuCategories = () =>
+  getJson<MenuCategory[]>('/api/admin/menu/categories')
+
+export const createMenuCategory = (req: MenuCategoryRequest) =>
+  getJson<MenuCategory>('/api/admin/menu/categories', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateMenuCategory = (id: number, req: MenuCategoryRequest) =>
+  getJson<MenuCategory>(`/api/admin/menu/categories/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteMenuCategory = (id: number) =>
+  fetchWithAuth(`/api/admin/menu/categories/${id}`, { method: 'DELETE' })
+
+export const fetchMenuItems = (categoryId: number) =>
+  getJson<MenuItem[]>(`/api/admin/menu/categories/${categoryId}/items`)
+
+export const createMenuItem = (categoryId: number, req: MenuItemRequest) =>
+  getJson<MenuItem>(`/api/admin/menu/categories/${categoryId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateMenuItem = (id: number, req: MenuItemRequest) =>
+  getJson<MenuItem>(`/api/admin/menu/items/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteMenuItem = (id: number) =>
+  fetchWithAuth(`/api/admin/menu/items/${id}`, { method: 'DELETE' })
+
+export const fetchDailyDishes = () =>
+  getJson<DailyDish[]>('/api/admin/menu/daily-dish')
+
+export const createDailyDish = (req: DailyDishRequest) =>
+  getJson<DailyDish>('/api/admin/menu/daily-dish', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateDailyDish = (id: number, req: DailyDishRequest) =>
+  getJson<DailyDish>(`/api/admin/menu/daily-dish/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteDailyDish = (id: number) =>
+  fetchWithAuth(`/api/admin/menu/daily-dish/${id}`, { method: 'DELETE' })

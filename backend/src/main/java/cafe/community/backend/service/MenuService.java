@@ -36,20 +36,27 @@ public class MenuService {
     // ===== Public =====
 
     @Transactional(readOnly = true)
-    public List<MenuCategoryWithItemsDto> getMenuPage(BarLocation bar) {
-        return categoryRepo.findForBar(bar).stream()
-                .map(cat -> {
-                    List<MenuItemDto> items = itemRepo
-                            .findByCategoryAndActiveOrderBySortOrderAsc(cat, true)
-                            .stream().map(MenuItemDto::from).toList();
-                    return MenuCategoryWithItemsDto.from(cat, items);
+    public List<MenuTabDto> getMenuPage(BarLocation bar) {
+        return categoryRepo.findTopLevelForBar(bar).stream()
+                .map(tab -> {
+                    List<MenuCategoryWithItemsDto> cats =
+                            categoryRepo.findByParentOrderBySortOrderAsc(tab).stream()
+                                    .map(cat -> {
+                                        List<MenuItemDto> items = itemRepo
+                                                .findByCategoryAndActiveOrderBySortOrderAsc(cat, true)
+                                                .stream().map(MenuItemDto::from).toList();
+                                        return MenuCategoryWithItemsDto.from(cat, items);
+                                    })
+                                    .toList();
+                    return MenuTabDto.from(tab, cats);
                 })
                 .toList();
     }
 
     @Transactional(readOnly = true)
-    public Optional<DailyDishDto> getTodaysDish() {
-        return dishRepo.findByDate(LocalDate.now()).map(DailyDishDto::from);
+    public List<DailyDishDto> getTodaysDishes() {
+        return dishRepo.findAllByDateOrderByIdAsc(LocalDate.now())
+                .stream().map(DailyDishDto::from).toList();
     }
 
     // ===== Admin: categories =====
@@ -168,6 +175,12 @@ public class MenuService {
         cat.setAvailabilityNote(req.availabilityNote());
         cat.setSortOrder(req.sortOrder());
         cat.setBar(req.bar());
+        if (req.parentId() != null) {
+            cat.setParent(categoryRepo.findById(req.parentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Parent category not found: " + req.parentId())));
+        } else {
+            cat.setParent(null);
+        }
     }
 
     private void applyItem(MenuItem item, MenuItemRequest req) {

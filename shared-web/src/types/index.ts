@@ -1,5 +1,5 @@
 export type { BarLocation, BarScope, DayOfWeek } from './bar'
-export type { MenuKind, MenuCategory, MenuItem, DailyDish } from './menu'
+export type { MenuKind, MenuCategory, MenuItem, MenuCategoryWithItems, DailyDish } from './menu'
 export type { WeeklyHours, HoursOverride, BarStatus } from './hours'
 export type { CafeEvent } from './event'
 export type { BoardType, BoardTerm, BoardMember } from './board'

@@ -38,35 +38,43 @@ class MenuControllerTest {
     }
 
     @Test
-    void publicMenu_returnsCategoriesWithItems() throws Exception {
+    void publicMenu_returnsTabsWithCategoriesAndItems() throws Exception {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
         MenuCategoryDto cat = menuService.createCategory(
-                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE));
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
         menuService.createItem(cat.id(), new MenuItemRequest(
                 "Heineken", null, new BigDecimal("3.50"), new BigDecimal("2.80"),
                 List.of("0.25L"), List.of(), List.of(), null, 1, true));
 
         mockMvc.perform(get("/api/menu/HUBBLE"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Beers"))
-                .andExpect(jsonPath("$[0].items[0].name").value("Heineken"))
-                .andExpect(jsonPath("$[0].items[0].regularPrice").value(3.50))
-                .andExpect(jsonPath("$[0].items[0].studentPrice").value(2.80));
+                .andExpect(jsonPath("$[0].name").value("Drinks"))
+                .andExpect(jsonPath("$[0].categories[0].name").value("Beers"))
+                .andExpect(jsonPath("$[0].categories[0].items[0].name").value("Heineken"))
+                .andExpect(jsonPath("$[0].categories[0].items[0].regularPrice").value(3.50))
+                .andExpect(jsonPath("$[0].categories[0].items[0].studentPrice").value(2.80));
     }
 
     @Test
-    void todaysDish_404WhenNoneSet() throws Exception {
+    void todaysDishes_emptyListWhenNoneSet() throws Exception {
         mockMvc.perform(get("/api/daily-dish/today"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isEmpty());
     }
 
     @Test
-    void todaysDish_returnsToday() throws Exception {
+    void todaysDishes_returnsAllDishesForToday() throws Exception {
         menuService.createDish(new DailyDishRequest(
                 LocalDate.now(), "Lasagna", null, new BigDecimal("9.00"), null));
+        menuService.createDish(new DailyDishRequest(
+                LocalDate.now(), "Vegan Curry", null, new BigDecimal("8.50"), null));
 
         mockMvc.perform(get("/api/daily-dish/today"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Lasagna"));
+                .andExpect(jsonPath("$[0].name").value("Lasagna"))
+                .andExpect(jsonPath("$[1].name").value("Vegan Curry"));
     }
 
     @Test
