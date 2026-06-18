@@ -36,7 +36,7 @@ export const NAV: NavSection[] = [
     items: [
       { label: 'Menu', to: '/menu', icon: UtensilsCrossed, requires: 'editor' },
       { label: 'Opening hours', to: '/hours', icon: Clock, requires: 'editor' },
-      { label: 'Events', to: '/events', icon: CalendarDays, requires: 'editor', placeholder: true },
+      { label: 'Events', to: '/events', icon: CalendarDays, requires: 'editor' },
       { label: 'Board', to: '/board', icon: UsersRound, requires: 'editor', placeholder: true },
       { label: 'Vacancies', to: '/vacancies', icon: ScrollText, requires: 'editor', placeholder: true },
       { label: 'Media', to: '/media', icon: Image, requires: 'editor', placeholder: true },

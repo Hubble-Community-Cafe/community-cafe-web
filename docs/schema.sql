@@ -111,6 +111,23 @@ CREATE TABLE IF NOT EXISTS opening_hours (
     UNIQUE KEY uk_opening_hours_bar_day (bar, day_of_week)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Events (per bar; published = false hides from public site without deleting)
+CREATE TABLE IF NOT EXISTS event (
+    id             BIGINT       NOT NULL AUTO_INCREMENT,
+    bar            VARCHAR(20)  NOT NULL,
+    title          VARCHAR(200) NOT NULL,
+    description    TEXT,
+    date           DATE         NOT NULL,
+    start_time     TIME,
+    price          VARCHAR(100),
+    subscribe_link VARCHAR(512),
+    image_id       BIGINT,
+    published      TINYINT(1)   NOT NULL DEFAULT 1,
+    PRIMARY KEY (id),
+    INDEX idx_event_bar_date (bar, date),
+    CONSTRAINT fk_event_image FOREIGN KEY (image_id) REFERENCES media_asset (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 -- One-off date overrides (holidays, special closures, special hours)
 CREATE TABLE IF NOT EXISTS hours_override (
     id          BIGINT       NOT NULL AUTO_INCREMENT,

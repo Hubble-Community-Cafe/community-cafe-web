@@ -12,6 +12,8 @@ export interface CafeEvent {
   price: string | null
   description: string | null
   imageId: number | null
+  imageUrl: string | null
+  imageAlt: string | null
   /** External sign-up/subscribe link, or null. */
   subscribeLink: string | null
   published: boolean

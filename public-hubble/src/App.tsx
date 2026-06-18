@@ -4,6 +4,7 @@ import { PageShell } from './components/PageShell'
 import { Home } from './pages/Home'
 import { MenuPage } from './pages/MenuPage'
 import { DailyDishPage } from './pages/DailyDishPage'
+import { EventsPage } from './pages/EventsPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
@@ -14,7 +15,6 @@ const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/community/board', title: 'Board' },
   { path: '/community/board/previous', title: 'Previous boards' },
   { path: '/community/board/supervisory', title: 'Supervisory Board' },
-  { path: '/events', title: 'Events' },
   { path: '/vacancies', title: 'Vacancies' },
   { path: '/contact', title: 'Contact' },
   { path: '/contact/tips', title: 'Tips, Complaints and Ideas' },
@@ -31,6 +31,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/cafe/menu" element={<MenuPage />} />
         <Route path="/cafe/daily-dish" element={<DailyDishPage />} />
+        <Route path="/events" element={<EventsPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}
