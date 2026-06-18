@@ -270,3 +270,66 @@ export const updateDailyDish = (id: number, req: DailyDishRequest) =>
 
 export const deleteDailyDish = (id: number) =>
   fetchWithAuth(`/api/admin/menu/daily-dish/${id}`, { method: 'DELETE' })
+
+export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
+
+export interface WeeklyHours {
+  id: number
+  bar: BarLocation
+  dayOfWeek: DayOfWeek
+  open: string
+  close: string
+  kitchenOpen: string | null
+  kitchenClose: string | null
+}
+
+export interface WeeklyHoursRequest {
+  open: string
+  close: string
+  kitchenOpen: string | null
+  kitchenClose: string | null
+}
+
+export interface HoursOverride {
+  id: number
+  bar: BarLocation
+  date: string
+  closed: boolean
+  open: string | null
+  close: string | null
+  note: string | null
+}
+
+export interface HoursOverrideRequest {
+  date: string
+  closed: boolean
+  open: string | null
+  close: string | null
+  note: string | null
+}
+
+export const fetchWeeklyHours = (bar: BarLocation) =>
+  getJson<WeeklyHours[]>(`/api/opening-hours/${bar}`)
+
+export const upsertDay = (bar: BarLocation, day: DayOfWeek, req: WeeklyHoursRequest) =>
+  getJson<WeeklyHours>(`/api/admin/opening-hours/${bar}/${day}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  })
+
+export const closeDay = (bar: BarLocation, day: DayOfWeek) =>
+  fetchWithAuth(`/api/admin/opening-hours/${bar}/${day}`, { method: 'DELETE' })
+
+export const fetchOverrides = (bar: BarLocation) =>
+  getJson<HoursOverride[]>(`/api/admin/opening-hours/${bar}/overrides`)
+
+export const createOverride = (bar: BarLocation, req: HoursOverrideRequest) =>
+  getJson<HoursOverride>(`/api/admin/opening-hours/${bar}/overrides`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  })
+
+export const deleteOverride = (id: number) =>
+  fetchWithAuth(`/api/admin/opening-hours/overrides/${id}`, { method: 'DELETE' })

@@ -1,6 +1,62 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
+import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
+
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
+  THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
+}
+
+const DAY_ORDER = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
+
+function formatOverrideDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+function collapse<T extends { dayOfWeek: string }>(
+  items: T[],
+  sameGroup: (a: T, b: T) => boolean,
+): T[][] {
+  const sorted = [...items].sort((a, b) => DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek))
+  const groups: T[][] = []
+  for (const item of sorted) {
+    const last = groups[groups.length - 1]
+    if (last && sameGroup(last[0], item) &&
+        DAY_ORDER.indexOf(item.dayOfWeek) === DAY_ORDER.indexOf(last[last.length - 1].dayOfWeek) + 1) {
+      last.push(item)
+    } else {
+      groups.push([item])
+    }
+  }
+  return groups
+}
+
+function rangeLabel(g: { dayOfWeek: string }[]): string {
+  return g.length === 1
+    ? DAY_LABELS[g[0].dayOfWeek]
+    : `${DAY_LABELS[g[0].dayOfWeek]} – ${DAY_LABELS[g[g.length - 1].dayOfWeek]}`
+}
+
+function groupHours(hours: WeeklyHours[]) {
+  return collapse(hours, (a, b) => a.open === b.open && a.close === b.close).map((g) => ({
+    label: rangeLabel(g),
+    open: g[0].open,
+    close: g[0].close,
+  }))
+}
+
+function groupKitchenHours(hours: WeeklyHours[]) {
+  const withKitchen = hours.filter((h) => h.kitchenOpen || h.kitchenClose)
+  return collapse(withKitchen, (a, b) => a.kitchenOpen === b.kitchenOpen && a.kitchenClose === b.kitchenClose)
+    .map((g) => ({
+      label: `Kitchen (${rangeLabel(g)})`,
+      open: g[0].kitchenOpen ?? '–',
+      close: g[0].kitchenClose ?? '–',
+    }))
+}
 
 const FEATURES = [
   {
@@ -21,6 +77,22 @@ const FEATURES = [
 ]
 
 export function Home() {
+  const [hours, setHours] = useState<WeeklyHours[]>([])
+  const [hoursLoaded, setHoursLoaded] = useState(false)
+  const [overrides, setOverrides] = useState<HoursOverride[]>([])
+
+  useEffect(() => {
+    getWeeklyHours('HUBBLE')
+      .then(setHours)
+      .catch(() => {})
+      .finally(() => setHoursLoaded(true))
+    getUpcomingOverrides('HUBBLE').then(setOverrides).catch(() => {})
+  }, [])
+
+  const allDays = DAY_ORDER.map((d) => ({ day: d, slot: hours.find((h) => h.dayOfWeek === d) ?? null }))
+  const grouped = groupHours(hours)
+  const hasKitchen = hours.some((h) => h.kitchenOpen || h.kitchenClose)
+
   return (
     <div className="mx-auto max-w-6xl space-y-8 px-4 py-8 md:py-10">
       {/* Hero: the "floating gold" duck with the tagline overlaid. */}
@@ -66,22 +138,52 @@ export function Home() {
         <h2 className="text-center font-title text-2xl font-bold text-hubble-700 md:text-3xl">
           Opening Times
         </h2>
-        <dl className="mx-auto mt-6 grid max-w-xl gap-x-8 gap-y-2 text-sm sm:grid-cols-2">
-          {[
-            ['Weekdays', '11:00 to 02:00'],
-            ['Saturday', '15:00 to 20:00'],
-            ['Sunday', 'Closed'],
-            ['Kitchen', '12:00 to 19:30'],
-          ].map(([label, value]) => (
-            <div
-              key={label}
-              className="flex items-center justify-between border-b border-hubble-50 py-2"
-            >
-              <dt className="font-semibold text-hubble-700">{label}</dt>
-              <dd className="text-hubble-800/80">{value}</dd>
-            </div>
-          ))}
-        </dl>
+        {!hoursLoaded && (
+          <p className="mt-6 text-center text-sm text-hubble-700/50">Loading…</p>
+        )}
+        {hoursLoaded && hours.length === 0 && (
+          <p className="mt-6 text-center text-sm text-hubble-700/50">Opening times coming soon.</p>
+        )}
+        {hoursLoaded && hours.length > 0 && (
+          <dl className="mx-auto mt-6 max-w-xl text-sm">
+            {grouped.map(({ label, open, close }) => (
+              <div key={label} className="flex items-center justify-between border-b border-hubble-50 py-2">
+                <dt className="font-semibold text-hubble-700">{label}</dt>
+                <dd className="text-hubble-800/80">{open} – {close}</dd>
+              </div>
+            ))}
+            {allDays.filter((d) => !d.slot).map(({ day }) => (
+              <div key={day} className="flex items-center justify-between border-b border-hubble-50 py-2">
+                <dt className="font-semibold text-hubble-700">{DAY_LABELS[day]}</dt>
+                <dd className="text-hubble-800/80">Closed</dd>
+              </div>
+            ))}
+            {hasKitchen && groupKitchenHours(hours).map(({ label, open, close }) => (
+              <div key={label} className="flex items-center justify-between border-b border-hubble-50 py-2">
+                <dt className="font-semibold text-hubble-700">{label}</dt>
+                <dd className="text-hubble-800/80">{open} – {close}</dd>
+              </div>
+            ))}
+            {overrides.length > 0 && (
+              <>
+                <p className="pt-4 text-xs font-semibold uppercase tracking-widest text-hubble-500">
+                  Special dates
+                </p>
+                {overrides.map((o) => (
+                  <div key={o.id} className="flex items-start justify-between border-b border-hubble-50 py-2">
+                    <dt className="font-semibold text-hubble-700">
+                      {formatOverrideDate(o.date)}
+                      {o.note && <span className="ml-2 text-xs font-normal text-hubble-500">({o.note})</span>}
+                    </dt>
+                    <dd className="shrink-0 text-hubble-800/80">
+                      {o.closed ? 'Closed' : (o.open && o.close ? `${o.open} – ${o.close}` : 'Open')}
+                    </dd>
+                  </div>
+                ))}
+              </>
+            )}
+          </dl>
+        )}
         <p className="mx-auto mt-5 max-w-xl text-center text-sm text-hubble-800/70">
           Looking to visit Hubble during the weekend? Fill out the reservation form to enquire about
           the options.

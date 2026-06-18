@@ -9,5 +9,7 @@ public enum AuditEntityType {
     MEDIA_ASSET,
     MENU_CATEGORY,
     MENU_ITEM,
-    DAILY_DISH
+    DAILY_DISH,
+    OPENING_HOURS,
+    HOURS_OVERRIDE
 }

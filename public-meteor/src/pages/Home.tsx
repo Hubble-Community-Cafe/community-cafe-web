@@ -1,8 +1,57 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
+import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
 
+const DAY_LABELS: Record<string, string> = {
+  MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
+  THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
+}
+const DAY_ORDER = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
+
+function formatOverrideDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
+}
+
+function groupHours(hours: WeeklyHours[]): { label: string; open: string; close: string }[] {
+  const sorted = [...hours].sort((a, b) => DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek))
+  const groups: typeof sorted[number][][] = []
+  for (const h of sorted) {
+    const last = groups[groups.length - 1]
+    if (last && last[0].open === h.open && last[0].close === h.close &&
+        DAY_ORDER.indexOf(h.dayOfWeek) === DAY_ORDER.indexOf(last[last.length - 1].dayOfWeek) + 1) {
+      last.push(h)
+    } else {
+      groups.push([h])
+    }
+  }
+  return groups.map((g) => ({
+    label: g.length === 1
+      ? DAY_LABELS[g[0].dayOfWeek]
+      : `${DAY_LABELS[g[0].dayOfWeek]} to ${DAY_LABELS[g[g.length - 1].dayOfWeek]}`,
+    open: g[0].open,
+    close: g[0].close,
+  }))
+}
+
 export function Home() {
+  const [hours, setHours] = useState<WeeklyHours[]>([])
+  const [hoursLoaded, setHoursLoaded] = useState(false)
+  const [overrides, setOverrides] = useState<HoursOverride[]>([])
+
+  useEffect(() => {
+    getWeeklyHours('METEOR')
+      .then(setHours)
+      .catch(() => {})
+      .finally(() => setHoursLoaded(true))
+    getUpcomingOverrides('METEOR').then(setOverrides).catch(() => {})
+  }, [])
+
+  const closedDays = DAY_ORDER.filter((d) => !hours.find((h) => h.dayOfWeek === d))
+  const grouped = groupHours(hours)
+
   return (
     <>
       {/* Hero */}
@@ -56,18 +105,47 @@ export function Home() {
           <h2 className="font-title text-2xl font-bold uppercase text-meteor-500 md:text-3xl">
             Opening hours
           </h2>
-          <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
-            <div className="flex items-center justify-between py-3">
-              <dt className="font-bold uppercase tracking-wide text-meteor-700">Monday to Friday</dt>
-              <dd className="text-meteor-900/80">16:00 to 02:00</dd>
-            </div>
-            <div className="flex items-center justify-between py-3">
-              <dt className="font-bold uppercase tracking-wide text-meteor-700">
-                Saturday to Sunday
-              </dt>
-              <dd className="text-meteor-900/80">Closed</dd>
-            </div>
-          </dl>
+          {!hoursLoaded && (
+            <p className="mt-6 text-sm text-meteor-700/50">Loading…</p>
+          )}
+          {hoursLoaded && (
+            <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
+              {grouped.map(({ label, open, close }) => (
+                <div key={label} className="flex items-center justify-between py-3">
+                  <dt className="font-bold uppercase tracking-wide text-meteor-700">{label}</dt>
+                  <dd className="text-meteor-900/80">{open} to {close}</dd>
+                </div>
+              ))}
+              {closedDays.length > 0 && (
+                <div className="flex items-center justify-between py-3">
+                  <dt className="font-bold uppercase tracking-wide text-meteor-700">
+                    {closedDays.length === 7 ? 'All days' : closedDays.map((d) => DAY_LABELS[d]).join(', ')}
+                  </dt>
+                  <dd className="text-meteor-900/80">Closed</dd>
+                </div>
+              )}
+            </dl>
+          )}
+          {overrides.length > 0 && (
+            <>
+              <h3 className="mt-8 font-title text-lg font-bold uppercase text-meteor-500">
+                Special dates
+              </h3>
+              <dl className="mt-3 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
+                {overrides.map((o) => (
+                  <div key={o.id} className="flex items-start justify-between py-3">
+                    <dt className="font-bold uppercase tracking-wide text-meteor-700">
+                      {formatOverrideDate(o.date)}
+                      {o.note && <span className="ml-2 text-xs font-normal normal-case tracking-normal text-meteor-500">({o.note})</span>}
+                    </dt>
+                    <dd className="shrink-0 text-meteor-900/80">
+                      {o.closed ? 'Closed' : (o.open && o.close ? `${o.open} to ${o.close}` : 'Open')}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </>
+          )}
           <h3 className="mt-6 font-title text-lg font-bold uppercase text-meteor-500">
             Alternative hours
           </h3>

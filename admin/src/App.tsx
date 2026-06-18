@@ -10,6 +10,7 @@ import { UsersPage } from './pages/UsersPage'
 import { AuditLogPage } from './pages/AuditLogPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { MenuPage } from './pages/MenuPage'
+import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -89,7 +90,6 @@ function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: R
 }
 
 const CONTENT_MODULES = [
-  { path: 'hours', title: 'Opening hours' },
   { path: 'events', title: 'Events' },
   { path: 'board', title: 'Board' },
   { path: 'vacancies', title: 'Vacancies' },
@@ -116,6 +116,14 @@ function App() {
               element={
                 <RequireRole need="editor">
                   <MenuPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="hours"
+              element={
+                <RequireRole need="editor">
+                  <OpeningHoursPage />
                 </RequireRole>
               }
             />
