@@ -1,0 +1,148 @@
+import { PublicClientApplication } from '@azure/msal-browser'
+import { getE2eAuth } from './e2eAuth'
+// Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts.
+
+const getApiUrl = (): string => {
+  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL
+  if (runtimeUrl && !runtimeUrl.startsWith('__')) {
+    return runtimeUrl
+  }
+  // In containers the API_URL is injected at startup; locally default to the
+  // documented dev backend so the app loads without a .env.
+  return import.meta.env.VITE_API_URL || 'http://localhost:8080'
+}
+
+const API_BASE_URL = getApiUrl()
+
+export class ForbiddenError extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'ForbiddenError'
+  }
+}
+
+let msalInstance: PublicClientApplication | null = null
+
+export const setMsalInstance = (instance: PublicClientApplication) => {
+  msalInstance = instance
+}
+
+export const clearAuth = () => {
+  sessionStorage.clear()
+}
+
+// Azure AD returns a token for ONE resource at a time, so we request only the
+// API scope here (never mixed with Graph scopes).
+const getApiScope = () => {
+  const clientId =
+    window.__RUNTIME_CONFIG__?.AZURE_CLIENT_ID || import.meta.env.VITE_AZURE_CLIENT_ID
+  return `api://${clientId}/access_as_user`
+}
+
+const getAccessToken = async (): Promise<string | null> => {
+  if (!msalInstance) {
+    console.error('MSAL instance not set')
+    return null
+  }
+  const accounts = msalInstance.getAllAccounts()
+  if (accounts.length === 0) {
+    return null
+  }
+  try {
+    const response = await msalInstance.acquireTokenSilent({
+      scopes: [getApiScope()],
+      account: accounts[0],
+    })
+    return response.accessToken
+  } catch (error) {
+    console.error('Failed to acquire token silently:', error)
+    return null
+  }
+}
+
+/** Fetch against the backend with admin authentication (MSAL bearer, or e2e headers). */
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) }
+
+  const e2e = getE2eAuth()
+  if (e2e) {
+    headers['X-Test-Oid'] = e2e.oid
+    if (e2e.email) headers['X-Test-Email'] = e2e.email
+    if (e2e.name) headers['X-Test-Name'] = e2e.name
+  } else {
+    const token = await getAccessToken()
+    if (!token) {
+      throw new Error('Not authenticated')
+    }
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const response = await fetch(fullUrl, { ...options, headers })
+
+  if (response.status === 401) {
+    clearAuth()
+    throw new Error('Authentication failed')
+  }
+  if (response.status === 403) {
+    throw new ForbiddenError('You do not have permission to perform this action')
+  }
+  return response
+}
+
+async function getJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetchWithAuth(url, options)
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}) for ${url}`)
+  }
+  return response.json() as Promise<T>
+}
+
+// ── Types (mirror the backend DTOs) ────────────────────────────────────────────
+export type AdminRole = 'VIEWER' | 'EDITOR' | 'ADMIN'
+
+export interface AdminUser {
+  id: number
+  email: string
+  displayName: string | null
+  role: AdminRole
+}
+
+export interface AuditLogEntry {
+  id: number
+  entityType: string
+  entityId: number | null
+  entityLabel: string | null
+  action: string
+  actorEmail: string | null
+  actorName: string | null
+  changes: string | null
+  summary: string | null
+  createdAt: string
+}
+
+export interface Page<T> {
+  content: T[]
+  totalElements: number
+  totalPages: number
+  number: number
+  size: number
+}
+
+// ── Admin endpoints ────────────────────────────────────────────────────────────
+export const fetchCurrentUser = () => getJson<AdminUser>('/api/admin/users/me')
+
+export const fetchAllUsers = () => getJson<AdminUser[]>('/api/admin/users')
+
+export const updateUserRole = (userId: number, role: AdminRole) =>
+  getJson<AdminUser>(`/api/admin/users/${userId}/role`, {
+    method: 'PATCH',
+    body: JSON.stringify({ role }),
+  })
+
+export const fetchAuditLog = (page = 0, size = 50) =>
+  getJson<Page<AuditLogEntry>>(`/api/admin/audit?page=${page}&size=${size}`)

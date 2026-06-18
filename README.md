@@ -33,15 +33,39 @@ MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third
 
 ## Getting started
 
-```bash
-# Full dev stack (backend + db + frontends)
-docker compose up --build
+The frontends are one npm **workspace**, so install once at the repo root.
 
-# Or run a single app
+```bash
+npm install
+```
+
+### Full local stack (MariaDB + backend + both sites + admin)
+
+```bash
+cp .env.example .env   # fill in Entra ids for admin login (see below)
+docker compose up --build
+```
+
+| App | URL |
+|-----|-----|
+| Admin | http://localhost:5173 |
+| Hubble | http://localhost:5174 |
+| Meteor | http://localhost:5175 |
+| Backend (Swagger) | http://localhost:8080/swagger-ui.html |
+
+Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`,
+`AZURE_CLIENT_SECRET`, `INITIAL_ADMIN_OID`, and `VITE_ALLOWED_GROUP_ID` are set in `.env`. The
+admin is served on `http://localhost:5173`, which is registered as an Entra redirect URI; your
+first sign-in is provisioned as ADMIN (via `INITIAL_ADMIN_OID`). For Portainer/test deployment,
+copy [`docker-compose.portainer.template.yml`](docker-compose.portainer.template.yml) and fill it in.
+
+### Single app (hot reload)
+
+```bash
+npm run dev --workspace @cafe/public-hubble
+npm run dev --workspace @cafe/public-meteor
+npm run dev --workspace @cafe/admin     # needs VITE_AZURE_* in .env for Microsoft login
 cd backend && ./mvnw spring-boot:run
-cd public-hubble && npm ci && npm run dev
-cd public-meteor && npm ci && npm run dev
-cd admin && npm ci && npm run dev
 ```
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.

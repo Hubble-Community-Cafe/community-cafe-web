@@ -1,0 +1,24 @@
+@import "tailwindcss";
+@import "@cafe/shared-web/theme.css";
+
+/*
+ * The admin is intentionally neutral and utilitarian (it manages both cafes), so
+ * it does not adopt either brand's identity. Clean light slate UI with the shared
+ * teal as the single accent, AXIS for headings, Lato for body.
+ */
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  background-color: #f1f5f9;
+  color: #0f172a;
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-title);
+}
