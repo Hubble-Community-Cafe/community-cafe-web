@@ -120,11 +120,11 @@ export function Header() {
     <header className="sticky top-0 z-40 border-b border-hubble-100 bg-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-4 px-4 md:h-20">
         <Link to="/" className="flex items-center" aria-label="Hubble Community Cafe home">
-          <img src="/hubble-logo.svg" alt="Hubble Community Cafe" className="h-9 w-auto md:h-11" />
+          <img src="/hubble-logo.png" alt="Hubble Community Cafe" className="h-10 w-auto md:h-12" />
         </Link>
 
         <div className="flex items-center gap-2">
-          <nav className="hidden items-center gap-1 xl:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-1 lg:flex" aria-label="Primary">
             {NAV.map((group) => (
               <DesktopGroup key={group.label} group={group} />
             ))}
@@ -141,7 +141,7 @@ export function Header() {
 
           <button
             type="button"
-            className="inline-flex items-center justify-center rounded-md p-2 text-hubble-700 xl:hidden"
+            className="inline-flex items-center justify-center rounded-md p-2 text-hubble-700 lg:hidden"
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             onClick={() => setMobileOpen((v) => !v)}
@@ -152,7 +152,7 @@ export function Header() {
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-hubble-100 bg-white xl:hidden">
+        <div className="border-t border-hubble-100 bg-white lg:hidden">
           <nav aria-label="Mobile" className="mx-auto max-w-6xl">
             {NAV.map((group) => (
               <MobileGroup

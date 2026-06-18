@@ -27,7 +27,6 @@ export const EXTERNAL = {
 } as const
 
 export const NAV: NavGroup[] = [
-  { label: 'Home', to: '/' },
   {
     label: 'Community',
     children: [
@@ -47,9 +46,9 @@ export const NAV: NavGroup[] = [
       { label: 'Menu', to: '/cafe/menu' },
       { label: 'Order tracker', href: EXTERNAL.foodTracker },
       { label: 'Discount policy', to: '/cafe/discount-policy' },
+      { label: 'Vacancies', to: '/vacancies' },
     ],
   },
-  { label: 'Vacancies', to: '/vacancies' },
   {
     label: 'Contact',
     to: '/contact',
