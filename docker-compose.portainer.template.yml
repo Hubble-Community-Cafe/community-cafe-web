@@ -14,7 +14,7 @@
 
 services:
   backend:
-    image: ghcr.io/hubble-community-cafe/community-cafe-backend:__VERSION__
+    image: ghcr.io/hubble-community-cafe/community-cafe-web-backend:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -43,7 +43,7 @@ services:
       - SENTRY_ENVIRONMENT=test
 
   public-hubble:
-    image: ghcr.io/hubble-community-cafe/community-cafe-public-hubble:__VERSION__
+    image: ghcr.io/hubble-community-cafe/community-cafe-web-public-hubble:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -57,7 +57,7 @@ services:
       - SENTRY_DSN=__SENTRY_DSN_PUBLIC_HUBBLE__
 
   public-meteor:
-    image: ghcr.io/hubble-community-cafe/community-cafe-public-meteor:__VERSION__
+    image: ghcr.io/hubble-community-cafe/community-cafe-web-public-meteor:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure
@@ -71,7 +71,7 @@ services:
       - SENTRY_DSN=__SENTRY_DSN_PUBLIC_METEOR__
 
   admin:
-    image: ghcr.io/hubble-community-cafe/community-cafe-admin:__VERSION__
+    image: ghcr.io/hubble-community-cafe/community-cafe-web-admin:__VERSION__
     deploy:
       restart_policy:
         condition: on-failure

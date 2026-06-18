@@ -1,0 +1,27 @@
+# Frontend images build from the repo root (npm workspaces). Keep the build
+# context small and reproducible: never ship local installs, builds, or secrets.
+**/node_modules
+**/dist
+**/build
+**/target
+**/coverage
+**/.tmp
+**/*.tsbuildinfo
+
+.git
+.github
+.idea
+.vscode
+**/.DS_Store
+**/*.log
+
+.env
+.env.*
+!.env.example
+
+# Not needed inside any image
+e2e
+docs
+**/*.md
+CLAUDE.md
+docker-compose*.yml
