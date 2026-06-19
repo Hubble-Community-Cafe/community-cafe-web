@@ -39,8 +39,12 @@ services:
       - INITIAL_ADMIN_OID=__INITIAL_ADMIN_OID__
       # Comma-separated public origins
       - CORS_ALLOWED_ORIGINS=https://test.hubble.cafe,https://test.meteor.cafe,https://admin.test.hubble.cafe
+      - MEDIA_DIR=/data/media
+      - MEDIA_BASE_URL=https://api.test.hubble.cafe
       - SENTRY_DSN=__SENTRY_DSN_BACKEND__
       - SENTRY_ENVIRONMENT=test
+    volumes:
+      - cafe_media:/data/media
 
   public-hubble:
     image: ghcr.io/hubble-community-cafe/community-cafe-web-public-hubble:__VERSION__
@@ -88,6 +92,9 @@ services:
       # Entra security group whose members may access the admin
       - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
       - SENTRY_DSN=__SENTRY_DSN_ADMIN__
+
+volumes:
+  cafe_media:
 
 networks:
   cafe:

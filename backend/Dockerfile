@@ -12,7 +12,8 @@ WORKDIR /app
 
 # curl for the health check; run as a non-root user
 RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system appgroup && adduser --system --ingroup appgroup appuser
+    && addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+    && mkdir -p /data/media && chown appuser:appgroup /data/media
 
 COPY --from=build /app/target/community-cafe-backend-*.jar app.jar
 

@@ -61,7 +61,11 @@ services:
       # Your Azure object id, so your first login becomes ADMIN.
       - INITIAL_ADMIN_OID=${INITIAL_ADMIN_OID:-}
       - CORS_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:5175
+      - MEDIA_DIR=/data/media
+      - MEDIA_BASE_URL=http://localhost:8080
       - SENTRY_DSN=${SENTRY_DSN:-}
+    volumes:
+      - cafeweb_media:/data/media
 
   public-hubble:
     build:
@@ -114,6 +118,7 @@ services:
 
 volumes:
   cafeweb_db:
+  cafeweb_media:
 
 networks:
   cafe:
