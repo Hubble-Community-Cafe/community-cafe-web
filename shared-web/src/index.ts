@@ -9,4 +9,7 @@ export { getBoard } from './api/board'
 export { getVacancies } from './api/vacancy'
 export { getAssociations } from './api/association'
 export { cn } from './lib/cn'
+export {
+  groupWeeklyHours, groupKitchenHours, DAY_LABELS, DAY_ORDER, type HoursGroup,
+} from './lib/hours'
 export { hubble, meteor, fonts, brandColor } from './theme/tokens'

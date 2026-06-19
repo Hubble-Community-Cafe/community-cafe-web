@@ -1,6 +1,48 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, MapPin, Phone } from 'lucide-react'
+import {
+  getWeeklyHours, groupWeeklyHours, DAY_LABELS, DAY_ORDER, type WeeklyHours,
+} from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
+
+/** The same standing weekly hours shown on the home page, managed once in the CMS. */
+function FooterHours() {
+  const [hours, setHours] = useState<WeeklyHours[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    getWeeklyHours('HUBBLE')
+      .then(setHours)
+      .catch(() => {})
+      .finally(() => setLoaded(true))
+  }, [])
+
+  if (!loaded || hours.length === 0) return null
+
+  const open = groupWeeklyHours(hours)
+  const closed = DAY_ORDER
+    .filter((d) => !hours.some((h) => h.dayOfWeek === d))
+    .map((d) => DAY_LABELS[d])
+
+  // Kept concise: bar hours only, no kitchen times (those live on the home page).
+  return (
+    <dl className="mt-3 space-y-1.5 text-sm text-hubble-100/90">
+      {open.map(({ label, open, close }) => (
+        <div key={label} className="flex justify-between gap-4">
+          <dt>{label}</dt>
+          <dd>{open} to {close}</dd>
+        </div>
+      ))}
+      {closed.map((label) => (
+        <div key={label} className="flex justify-between gap-4">
+          <dt>{label}</dt>
+          <dd>Closed</dd>
+        </div>
+      ))}
+    </dl>
+  )
+}
 
 export function Footer() {
   return (
@@ -45,24 +87,7 @@ export function Footer() {
           <h2 className="font-title text-sm font-bold uppercase tracking-wide text-hubble-200">
             Opening Times
           </h2>
-          <dl className="mt-3 space-y-1.5 text-sm text-hubble-100/90">
-            <div className="flex justify-between gap-4">
-              <dt>Weekdays</dt>
-              <dd>11:00 to 02:00</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt>Saturday</dt>
-              <dd>15:00 to 20:00</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt>Sunday</dt>
-              <dd>On reservation</dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt>Kitchen</dt>
-              <dd>12:00 to 19:30</dd>
-            </div>
-          </dl>
+          <FooterHours />
           <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
             <a
               href={EXTERNAL.reservations}

@@ -1,6 +1,44 @@
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
+import {
+  getWeeklyHours, groupWeeklyHours, DAY_LABELS, DAY_ORDER, type WeeklyHours,
+} from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
+
+/** Standing weekly hours, managed once in the CMS (same source as the status banner). */
+function FooterHours() {
+  const [hours, setHours] = useState<WeeklyHours[]>([])
+  const [loaded, setLoaded] = useState(false)
+
+  useEffect(() => {
+    getWeeklyHours('METEOR')
+      .then(setHours)
+      .catch(() => {})
+      .finally(() => setLoaded(true))
+  }, [])
+
+  if (!loaded || hours.length === 0) return null
+
+  const open = groupWeeklyHours(hours)
+  const closed = DAY_ORDER
+    .filter((d) => !hours.some((h) => h.dayOfWeek === d))
+    .map((d) => DAY_LABELS[d])
+
+  return (
+    <dl className="mt-3 space-y-1.5 text-sm text-white/80">
+      {open.map(({ label, open, close }) => (
+        <div key={label} className="flex items-center gap-2">
+          <Clock className="h-4 w-4 shrink-0" />
+          <span>{label}: {open} to {close}</span>
+        </div>
+      ))}
+      {closed.length > 0 && (
+        <div className="pl-6">{closed.join(', ')}: closed</div>
+      )}
+    </dl>
+  )
+}
 
 export function Footer() {
   return (
@@ -42,13 +80,7 @@ export function Footer() {
           <h2 className="font-title text-sm font-bold uppercase tracking-wide text-meteor-accent">
             Opening hours
           </h2>
-          <dl className="mt-3 space-y-1.5 text-sm text-white/80">
-            <div className="flex items-center gap-2">
-              <Clock className="h-4 w-4 shrink-0" />
-              <span>Monday to Friday: 16:00 to 02:00</span>
-            </div>
-            <div className="pl-6">Saturday and Sunday: closed</div>
-          </dl>
+          <FooterHours />
           <h2 className="mt-6 font-title text-sm font-bold uppercase tracking-wide text-meteor-accent">
             Quick links
           </h2>

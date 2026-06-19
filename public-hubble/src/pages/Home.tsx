@@ -1,61 +1,15 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
-import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
+import {
+  getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours,
+  DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
+} from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
-
-const DAY_LABELS: Record<string, string> = {
-  MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
-  THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
-}
-
-const DAY_ORDER = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
 
 function formatOverrideDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })
-}
-
-function collapse<T extends { dayOfWeek: string }>(
-  items: T[],
-  sameGroup: (a: T, b: T) => boolean,
-): T[][] {
-  const sorted = [...items].sort((a, b) => DAY_ORDER.indexOf(a.dayOfWeek) - DAY_ORDER.indexOf(b.dayOfWeek))
-  const groups: T[][] = []
-  for (const item of sorted) {
-    const last = groups[groups.length - 1]
-    if (last && sameGroup(last[0], item) &&
-        DAY_ORDER.indexOf(item.dayOfWeek) === DAY_ORDER.indexOf(last[last.length - 1].dayOfWeek) + 1) {
-      last.push(item)
-    } else {
-      groups.push([item])
-    }
-  }
-  return groups
-}
-
-function rangeLabel(g: { dayOfWeek: string }[]): string {
-  return g.length === 1
-    ? DAY_LABELS[g[0].dayOfWeek]
-    : `${DAY_LABELS[g[0].dayOfWeek]} – ${DAY_LABELS[g[g.length - 1].dayOfWeek]}`
-}
-
-function groupHours(hours: WeeklyHours[]) {
-  return collapse(hours, (a, b) => a.open === b.open && a.close === b.close).map((g) => ({
-    label: rangeLabel(g),
-    open: g[0].open,
-    close: g[0].close,
-  }))
-}
-
-function groupKitchenHours(hours: WeeklyHours[]) {
-  const withKitchen = hours.filter((h) => h.kitchenOpen || h.kitchenClose)
-  return collapse(withKitchen, (a, b) => a.kitchenOpen === b.kitchenOpen && a.kitchenClose === b.kitchenClose)
-    .map((g) => ({
-      label: `Kitchen (${rangeLabel(g)})`,
-      open: g[0].kitchenOpen ?? '–',
-      close: g[0].kitchenClose ?? '–',
-    }))
 }
 
 const FEATURES = [
@@ -90,7 +44,7 @@ export function Home() {
   }, [])
 
   const allDays = DAY_ORDER.map((d) => ({ day: d, slot: hours.find((h) => h.dayOfWeek === d) ?? null }))
-  const grouped = groupHours(hours)
+  const grouped = groupWeeklyHours(hours)
   const hasKitchen = hours.some((h) => h.kitchenOpen || h.kitchenClose)
 
   return (
