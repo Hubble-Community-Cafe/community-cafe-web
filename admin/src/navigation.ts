@@ -39,7 +39,7 @@ export const NAV: NavSection[] = [
       { label: 'Events', to: '/events', icon: CalendarDays, requires: 'editor' },
       { label: 'Board', to: '/board', icon: UsersRound, requires: 'editor', placeholder: true },
       { label: 'Vacancies', to: '/vacancies', icon: ScrollText, requires: 'editor', placeholder: true },
-      { label: 'Media', to: '/media', icon: Image, requires: 'editor', placeholder: true },
+      { label: 'Media', to: '/media', icon: Image, requires: 'editor' },
     ],
   },
   {

@@ -380,3 +380,35 @@ export const updateEvent = (id: number, req: EventRequest) =>
 
 export const deleteEvent = (id: number) =>
   fetchWithAuth(`/api/admin/events/${id}`, { method: 'DELETE' })
+
+// ── Media types ─────────────────────────────────────────────────────────────────
+export interface MediaAsset {
+  id: number
+  filename: string
+  contentType: string
+  url: string
+  alt: string | null
+  sizeBytes: number | null
+  bar: BarLocation | null
+  createdAt: string
+}
+
+// ── Media endpoints ────────────────────────────────────────────────────────────
+export const fetchAllMedia = () =>
+  getJson<MediaAsset[]>('/api/admin/media')
+
+export const uploadMedia = async (file: File, alt?: string, bar?: BarLocation | null): Promise<MediaAsset> => {
+  const form = new FormData()
+  form.append('file', file)
+  if (alt) form.append('alt', alt)
+  if (bar) form.append('bar', bar)
+  const response = await fetchWithAuth('/api/admin/media', { method: 'POST', body: form })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { message?: string }
+    throw new Error(err.message ?? `Upload failed (${response.status})`)
+  }
+  return response.json() as Promise<MediaAsset>
+}
+
+export const deleteMedia = (id: number) =>
+  fetchWithAuth(`/api/admin/media/${id}`, { method: 'DELETE' })

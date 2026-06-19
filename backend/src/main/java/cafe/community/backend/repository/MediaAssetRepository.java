@@ -10,5 +10,7 @@ import java.util.List;
 @Repository
 public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
 
+    List<MediaAsset> findAllByOrderByCreatedAtDesc();
+
     List<MediaAsset> findByBarOrderByCreatedAtDesc(BarLocation bar);
 }

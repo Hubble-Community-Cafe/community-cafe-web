@@ -12,6 +12,7 @@ import { PlaceholderPage } from './pages/PlaceholderPage'
 import { MenuPage } from './pages/MenuPage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { EventsPage } from './pages/EventsPage'
+import { MediaPage } from './pages/MediaPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -93,7 +94,6 @@ function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: R
 const CONTENT_MODULES = [
   { path: 'board', title: 'Board' },
   { path: 'vacancies', title: 'Vacancies' },
-  { path: 'media', title: 'Media' },
 ]
 
 function App() {
@@ -132,6 +132,14 @@ function App() {
               element={
                 <RequireRole need="editor">
                   <EventsPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="media"
+              element={
+                <RequireRole need="editor">
+                  <MediaPage />
                 </RequireRole>
               }
             />
