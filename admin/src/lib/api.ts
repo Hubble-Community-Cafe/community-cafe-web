@@ -103,7 +103,7 @@ async function getJson<T>(url: string, options: RequestInit = {}): Promise<T> {
 }
 
 // ── Types (mirror the backend DTOs) ────────────────────────────────────────────
-export type AdminRole = 'VIEWER' | 'EDITOR' | 'ADMIN'
+export type AdminRole = 'VIEWER' | 'DDD_POSTER' | 'EDITOR' | 'ADMIN'
 
 export interface AdminUser {
   id: number
@@ -254,22 +254,22 @@ export const deleteMenuItem = (id: number) =>
   fetchWithAuth(`/api/admin/menu/items/${id}`, { method: 'DELETE' })
 
 export const fetchDailyDishes = () =>
-  getJson<DailyDish[]>('/api/admin/menu/daily-dish')
+  getJson<DailyDish[]>('/api/admin/daily-dish')
 
 export const createDailyDish = (req: DailyDishRequest) =>
-  getJson<DailyDish>('/api/admin/menu/daily-dish', {
+  getJson<DailyDish>('/api/admin/daily-dish', {
     method: 'POST',
     body: JSON.stringify(req),
   })
 
 export const updateDailyDish = (id: number, req: DailyDishRequest) =>
-  getJson<DailyDish>(`/api/admin/menu/daily-dish/${id}`, {
+  getJson<DailyDish>(`/api/admin/daily-dish/${id}`, {
     method: 'PUT',
     body: JSON.stringify(req),
   })
 
 export const deleteDailyDish = (id: number) =>
-  fetchWithAuth(`/api/admin/menu/daily-dish/${id}`, { method: 'DELETE' })
+  fetchWithAuth(`/api/admin/daily-dish/${id}`, { method: 'DELETE' })
 
 export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
 

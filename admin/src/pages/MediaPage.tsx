@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Trash2, Upload, Copy, Check } from 'lucide-react'
+import { usePermissions } from '../lib/usePermissions'
 import { fetchAllMedia, uploadMedia, deleteMedia, type MediaAsset, type BarLocation } from '../lib/api'
 
 const BARS: (BarLocation | '')[] = ['', 'HUBBLE', 'METEOR']
@@ -14,9 +15,11 @@ function formatBytes(n: number | null): string {
 
 function AssetCard({
   asset,
+  canEdit,
   onDeleted,
 }: {
   asset: MediaAsset
+  canEdit: boolean
   onDeleted: () => void
 }) {
   const [copied, setCopied] = useState(false)
@@ -56,14 +59,16 @@ function AssetCard({
           >
             {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
           </button>
-          <button
-            onClick={handleDelete}
-            disabled={deleting}
-            title="Delete"
-            className="rounded-full bg-white p-2 text-red-500 hover:bg-red-50 disabled:opacity-50"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
+          {canEdit && (
+            <button
+              onClick={handleDelete}
+              disabled={deleting}
+              title="Delete"
+              className="rounded-full bg-white p-2 text-red-500 hover:bg-red-50 disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          )}
         </div>
       </div>
       <div className="px-3 py-2">
@@ -85,6 +90,7 @@ function AssetCard({
 }
 
 export function MediaPage() {
+  const { canEditContent } = usePermissions()
   const [assets, setAssets] = useState<MediaAsset[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -136,6 +142,7 @@ export function MediaPage() {
       </div>
 
       {/* Upload panel */}
+      {canEditContent && (
       <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <h2 className="mb-4 text-base font-semibold text-slate-800">Upload image</h2>
         <div className="flex flex-wrap items-end gap-3">
@@ -180,6 +187,7 @@ export function MediaPage() {
         </div>
         {uploadError && <p className="mt-2 text-xs text-red-600">{uploadError}</p>}
       </section>
+      )}
 
       {loading && <p className="text-sm text-slate-400">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
@@ -194,6 +202,7 @@ export function MediaPage() {
             <AssetCard
               key={asset.id}
               asset={asset}
+              canEdit={canEditContent}
               onDeleted={() => setAssets((prev) => prev.filter((a) => a.id !== asset.id))}
             />
           ))}

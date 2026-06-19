@@ -6,13 +6,17 @@ import {
   Link,
   ScrollText,
   ShieldCheck,
+  Soup,
   UsersRound,
   UtensilsCrossed,
   type LucideIcon,
 } from 'lucide-react'
 
-/** What capability a nav item requires; undefined means any signed-in user. */
-export type NavRequirement = 'editor' | 'admin'
+/**
+ * What capability a nav item requires; undefined means any signed-in user.
+ * Content modules are 'viewer' (everyone can read; editing is gated inside the page).
+ */
+export type NavRequirement = 'viewer' | 'editor' | 'admin'
 
 export interface NavItem {
   label: string
@@ -35,13 +39,14 @@ export const NAV: NavSection[] = [
   {
     title: 'Content',
     items: [
-      { label: 'Menu', to: '/menu', icon: UtensilsCrossed, requires: 'editor' },
-      { label: 'Opening hours', to: '/hours', icon: Clock, requires: 'editor' },
-      { label: 'Events', to: '/events', icon: CalendarDays, requires: 'editor' },
-      { label: 'Board', to: '/board', icon: UsersRound, requires: 'editor' },
-      { label: 'Vacancies', to: '/vacancies', icon: ScrollText, requires: 'editor' },
-      { label: 'Associations', to: '/associations', icon: Link, requires: 'editor' },
-      { label: 'Media', to: '/media', icon: Image, requires: 'editor' },
+      { label: 'Menu', to: '/menu', icon: UtensilsCrossed, requires: 'viewer' },
+      { label: 'Daily dish', to: '/daily-dish', icon: Soup, requires: 'viewer' },
+      { label: 'Opening hours', to: '/hours', icon: Clock, requires: 'viewer' },
+      { label: 'Events', to: '/events', icon: CalendarDays, requires: 'viewer' },
+      { label: 'Board', to: '/board', icon: UsersRound, requires: 'viewer' },
+      { label: 'Vacancies', to: '/vacancies', icon: ScrollText, requires: 'viewer' },
+      { label: 'Associations', to: '/associations', icon: Link, requires: 'viewer' },
+      { label: 'Media', to: '/media', icon: Image, requires: 'viewer' },
     ],
   },
   {

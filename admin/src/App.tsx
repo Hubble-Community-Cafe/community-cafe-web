@@ -10,6 +10,7 @@ import { UsersPage } from './pages/UsersPage'
 import { AuditLogPage } from './pages/AuditLogPage'
 import { PlaceholderPage } from './pages/PlaceholderPage'
 import { MenuPage } from './pages/MenuPage'
+import { DailyDishPage } from './pages/DailyDishPage'
 import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { EventsPage } from './pages/EventsPage'
 import { MediaPage } from './pages/MediaPage'
@@ -78,10 +79,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/** Gates a route on the database-backed role. */
-function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: ReactNode }) {
+/** Gates a route on the database-backed role. Content pages use 'viewer' (read-only
+ *  for viewers; editing is gated inside each page by capability). */
+function RequireRole({ need, children }: { need: 'viewer' | 'editor' | 'admin'; children: ReactNode }) {
   const { isLoading } = useRole()
-  const { isEditor, isAdmin } = usePermissions()
+  const { isViewer, isEditor, isAdmin } = usePermissions()
 
   if (isLoading) {
     return (
@@ -90,7 +92,7 @@ function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: R
       </FullScreen>
     )
   }
-  const allowed = need === 'admin' ? isAdmin : isEditor
+  const allowed = need === 'admin' ? isAdmin : need === 'editor' ? isEditor : isViewer
   return allowed ? <>{children}</> : <Navigate to="/" replace />
 }
 
@@ -114,15 +116,23 @@ function App() {
             <Route
               path="menu"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <MenuPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="daily-dish"
+              element={
+                <RequireRole need="viewer">
+                  <DailyDishPage />
                 </RequireRole>
               }
             />
             <Route
               path="hours"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <OpeningHoursPage />
                 </RequireRole>
               }
@@ -130,7 +140,7 @@ function App() {
             <Route
               path="events"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <EventsPage />
                 </RequireRole>
               }
@@ -138,7 +148,7 @@ function App() {
             <Route
               path="board"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <BoardPage />
                 </RequireRole>
               }
@@ -146,7 +156,7 @@ function App() {
             <Route
               path="vacancies"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <VacanciesPage />
                 </RequireRole>
               }
@@ -154,7 +164,7 @@ function App() {
             <Route
               path="associations"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <AssociationsPage />
                 </RequireRole>
               }
@@ -162,7 +172,7 @@ function App() {
             <Route
               path="media"
               element={
-                <RequireRole need="editor">
+                <RequireRole need="viewer">
                   <MediaPage />
                 </RequireRole>
               }
@@ -172,7 +182,7 @@ function App() {
                 key={m.path}
                 path={m.path}
                 element={
-                  <RequireRole need="editor">
+                  <RequireRole need="viewer">
                     <PlaceholderPage title={m.title} />
                   </RequireRole>
                 }

@@ -1,10 +1,18 @@
 import { Card, PageHeader } from '../components/PageHeader'
 import { useRole } from '../lib/RoleContext'
 import { usePermissions } from '../lib/usePermissions'
+import type { AdminRole } from '../lib/api'
+
+const ROLE_LABELS: Record<AdminRole, string> = {
+  VIEWER: 'Viewer',
+  DDD_POSTER: 'DDD poster',
+  EDITOR: 'Editor',
+  ADMIN: 'Admin',
+}
 
 export function DashboardPage() {
   const { user, role, isLoading } = useRole()
-  const { isEditor, isAdmin } = usePermissions()
+  const { isEditor, isAdmin, isDddPoster } = usePermissions()
 
   return (
     <>
@@ -16,14 +24,16 @@ export function DashboardPage() {
         <Card>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Your role</p>
           <p className="mt-2 font-title text-2xl font-bold text-slate-800">
-            {isLoading ? '…' : (role ?? 'Unknown')}
+            {isLoading ? '…' : (role ? ROLE_LABELS[role] : 'Unknown')}
           </p>
           <p className="mt-1 text-sm text-slate-500">
             {isAdmin
               ? 'Full access, including users and the audit log.'
               : isEditor
                 ? 'You can edit the content modules.'
-                : 'Read-only access. Ask an admin for edit rights.'}
+                : isDddPoster
+                  ? 'You can view all content and edit the Daily Dinner Dish.'
+                  : 'Read-only access. Ask an admin for edit rights.'}
           </p>
         </Card>
         <Card>

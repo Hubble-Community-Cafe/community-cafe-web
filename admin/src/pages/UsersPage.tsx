@@ -3,7 +3,14 @@ import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAllUsers, updateUserRole, type AdminRole, type AdminUser } from '../lib/api'
 import { useRole } from '../lib/RoleContext'
 
-const ROLES: AdminRole[] = ['VIEWER', 'EDITOR', 'ADMIN']
+const ROLES: AdminRole[] = ['VIEWER', 'DDD_POSTER', 'EDITOR', 'ADMIN']
+
+const ROLE_LABELS: Record<AdminRole, string> = {
+  VIEWER: 'Viewer',
+  DDD_POSTER: 'DDD poster',
+  EDITOR: 'Editor',
+  ADMIN: 'Admin',
+}
 
 export function UsersPage() {
   const { user: currentUser } = useRole()
@@ -80,7 +87,7 @@ export function UsersPage() {
                         >
                           {ROLES.map((r) => (
                             <option key={r} value={r}>
-                              {r}
+                              {ROLE_LABELS[r]}
                             </option>
                           ))}
                         </select>

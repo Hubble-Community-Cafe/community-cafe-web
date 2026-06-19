@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
+import { usePermissions } from '../lib/usePermissions'
 import {
   fetchVacancies, createVacancy, updateVacancy, deleteVacancy,
   type Vacancy, type VacancyRequest, type BarLocation, type MediaAsset,
@@ -142,9 +143,10 @@ function VacancyForm({
 }
 
 function VacancyRow({
-  vacancy, onUpdated, onDeleted,
+  vacancy, canEdit, onUpdated, onDeleted,
 }: {
   vacancy: Vacancy
+  canEdit: boolean
   onUpdated: (v: Vacancy) => void
   onDeleted: () => void
 }) {
@@ -162,7 +164,7 @@ function VacancyRow({
     }
   }
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <li className="py-3">
         <VacancyForm
@@ -206,21 +208,24 @@ function VacancyRow({
           {[vacancy.hours, vacancy.type].filter(Boolean).join(' · ') || 'No details'}
         </p>
       </div>
-      <div className="flex shrink-0 gap-1">
-        <button onClick={() => setEditing(true)}
-          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button onClick={handleDelete} disabled={deleting}
-          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex shrink-0 gap-1">
+          <button onClick={() => setEditing(true)}
+            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button onClick={handleDelete} disabled={deleting}
+            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </li>
   )
 }
 
 export function VacanciesPage() {
+  const { canEditContent } = usePermissions()
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -242,16 +247,18 @@ export function VacanciesPage() {
         </p>
       </div>
 
-      <div className="flex justify-end">
-        {!creating && (
-          <button onClick={() => setCreating(true)}
-            className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
-            <Plus className="h-4 w-4" /> Add vacancy
-          </button>
-        )}
-      </div>
+      {canEditContent && (
+        <div className="flex justify-end">
+          {!creating && (
+            <button onClick={() => setCreating(true)}
+              className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
+              <Plus className="h-4 w-4" /> Add vacancy
+            </button>
+          )}
+        </div>
+      )}
 
-      {creating && (
+      {canEditContent && creating && (
         <VacancyForm
           onSave={async (req) => {
             const created = await createVacancy(req)
@@ -268,13 +275,14 @@ export function VacanciesPage() {
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           {vacancies.length === 0 && !creating && (
-            <p className="text-sm text-slate-400">No vacancies yet. Add one above.</p>
+            <p className="text-sm text-slate-400">No vacancies yet.</p>
           )}
           <ul>
             {vacancies.map((v) => (
               <VacancyRow
                 key={v.id}
                 vacancy={v}
+                canEdit={canEditContent}
                 onUpdated={(updated) => setVacancies((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
                 onDeleted={() => setVacancies((prev) => prev.filter((x) => x.id !== v.id))}
               />

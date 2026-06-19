@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
+import { usePermissions } from '../lib/usePermissions'
 import {
   fetchEvents, createEvent, updateEvent, deleteEvent,
   type BarLocation, type CafeEvent, type EventRequest,
@@ -119,9 +120,10 @@ function EventForm({
 }
 
 function EventRow({
-  event, onUpdated, onDeleted,
+  event, canEdit, onUpdated, onDeleted,
 }: {
   event: CafeEvent
+  canEdit: boolean
   onUpdated: (e: CafeEvent) => void
   onDeleted: () => void
 }) {
@@ -139,7 +141,7 @@ function EventRow({
     }
   }
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <li className="py-3">
         <EventForm
@@ -176,21 +178,24 @@ function EventRow({
           {event.subscribeLink && <span>Has sign-up link</span>}
         </div>
       </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <button onClick={() => setEditing(true)}
-          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button onClick={handleDelete} disabled={deleting}
-          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex shrink-0 items-center gap-1">
+          <button onClick={() => setEditing(true)}
+            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button onClick={handleDelete} disabled={deleting}
+            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </li>
   )
 }
 
 export function EventsPage() {
+  const { canEditContent } = usePermissions()
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [events, setEvents] = useState<CafeEvent[]>([])
   const [loading, setLoading] = useState(true)
@@ -247,7 +252,7 @@ export function EventsPage() {
             <h2 className="text-base font-semibold text-slate-800">
               {bar.charAt(0) + bar.slice(1).toLowerCase()} events
             </h2>
-            {!creating && (
+            {canEditContent && !creating && (
               <button onClick={() => setCreating(true)}
                 className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
                 <Plus className="h-4 w-4" /> Add event
@@ -255,7 +260,7 @@ export function EventsPage() {
             )}
           </div>
 
-          {creating && (
+          {canEditContent && creating && (
             <div className="mb-4">
               <EventForm
                 bar={bar}
@@ -274,6 +279,7 @@ export function EventsPage() {
               <EventRow
                 key={event.id}
                 event={event}
+                canEdit={canEditContent}
                 onUpdated={(updated) => setEvents((prev) => prev.map((e) => e.id === updated.id ? updated : e))}
                 onDeleted={() => setEvents((prev) => prev.filter((e) => e.id !== event.id))}
               />

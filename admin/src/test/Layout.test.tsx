@@ -28,11 +28,21 @@ function renderLayoutAs(role: AdminRole) {
 }
 
 describe('Layout role-gated navigation', () => {
-  it('shows only the dashboard to a viewer', () => {
+  it('shows content modules but not the admin area to a viewer', () => {
     renderLayoutAs('VIEWER')
     const nav = screen.getByRole('navigation', { name: 'Admin' })
     expect(within(nav).getByText('Dashboard')).toBeInTheDocument()
-    expect(within(nav).queryByText('Menu')).not.toBeInTheDocument()
+    expect(within(nav).getByText('Menu')).toBeInTheDocument()
+    expect(within(nav).getByText('Daily dish')).toBeInTheDocument()
+    expect(within(nav).queryByText('Users')).not.toBeInTheDocument()
+    expect(within(nav).queryByText('Audit log')).not.toBeInTheDocument()
+  })
+
+  it('shows content modules to a DDD poster but not the admin area', () => {
+    renderLayoutAs('DDD_POSTER')
+    const nav = screen.getByRole('navigation', { name: 'Admin' })
+    expect(within(nav).getByText('Daily dish')).toBeInTheDocument()
+    expect(within(nav).getByText('Menu')).toBeInTheDocument()
     expect(within(nav).queryByText('Users')).not.toBeInTheDocument()
   })
 

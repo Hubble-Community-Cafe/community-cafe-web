@@ -117,7 +117,7 @@ function DishForm({
   )
 }
 
-export function DailyDishSection() {
+export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
   const [dishes, setDishes] = useState<DailyDish[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -159,18 +159,19 @@ export function DailyDishSection() {
   }
 
   return (
-    <div className="mt-8">
-      <div className="mb-3 flex items-center justify-between">
-        <h2 className="font-title text-lg font-semibold text-slate-800">Daily Dinner Dish</h2>
-        <button
-          onClick={() => { setShowNew(true); setEditing(null) }}
-          className="flex items-center gap-1.5 rounded-lg bg-hubble-700 px-3 py-2 text-sm font-semibold text-white hover:bg-hubble-800"
-        >
-          <Plus className="h-4 w-4" /> Add dish
-        </button>
-      </div>
+    <div>
+      {canEdit && (
+        <div className="mb-3 flex justify-end">
+          <button
+            onClick={() => { setShowNew(true); setEditing(null) }}
+            className="flex items-center gap-1.5 rounded-lg bg-hubble-700 px-3 py-2 text-sm font-semibold text-white hover:bg-hubble-800"
+          >
+            <Plus className="h-4 w-4" /> Add dish
+          </button>
+        </div>
+      )}
 
-      {showNew && (
+      {canEdit && showNew && (
         <div className="mb-4">
           <DishForm onSave={handleCreate} onCancel={() => setShowNew(false)} />
         </div>
@@ -187,7 +188,7 @@ export function DailyDishSection() {
         <div className="space-y-2">
           {dishes.map((dish) => (
             <div key={dish.id}>
-              {editing?.id === dish.id ? (
+              {canEdit && editing?.id === dish.id ? (
                 <DishForm
                   initial={dish}
                   onSave={handleUpdate}
@@ -206,22 +207,24 @@ export function DailyDishSection() {
                       <p className="mt-0.5 text-xs text-slate-400">{dish.description}</p>
                     )}
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => { setEditing(dish); setShowNew(false) }}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                      aria-label="Edit"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(dish.id)}
-                      className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
-                      aria-label="Delete"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
+                  {canEdit && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => { setEditing(dish); setShowNew(false) }}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                        aria-label="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(dish.id)}
+                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        aria-label="Delete"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>

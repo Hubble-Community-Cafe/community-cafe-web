@@ -9,11 +9,14 @@ form emails, evidence capture).
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ⬜ | ⬜ | n/a | ⬜ |
-| Menu (+ daily dish) | ⬜ | ⬜ | ⬜ | ⬜ |
+| Menu | ⬜ | ⬜ | ⬜ | ⬜ |
+| Daily dinner dish | ⬜ | n/a | ⬜ | ⬜ |
 | Opening hours (+ status banner) | ⬜ | ⬜ | ⬜ | ⬜ |
 | Events | ⬜ | ⬜ | ⬜ | ⬜ |
 | Board (current / previous / supervisory) | ⬜ | ⬜ | ⬜ | ⬜ |
-| Vacancies | ⬜ | ⬜ | ⬜ | ⬜ |
+| Vacancies | ⬜ | n/a | ⬜ | ⬜ |
+| Associations | ⬜ | n/a | ⬜ | ⬜ |
+| Roles / read-only viewer / DDD poster | n/a | n/a | ⬜ | ⬜ |
 | Forms (contact / tips / …) | ⬜ | ⬜ | n/a | ⬜ |
 
 Legend: ⬜ not yet · 🟡 partial · ✅ covered. Update this table as specs land.

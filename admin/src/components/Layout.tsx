@@ -9,16 +9,17 @@ import { useRole } from '../lib/RoleContext'
 import { usePermissions } from '../lib/usePermissions'
 import { isE2E } from '../lib/e2eAuth'
 
-function canSee(item: NavItem, isEditor: boolean, isAdmin: boolean): boolean {
+function canSee(item: NavItem, isViewer: boolean, isEditor: boolean, isAdmin: boolean): boolean {
   if (item.requires === 'admin') return isAdmin
   if (item.requires === 'editor') return isEditor
+  if (item.requires === 'viewer') return isViewer
   return true
 }
 
 export function Layout() {
   const { instance } = useMsal()
   const { user, role } = useRole()
-  const { isEditor, isAdmin } = usePermissions()
+  const { isViewer, isEditor, isAdmin } = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   const handleSignOut = () => {
@@ -28,7 +29,7 @@ export function Layout() {
 
   const sections = NAV.map((section) => ({
     ...section,
-    items: section.items.filter((item) => canSee(item, isEditor, isAdmin)),
+    items: section.items.filter((item) => canSee(item, isViewer, isEditor, isAdmin)),
   })).filter((section) => section.items.length > 0)
 
   const nav = (

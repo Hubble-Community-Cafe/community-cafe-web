@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
+import { usePermissions } from '../lib/usePermissions'
 import {
   fetchBoardTerms, createBoardTerm, updateBoardTerm, deleteBoardTerm,
   createBoardMember, updateBoardMember, deleteBoardMember,
@@ -104,17 +105,19 @@ function MemberForm({
 
 function MemberRow({
   member,
+  canEdit,
   onUpdated,
   onDeleted,
 }: {
   member: BoardMember
+  canEdit: boolean
   onUpdated: (m: BoardMember) => void
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <li className="py-2">
         <MemberForm
@@ -144,21 +147,23 @@ function MemberRow({
         <p className="text-sm font-medium text-slate-800">{member.name}</p>
         {member.role && <p className="text-xs text-slate-500">{member.role}</p>}
       </div>
-      <div className="flex shrink-0 gap-1">
-        <button onClick={() => setEditing(true)}
-          className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-          <Pencil className="h-3.5 w-3.5" />
-        </button>
-        <button onClick={async () => {
-          if (!confirm(`Remove "${member.name}"?`)) return
-          setDeleting(true)
-          try { await deleteBoardMember(member.id); onDeleted() }
-          catch { setDeleting(false) }
-        }} disabled={deleting}
-          className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex shrink-0 gap-1">
+          <button onClick={() => setEditing(true)}
+            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <Pencil className="h-3.5 w-3.5" />
+          </button>
+          <button onClick={async () => {
+            if (!confirm(`Remove "${member.name}"?`)) return
+            setDeleting(true)
+            try { await deleteBoardMember(member.id); onDeleted() }
+            catch { setDeleting(false) }
+          }} disabled={deleting}
+            className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
     </li>
   )
 }
@@ -277,10 +282,12 @@ function TermForm({
 
 function TermCard({
   term,
+  canEdit,
   onUpdated,
   onDeleted,
 }: {
   term: BoardTerm
+  canEdit: boolean
   onUpdated: (t: BoardTerm) => void
   onDeleted: () => void
 }) {
@@ -297,7 +304,7 @@ function TermCard({
     catch { setDeleting(false) }
   }
 
-  if (editingTerm) {
+  if (editingTerm && canEdit) {
     return (
       <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
         <TermForm
@@ -343,16 +350,18 @@ function TermCard({
             {term.photoCredit && ' · credit set'}
           </p>
         </div>
-        <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditingTerm(true)}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-            <Pencil className="h-4 w-4" />
-          </button>
-          <button onClick={handleDeleteTerm} disabled={deleting}
-            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+        {canEdit && (
+          <div className="flex shrink-0 gap-1">
+            <button onClick={() => setEditingTerm(true)}
+              className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+              <Pencil className="h-4 w-4" />
+            </button>
+            <button onClick={handleDeleteTerm} disabled={deleting}
+              className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       {expanded && (
@@ -362,13 +371,14 @@ function TermCard({
               <MemberRow
                 key={m.id}
                 member={m}
+                canEdit={canEdit}
                 onUpdated={(updated) => setMembers((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
                 onDeleted={() => setMembers((prev) => prev.filter((x) => x.id !== m.id))}
               />
             ))}
           </ul>
 
-          {addingMember ? (
+          {canEdit && (addingMember ? (
             <div className="mt-3">
               <MemberForm
                 onSave={async (req) => {
@@ -384,7 +394,7 @@ function TermCard({
               className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-hubble-700 hover:text-hubble-600">
               <Plus className="h-3.5 w-3.5" /> Add member
             </button>
-          )}
+          ))}
         </div>
       )}
     </div>
@@ -394,6 +404,7 @@ function TermCard({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function BoardPage() {
+  const { canEditContent } = usePermissions()
   const [terms, setTerms] = useState<BoardTerm[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -416,16 +427,18 @@ export function BoardPage() {
         </p>
       </div>
 
-      <div className="flex justify-end">
-        {!creating && (
-          <button onClick={() => setCreating(true)}
-            className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
-            <Plus className="h-4 w-4" /> Add term
-          </button>
-        )}
-      </div>
+      {canEditContent && (
+        <div className="flex justify-end">
+          {!creating && (
+            <button onClick={() => setCreating(true)}
+              className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
+              <Plus className="h-4 w-4" /> Add term
+            </button>
+          )}
+        </div>
+      )}
 
-      {creating && (
+      {canEditContent && creating && (
         <TermForm
           onSave={async (req) => {
             const created = await createBoardTerm(req)
@@ -440,7 +453,7 @@ export function BoardPage() {
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && terms.length === 0 && !creating && (
-        <p className="text-sm text-slate-400">No board terms yet. Add one above.</p>
+        <p className="text-sm text-slate-400">No board terms yet.</p>
       )}
 
       <div className="space-y-4">
@@ -448,6 +461,7 @@ export function BoardPage() {
           <TermCard
             key={term.id}
             term={term}
+            canEdit={canEditContent}
             onUpdated={(updated) => setTerms((prev) => prev.map((t) => t.id === updated.id ? updated : t))}
             onDeleted={() => setTerms((prev) => prev.filter((t) => t.id !== term.id))}
           />

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
+import { usePermissions } from '../lib/usePermissions'
 import {
   fetchAssociations, createAssociation, updateAssociation, deleteAssociation,
   type Association, type AssociationRequest, type BarLocation, type MediaAsset,
@@ -80,9 +81,10 @@ function AssociationForm({
 }
 
 function AssociationRow({
-  association, onUpdated, onDeleted,
+  association, canEdit, onUpdated, onDeleted,
 }: {
   association: Association
+  canEdit: boolean
   onUpdated: (a: Association) => void
   onDeleted: () => void
 }) {
@@ -100,7 +102,7 @@ function AssociationRow({
     }
   }
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <li className="py-3">
         <AssociationForm
@@ -134,21 +136,24 @@ function AssociationRow({
           </p>
         )}
       </div>
-      <div className="flex shrink-0 gap-1">
-        <button onClick={() => setEditing(true)}
-          className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
-          <Pencil className="h-4 w-4" />
-        </button>
-        <button onClick={handleDelete} disabled={deleting}
-          className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
-          <Trash2 className="h-4 w-4" />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex shrink-0 gap-1">
+          <button onClick={() => setEditing(true)}
+            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <Pencil className="h-4 w-4" />
+          </button>
+          <button onClick={handleDelete} disabled={deleting}
+            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+            <Trash2 className="h-4 w-4" />
+          </button>
+        </div>
+      )}
     </li>
   )
 }
 
 export function AssociationsPage() {
+  const { canEditContent } = usePermissions()
   const [associations, setAssociations] = useState<Association[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -170,16 +175,18 @@ export function AssociationsPage() {
         </p>
       </div>
 
-      <div className="flex justify-end">
-        {!creating && (
-          <button onClick={() => setCreating(true)}
-            className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
-            <Plus className="h-4 w-4" /> Add association
-          </button>
-        )}
-      </div>
+      {canEditContent && (
+        <div className="flex justify-end">
+          {!creating && (
+            <button onClick={() => setCreating(true)}
+              className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600">
+              <Plus className="h-4 w-4" /> Add association
+            </button>
+          )}
+        </div>
+      )}
 
-      {creating && (
+      {canEditContent && creating && (
         <AssociationForm
           onSave={async (req) => {
             const created = await createAssociation(req)
@@ -196,13 +203,14 @@ export function AssociationsPage() {
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           {associations.length === 0 && !creating && (
-            <p className="text-sm text-slate-400">No associations yet. Add one above.</p>
+            <p className="text-sm text-slate-400">No associations yet.</p>
           )}
           <ul>
             {associations.map((a) => (
               <AssociationRow
                 key={a.id}
                 association={a}
+                canEdit={canEditContent}
                 onUpdated={(updated) =>
                   setAssociations((prev) =>
                     prev.map((x) => x.id === updated.id ? updated : x)

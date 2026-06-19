@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
+import { usePermissions } from '../lib/usePermissions'
 import {
   fetchWeeklyHours, upsertDay, closeDay,
   fetchOverrides, createOverride, deleteOverride,
@@ -25,11 +26,12 @@ function TimeInput({ value, onChange }: { value: string; onChange: (v: string) =
 }
 
 function DayRow({
-  bar, day, slot, onSaved,
+  bar, day, slot, canEdit, onSaved,
 }: {
   bar: BarLocation
   day: DayOfWeek
   slot: WeeklyHours | undefined
+  canEdit: boolean
   onSaved: (updated: WeeklyHours | null) => void
 }) {
   const [editing, setEditing] = useState(false)
@@ -81,7 +83,7 @@ function DayRow({
     }
   }
 
-  if (editing) {
+  if (editing && canEdit) {
     return (
       <tr className="border-t border-slate-100">
         <td className="py-2 pr-4 text-sm font-medium text-slate-700">{DAY_LABELS[day]}</td>
@@ -134,10 +136,12 @@ function DayRow({
           : <span className="text-slate-400">–</span>}
       </td>
       <td className="py-2.5">
-        <button onClick={startEdit}
-          className="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100">
-          <Pencil className="h-3.5 w-3.5" /> {slot ? 'Edit' : 'Set hours'}
-        </button>
+        {canEdit && (
+          <button onClick={startEdit}
+            className="flex items-center gap-1 rounded px-2 py-1 text-xs text-slate-500 hover:bg-slate-100">
+            <Pencil className="h-3.5 w-3.5" /> {slot ? 'Edit' : 'Set hours'}
+          </button>
+        )}
       </td>
     </tr>
   )
@@ -204,6 +208,7 @@ function OverrideForm({
 }
 
 export function OpeningHoursPage() {
+  const { canEditContent } = usePermissions()
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [slots, setSlots] = useState<WeeklyHours[]>([])
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
@@ -293,6 +298,7 @@ export function OpeningHoursPage() {
                     bar={bar}
                     day={day}
                     slot={slots.find((s) => s.dayOfWeek === day)}
+                    canEdit={canEditContent}
                     onSaved={(updated) => handleDaySaved(day, updated)}
                   />
                 ))}
@@ -322,15 +328,17 @@ export function OpeningHoursPage() {
                       </span>
                       {o.note && <span className="ml-2 text-xs text-slate-500">{o.note}</span>}
                     </div>
-                    <button onClick={() => handleDeleteOverride(o.id)}
-                      className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                    {canEditContent && (
+                      <button onClick={() => handleDeleteOverride(o.id)}
+                        className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500">
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    )}
                   </li>
                 ))}
               </ul>
             )}
-            <OverrideForm bar={bar} onCreated={handleOverrideCreated} />
+            {canEditContent && <OverrideForm bar={bar} onCreated={handleOverrideCreated} />}
           </section>
         </>
       )}
