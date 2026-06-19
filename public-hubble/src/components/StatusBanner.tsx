@@ -1,11 +1,11 @@
 import type { BarStatus } from '@cafe/shared-web'
 
-/** Hubble's open/closed banner: shown when closed today or when there is a special notice. */
+/** Hubble's open/closed banner: shown when closed or when there is a special notice. */
 export function StatusBanner({ status }: { status: BarStatus }) {
   const closed = !status.isOpen
   if (!closed && !status.bannerMessage) return null
 
-  const message = status.bannerMessage ?? (closed ? 'Sadly we are closed today' : 'We are open')
+  const message = status.bannerMessage ?? (closed ? 'Sadly we are closed now' : 'We are open')
 
   return (
     <div role="status" className={closed ? 'bg-hubble-700 text-white' : 'bg-hubble-100 text-hubble-800'}>
