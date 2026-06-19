@@ -59,6 +59,18 @@ async function adminPut(request: APIRequestContext, path: string, data: unknown)
 
 export type Bar = 'HUBBLE' | 'METEOR'
 
+/** Today as YYYY-MM-DD (local). */
+export function today(): string {
+  return new Date().toISOString().slice(0, 10)
+}
+
+/** A date `days` in the future as YYYY-MM-DD, for "upcoming" events. */
+export function inDays(days: number): string {
+  const d = new Date()
+  d.setDate(d.getDate() + days)
+  return d.toISOString().slice(0, 10)
+}
+
 // ── Content seeders (through the real admin endpoints) ─────────────────────────
 
 export interface SeedWeeklyHours {
@@ -74,6 +86,16 @@ export function seedWeeklyHours(
 ): Promise<void> {
   return adminPut(request, `/api/admin/opening-hours/${bar}/${day}`, {
     kitchenOpen: null, kitchenClose: null, ...hours,
+  })
+}
+
+/** Seed a one-off date override (e.g. a closed day), which takes precedence over weekly hours. */
+export function seedHoursOverride(
+  request: APIRequestContext, bar: Bar,
+  override: { date: string; closed: boolean; note?: string | null; open?: string | null; close?: string | null },
+): Promise<{ id: number }> {
+  return adminPost(request, `/api/admin/opening-hours/${bar}/overrides`, {
+    open: null, close: null, note: null, ...override,
   })
 }
 

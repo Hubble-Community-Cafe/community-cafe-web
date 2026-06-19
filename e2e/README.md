@@ -27,22 +27,22 @@ and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, f
 
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
-| Shell / nav / static pages | ⬜ | ⬜ | n/a | ⬜ |
+| Shell / nav / static pages | 🟡 | 🟡 | n/a | 🟡 |
 | Menu | 🟡 | 🟡 | ⬜ | 🟡 |
-| Daily dinner dish | ⬜ | n/a | 🟡 | ⬜ |
+| Daily dinner dish | 🟡 | n/a | 🟡 | ⬜ |
 | Opening hours (+ CMS footer) | 🟡 | ⬜ | ⬜ | 🟡 |
-| Status banner (Meteor) | n/a | ⬜ | n/a | ⬜ |
-| Events | ⬜ | ⬜ | ⬜ | ⬜ |
-| Board (current / previous / supervisory) | ⬜ | 🟡 | ⬜ | ⬜ |
+| Status banner (Meteor) | n/a | 🟡 | n/a | ⬜ |
+| Events | 🟡 | 🟡 | ⬜ | ⬜ |
+| Board (current / previous / supervisory) | 🟡 | 🟡 | ⬜ | ⬜ |
 | Vacancies | 🟡 | n/a | ⬜ | ⬜ |
-| Associations | 🟡 | n/a | 🟡 | ⬜ |
+| Associations | 🟡 | n/a | 🟡 | 🟡 |
 | Roles / read-only viewer / DDD poster | n/a | n/a | 🟡 | ⬜ |
 | Forms (contact / tips / …) | ⬜ | ⬜ | n/a | ⬜ |
 
-Legend: ⬜ not yet · 🟡 partial · ✅ covered. Update this table as specs land.
+Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the
+suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
 ## Next specs
 
-Admin content CRUD round-trips (create/edit/delete via the UI, verify on the public site);
-events (both bars); board previous/supervisory; Meteor status banner open/closed; daily-dish
-public rendering; static-page/nav smoke; and the Forms module once Step 7 lands.
+Admin CRUD round-trips for the remaining modules (menu, events, board, hours, daily dish via the
+UI); opening-hours admin editing; more mobile coverage; and the Forms module once Step 7 lands.

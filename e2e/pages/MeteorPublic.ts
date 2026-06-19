@@ -13,6 +13,10 @@ export class MeteorPublic {
     await this.page.goto('/menu')
   }
 
+  async gotoAgenda(): Promise<void> {
+    await this.page.goto('/agenda')
+  }
+
   async gotoBoard(): Promise<void> {
     await this.page.goto('/community/board')
   }
