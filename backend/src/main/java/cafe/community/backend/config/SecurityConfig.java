@@ -74,6 +74,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                 // Everything under /api/admin requires a valid staff token.
                 .requestMatchers("/api/admin/**").authenticated()

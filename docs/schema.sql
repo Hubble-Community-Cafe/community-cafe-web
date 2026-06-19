@@ -184,4 +184,13 @@ CREATE TABLE IF NOT EXISTS vacancy (
     CONSTRAINT fk_vacancy_image FOREIGN KEY (image_id) REFERENCES media_asset (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS association (
+    id      BIGINT       NOT NULL AUTO_INCREMENT,
+    name    VARCHAR(100) NOT NULL,
+    logo_id BIGINT,
+    bar     VARCHAR(20),
+    PRIMARY KEY (id),
+    CONSTRAINT fk_association_logo FOREIGN KEY (logo_id) REFERENCES media_asset (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;

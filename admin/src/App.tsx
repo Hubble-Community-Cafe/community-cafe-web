@@ -15,6 +15,7 @@ import { EventsPage } from './pages/EventsPage'
 import { MediaPage } from './pages/MediaPage'
 import { BoardPage } from './pages/BoardPage'
 import { VacanciesPage } from './pages/VacanciesPage'
+import { AssociationsPage } from './pages/AssociationsPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -147,6 +148,14 @@ function App() {
               element={
                 <RequireRole need="editor">
                   <VacanciesPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="associations"
+              element={
+                <RequireRole need="editor">
+                  <AssociationsPage />
                 </RequireRole>
               }
             />

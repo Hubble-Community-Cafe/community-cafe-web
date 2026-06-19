@@ -7,12 +7,12 @@ import { DailyDishPage } from './pages/DailyDishPage'
 import { EventsPage } from './pages/EventsPage'
 import { CurrentBoardPage, PreviousBoardsPage, SupervisoryBoardPage } from './pages/BoardPage'
 import { VacanciesPage } from './pages/VacanciesPage'
+import { AssociationsPage } from './pages/AssociationsPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/cafe', title: 'The Cafe', intro: 'About Hubble Community Cafe.' },
   { path: '/cafe/discount-policy', title: 'Discount policy' },
-  { path: '/community/associations', title: 'Associations' },
   { path: '/community/committees', title: 'Committees' },
   { path: '/contact', title: 'Contact' },
   { path: '/contact/tips', title: 'Tips, Complaints and Ideas' },
@@ -34,6 +34,7 @@ function App() {
         <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
         <Route path="/community/board/supervisory" element={<SupervisoryBoardPage />} />
         <Route path="/vacancies" element={<VacanciesPage />} />
+        <Route path="/community/associations" element={<AssociationsPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}
