@@ -6,11 +6,12 @@ import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.service.EventService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Authenticated admin CRUD for events. */
+/** Admin CRUD for events. Reads open to any signed-in staff; writes require EDITOR. */
 @RestController
 @RequestMapping("/api/admin/events")
 public class AdminEventController {
@@ -29,17 +30,20 @@ public class AdminEventController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('EDITOR')")
     public EventDto create(@Valid @RequestBody EventRequest req) {
         return service.create(req);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     public EventDto update(@PathVariable Long id, @Valid @RequestBody EventRequest req) {
         return service.update(id, req);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

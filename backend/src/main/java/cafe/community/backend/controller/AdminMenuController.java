@@ -9,10 +9,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Admin CRUD for menu categories, items, and the daily dinner dish. Requires EDITOR or ADMIN role. */
+/**
+ * Admin CRUD for menu categories and items. Reads are open to any signed-in
+ * staff (VIEWER and up); writes require EDITOR. The daily dinner dish lives in
+ * its own module ({@link AdminDailyDishController}).
+ */
 @RestController
 @RequestMapping("/api/admin/menu")
-@PreAuthorize("hasRole('EDITOR')")
 public class AdminMenuController {
 
     private final MenuService menuService;
@@ -30,11 +33,13 @@ public class AdminMenuController {
 
     @PostMapping("/categories")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('EDITOR')")
     public MenuCategoryDto createCategory(@Valid @RequestBody MenuCategoryRequest req) {
         return menuService.createCategory(req);
     }
 
     @PutMapping("/categories/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     public MenuCategoryDto updateCategory(@PathVariable Long id,
                                           @Valid @RequestBody MenuCategoryRequest req) {
         return menuService.updateCategory(id, req);
@@ -42,6 +47,7 @@ public class AdminMenuController {
 
     @DeleteMapping("/categories/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
     public void deleteCategory(@PathVariable Long id) {
         menuService.deleteCategory(id);
     }
@@ -55,12 +61,14 @@ public class AdminMenuController {
 
     @PostMapping("/categories/{categoryId}/items")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasRole('EDITOR')")
     public MenuItemDto createItem(@PathVariable Long categoryId,
                                   @Valid @RequestBody MenuItemRequest req) {
         return menuService.createItem(categoryId, req);
     }
 
     @PutMapping("/items/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
     public MenuItemDto updateItem(@PathVariable Long id,
                                   @Valid @RequestBody MenuItemRequest req) {
         return menuService.updateItem(id, req);
@@ -68,32 +76,8 @@ public class AdminMenuController {
 
     @DeleteMapping("/items/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
     public void deleteItem(@PathVariable Long id) {
         menuService.deleteItem(id);
-    }
-
-    // ===== Daily dish (Hubble only) =====
-
-    @GetMapping("/daily-dish")
-    public List<DailyDishDto> listDishes() {
-        return menuService.getUpcomingDishes();
-    }
-
-    @PostMapping("/daily-dish")
-    @ResponseStatus(HttpStatus.CREATED)
-    public DailyDishDto createDish(@Valid @RequestBody DailyDishRequest req) {
-        return menuService.createDish(req);
-    }
-
-    @PutMapping("/daily-dish/{id}")
-    public DailyDishDto updateDish(@PathVariable Long id,
-                                   @Valid @RequestBody DailyDishRequest req) {
-        return menuService.updateDish(id, req);
-    }
-
-    @DeleteMapping("/daily-dish/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteDish(@PathVariable Long id) {
-        menuService.deleteDish(id);
     }
 }

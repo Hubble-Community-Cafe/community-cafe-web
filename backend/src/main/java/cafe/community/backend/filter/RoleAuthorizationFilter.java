@@ -69,10 +69,16 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         filterChain.doFilter(request, response);
     }
 
-    /** Hierarchical authorities: ADMIN gets all three, EDITOR gets EDITOR + VIEWER, etc. */
+    /**
+     * Hierarchical authorities: every role is at least a VIEWER; DDD_POSTER adds
+     * the daily-dish authority; EDITOR adds DDD_POSTER + EDITOR; ADMIN adds all.
+     */
     List<GrantedAuthority> buildAuthorities(AdminRole role) {
         List<GrantedAuthority> authorities = new ArrayList<>();
         authorities.add(new SimpleGrantedAuthority("ROLE_VIEWER"));
+        if (role == AdminRole.DDD_POSTER || role == AdminRole.EDITOR || role == AdminRole.ADMIN) {
+            authorities.add(new SimpleGrantedAuthority("ROLE_DDD_POSTER"));
+        }
         if (role == AdminRole.EDITOR || role == AdminRole.ADMIN) {
             authorities.add(new SimpleGrantedAuthority("ROLE_EDITOR"));
         }
