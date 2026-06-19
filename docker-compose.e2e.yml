@@ -1,0 +1,105 @@
+# End-to-end test stack for the Community Cafe Web rebuild.
+# Brings up MariaDB + backend (e2e profile, header-auth bridge) + both public sites
+# + the admin, on dedicated ports so it can run alongside the dev stack.
+#
+#   docker compose -f docker-compose.e2e.yml up --build -d   # (or `npm run stack:up` in e2e/)
+#
+# Auth: no real Entra. The backend runs the `e2e` Spring profile, which trusts the
+# X-Test-Oid header (see E2eSecurityConfig); the admin is built to send it via a fixed
+# E2E_AUTH_OID identity whose role the Playwright suite sets through /test/users.
+#
+#   Hubble  -> http://localhost:6173
+#   Admin   -> http://localhost:6174
+#   Meteor  -> http://localhost:6175
+#   Backend -> http://localhost:8080
+
+services:
+  db:
+    image: mariadb:11
+    # Ephemeral: no named volume, so `down -v` (and a fresh `up`) start clean.
+    tmpfs:
+      - /var/lib/mysql
+    ports:
+      - "3307:3306"
+    environment:
+      MARIADB_ROOT_PASSWORD: rootpassword
+      MARIADB_DATABASE: cafeweb_e2e
+      MARIADB_USER: cafeweb
+      MARIADB_PASSWORD: e2e_password
+    networks:
+      - cafe-e2e
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - cafe-e2e
+    environment:
+      - TZ=Europe/Amsterdam
+      - SPRING_PROFILES_ACTIVE=e2e
+      - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/cafeweb_e2e
+      - SPRING_DATASOURCE_USERNAME=cafeweb
+      - SPRING_DATASOURCE_PASSWORD=e2e_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - MEDIA_DIR=/data/media
+      - MEDIA_BASE_URL=http://localhost:8080
+    tmpfs:
+      - /data/media
+
+  public-hubble:
+    build:
+      context: .
+      dockerfile: public-hubble/Dockerfile
+    ports:
+      - "6173:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe-e2e
+    environment:
+      - API_URL=http://localhost:8080
+
+  public-meteor:
+    build:
+      context: .
+      dockerfile: public-meteor/Dockerfile
+    ports:
+      - "6175:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe-e2e
+    environment:
+      - API_URL=http://localhost:8080
+
+  admin:
+    build:
+      context: .
+      dockerfile: admin/Dockerfile
+    ports:
+      - "6174:80"
+    depends_on:
+      - backend
+    networks:
+      - cafe-e2e
+    environment:
+      - API_URL=http://localhost:8080
+      # Fixed e2e identity; the suite sets this user's role via POST /test/users.
+      - E2E_AUTH_OID=e2e-user
+      - E2E_AUTH_EMAIL=e2e@community.cafe
+      - E2E_AUTH_NAME=E2E User
+
+networks:
+  cafe-e2e:
