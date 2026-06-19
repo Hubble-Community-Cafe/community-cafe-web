@@ -14,6 +14,7 @@ import { OpeningHoursPage } from './pages/OpeningHoursPage'
 import { EventsPage } from './pages/EventsPage'
 import { MediaPage } from './pages/MediaPage'
 import { BoardPage } from './pages/BoardPage'
+import { VacanciesPage } from './pages/VacanciesPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -92,9 +93,7 @@ function RequireRole({ need, children }: { need: 'editor' | 'admin'; children: R
   return allowed ? <>{children}</> : <Navigate to="/" replace />
 }
 
-const CONTENT_MODULES = [
-  { path: 'vacancies', title: 'Vacancies' },
-]
+const CONTENT_MODULES: { path: string; title: string }[] = []
 
 function App() {
   return (
@@ -140,6 +139,14 @@ function App() {
               element={
                 <RequireRole need="editor">
                   <BoardPage />
+                </RequireRole>
+              }
+            />
+            <Route
+              path="vacancies"
+              element={
+                <RequireRole need="editor">
+                  <VacanciesPage />
                 </RequireRole>
               }
             />

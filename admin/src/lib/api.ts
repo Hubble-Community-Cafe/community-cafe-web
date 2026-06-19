@@ -460,6 +460,55 @@ export const updateBoardMember = (id: number, req: BoardMemberRequest) =>
 export const deleteBoardMember = (id: number) =>
   fetchWithAuth(`/api/admin/board/members/${id}`, { method: 'DELETE' })
 
+// ── Vacancy types ──────────────────────────────────────────────────────────────
+export interface Vacancy {
+  id: number
+  title: string
+  description: string | null
+  hours: string | null
+  type: string | null
+  applyEmail: string | null
+  applyLink: string | null
+  imageId: number | null
+  imageUrl: string | null
+  imageAlt: string | null
+  bar: BarLocation | null
+  active: boolean
+  sortOrder: number
+}
+
+export interface VacancyRequest {
+  title: string
+  description: string | null
+  hours: string | null
+  type: string | null
+  applyEmail: string | null
+  applyLink: string | null
+  imageId: number | null
+  bar: BarLocation | null
+  active: boolean
+  sortOrder: number
+}
+
+// ── Vacancy endpoints ──────────────────────────────────────────────────────────
+export const fetchVacancies = () =>
+  getJson<Vacancy[]>('/api/admin/vacancies')
+
+export const createVacancy = (req: VacancyRequest) =>
+  getJson<Vacancy>('/api/admin/vacancies', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateVacancy = (id: number, req: VacancyRequest) =>
+  getJson<Vacancy>(`/api/admin/vacancies/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteVacancy = (id: number) =>
+  fetchWithAuth(`/api/admin/vacancies/${id}`, { method: 'DELETE' })
+
 // ── Media types ─────────────────────────────────────────────────────────────────
 export interface MediaAsset {
   id: number

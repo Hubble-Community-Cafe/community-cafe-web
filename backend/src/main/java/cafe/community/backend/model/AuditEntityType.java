@@ -14,5 +14,6 @@ public enum AuditEntityType {
     HOURS_OVERRIDE,
     EVENT,
     BOARD_TERM,
-    BOARD_MEMBER
+    BOARD_MEMBER,
+    VACANCY
 }

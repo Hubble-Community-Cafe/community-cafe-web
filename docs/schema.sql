@@ -168,4 +168,20 @@ CREATE TABLE IF NOT EXISTS board_member (
     CONSTRAINT fk_board_member_photo FOREIGN KEY (photo_id) REFERENCES media_asset (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS vacancy (
+    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    title       VARCHAR(100) NOT NULL,
+    description TEXT,
+    hours       VARCHAR(100),
+    type        VARCHAR(100),
+    apply_email VARCHAR(200),
+    apply_link  VARCHAR(512),
+    image_id    BIGINT,
+    bar         VARCHAR(20),
+    active      TINYINT(1)   NOT NULL DEFAULT 1,
+    sort_order  INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    CONSTRAINT fk_vacancy_image FOREIGN KEY (image_id) REFERENCES media_asset (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
