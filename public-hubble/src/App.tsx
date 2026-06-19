@@ -5,6 +5,7 @@ import { Home } from './pages/Home'
 import { MenuPage } from './pages/MenuPage'
 import { DailyDishPage } from './pages/DailyDishPage'
 import { EventsPage } from './pages/EventsPage'
+import { CurrentBoardPage, PreviousBoardsPage, SupervisoryBoardPage } from './pages/BoardPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
@@ -12,9 +13,6 @@ const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/cafe/discount-policy', title: 'Discount policy' },
   { path: '/community/associations', title: 'Associations' },
   { path: '/community/committees', title: 'Committees' },
-  { path: '/community/board', title: 'Board' },
-  { path: '/community/board/previous', title: 'Previous boards' },
-  { path: '/community/board/supervisory', title: 'Supervisory Board' },
   { path: '/vacancies', title: 'Vacancies' },
   { path: '/contact', title: 'Contact' },
   { path: '/contact/tips', title: 'Tips, Complaints and Ideas' },
@@ -32,6 +30,9 @@ function App() {
         <Route path="/cafe/menu" element={<MenuPage />} />
         <Route path="/cafe/daily-dish" element={<DailyDishPage />} />
         <Route path="/events" element={<EventsPage />} />
+        <Route path="/community/board" element={<CurrentBoardPage />} />
+        <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
+        <Route path="/community/board/supervisory" element={<SupervisoryBoardPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}

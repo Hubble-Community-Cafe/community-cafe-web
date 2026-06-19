@@ -12,5 +12,7 @@ public enum AuditEntityType {
     DAILY_DISH,
     OPENING_HOURS,
     HOURS_OVERRIDE,
-    EVENT
+    EVENT,
+    BOARD_TERM,
+    BOARD_MEMBER
 }

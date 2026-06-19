@@ -381,6 +381,85 @@ export const updateEvent = (id: number, req: EventRequest) =>
 export const deleteEvent = (id: number) =>
   fetchWithAuth(`/api/admin/events/${id}`, { method: 'DELETE' })
 
+// ── Board types ─────────────────────────────────────────────────────────────────
+export type BoardType = 'EXECUTIVE' | 'SUPERVISORY'
+
+export interface BoardMember {
+  id: number
+  termId: number
+  name: string
+  role: string | null
+  photoId: number | null
+  photoUrl: string | null
+  photoAlt: string | null
+  sortOrder: number
+}
+
+export interface BoardTerm {
+  id: number
+  label: string
+  type: BoardType
+  bar: BarLocation | null
+  current: boolean
+  sortOrder: number
+  groupPhotoId: number | null
+  groupPhotoUrl: string | null
+  groupPhotoAlt: string | null
+  photoCredit: string | null
+  members: BoardMember[]
+}
+
+export interface BoardTermRequest {
+  label: string
+  type: BoardType
+  bar: BarLocation | null
+  current: boolean
+  sortOrder: number
+  groupPhotoId: number | null
+  photoCredit: string | null
+}
+
+export interface BoardMemberRequest {
+  name: string
+  role: string | null
+  photoId: number | null
+  sortOrder: number
+}
+
+// ── Board endpoints ────────────────────────────────────────────────────────────
+export const fetchBoardTerms = () =>
+  getJson<BoardTerm[]>('/api/admin/board/terms')
+
+export const createBoardTerm = (req: BoardTermRequest) =>
+  getJson<BoardTerm>('/api/admin/board/terms', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateBoardTerm = (id: number, req: BoardTermRequest) =>
+  getJson<BoardTerm>(`/api/admin/board/terms/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteBoardTerm = (id: number) =>
+  fetchWithAuth(`/api/admin/board/terms/${id}`, { method: 'DELETE' })
+
+export const createBoardMember = (termId: number, req: BoardMemberRequest) =>
+  getJson<BoardMember>(`/api/admin/board/terms/${termId}/members`, {
+    method: 'POST',
+    body: JSON.stringify(req),
+  })
+
+export const updateBoardMember = (id: number, req: BoardMemberRequest) =>
+  getJson<BoardMember>(`/api/admin/board/members/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  })
+
+export const deleteBoardMember = (id: number) =>
+  fetchWithAuth(`/api/admin/board/members/${id}`, { method: 'DELETE' })
+
 // ── Media types ─────────────────────────────────────────────────────────────────
 export interface MediaAsset {
   id: number

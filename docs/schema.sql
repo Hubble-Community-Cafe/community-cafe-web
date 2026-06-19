@@ -140,4 +140,32 @@ CREATE TABLE IF NOT EXISTS hours_override (
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+-- Board terms and members (current/previous executive, supervisory)
+CREATE TABLE IF NOT EXISTS board_term (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    label           VARCHAR(100) NOT NULL,
+    type            VARCHAR(20)  NOT NULL,
+    bar             VARCHAR(20),
+    is_current      TINYINT(1)   NOT NULL DEFAULT 0,
+    sort_order      INT          NOT NULL DEFAULT 0,
+    group_photo_id  BIGINT,
+    photo_credit    VARCHAR(300),
+    PRIMARY KEY (id),
+    INDEX idx_board_term_type (type),
+    CONSTRAINT fk_board_term_group_photo FOREIGN KEY (group_photo_id) REFERENCES media_asset (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS board_member (
+    id          BIGINT       NOT NULL AUTO_INCREMENT,
+    term_id     BIGINT       NOT NULL,
+    name        VARCHAR(100) NOT NULL,
+    role        VARCHAR(100),
+    photo_id    BIGINT,
+    sort_order  INT          NOT NULL DEFAULT 0,
+    PRIMARY KEY (id),
+    INDEX idx_board_member_term (term_id),
+    CONSTRAINT fk_board_member_term  FOREIGN KEY (term_id)  REFERENCES board_term (id),
+    CONSTRAINT fk_board_member_photo FOREIGN KEY (photo_id) REFERENCES media_asset (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
