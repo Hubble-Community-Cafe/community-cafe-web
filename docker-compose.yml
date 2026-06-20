@@ -64,6 +64,14 @@ services:
       - MEDIA_DIR=/data/media
       - MEDIA_BASE_URL=http://localhost:8080
       - SENTRY_DSN=${SENTRY_DSN:-}
+      # Forms mail. Defaults to 'log' (no send). To test Graph locally, set
+      # APP_MAIL_PROVIDER=graph + the AZURE_* creds above in your .env, and point the
+      # recipients at an inbox you control so you don't email the real lists.
+      - APP_MAIL_PROVIDER=${APP_MAIL_PROVIDER:-log}
+      - APP_MAIL_FROM=${APP_MAIL_FROM:-noreply@hubble.cafe}
+      - APP_MAIL_FORMS_COMPLAINTS=${APP_MAIL_FORMS_COMPLAINTS:-nuisance@hubble.cafe}
+      - APP_MAIL_FORMS_SCREENS=${APP_MAIL_FORMS_SCREENS:-screens@hubble.cafe}
+      - APP_MAIL_FORMS_DECLARATIONS=${APP_MAIL_FORMS_DECLARATIONS:-finance@hubble.cafe}
     volumes:
       - cafeweb_media:/data/media
 

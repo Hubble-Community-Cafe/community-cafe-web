@@ -14,7 +14,7 @@ npm run stack:down          # tear down + wipe the e2e database
 
 The stack is `docker-compose.e2e.yml`: MariaDB + backend (`e2e` Spring profile, header-auth bridge) + both public sites + the admin, on ports 6173 (Hubble), 6174 (admin), 6175 (Meteor), 8090 (backend, deliberately not the dev stack's 8080). Set `E2E_NO_WEBSERVER=1` to run specs against an already-running stack.
 
-Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin` (Desktop Chrome), and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, fixtures in `fixtures/` (`backend.ts` = reset/seed helpers, `evidence.ts` = report attachments).
+Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin` (Desktop Chrome), and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, fixtures in `fixtures/` (`backend.ts` = reset/seed helpers, `mailpit.ts` = form-email assertions via the Mailpit API on :8025, `evidence.ts` = report attachments).
 
 ## Troubleshooting
 
@@ -43,7 +43,7 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Vacancies | ✅ | n/a | ⬜ | ⬜ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ⬜ |
-| Forms (contact / tips / …) | ⬜ | ⬜ | n/a | ⬜ |
+| Forms (screens / declaration / complaints) | 🟡 | 🟡 | n/a | ⬜ |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 

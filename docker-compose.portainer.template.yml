@@ -31,12 +31,20 @@ services:
       - SPRING_DATASOURCE_USERNAME=__DB_USERNAME__
       - SPRING_DATASOURCE_PASSWORD=__DB_PASSWORD__
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update # tighten to validate once schema is stable
-      # Entra (JWT validation + Graph mail later)
+      # Entra: JWT validation AND Graph form-mail (Mail.Send) reuse these credentials.
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
       # Azure object id of the first admin (only used on first-ever login)
       - INITIAL_ADMIN_OID=__INITIAL_ADMIN_OID__
+      # Forms mail. provider=graph sends via Microsoft Graph; APP_MAIL_FROM must be a real,
+      # sendable mailbox in the tenant. Recipients default to the lists below; override here
+      # if they change. Set provider=log to disable sending (e.g. while validating).
+      - APP_MAIL_PROVIDER=graph
+      - APP_MAIL_FROM=noreply@hubble.cafe
+      - APP_MAIL_FORMS_COMPLAINTS=nuisance@hubble.cafe
+      - APP_MAIL_FORMS_SCREENS=screens@hubble.cafe
+      - APP_MAIL_FORMS_DECLARATIONS=finance@hubble.cafe
       # Comma-separated public origins
       - CORS_ALLOWED_ORIGINS=https://test.hubble.cafe,https://test.meteor.cafe,https://admin.test.hubble.cafe
       - MEDIA_DIR=/data/media
