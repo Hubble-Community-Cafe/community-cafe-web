@@ -84,10 +84,20 @@ public class FormService {
     public void submitScreen(ScreenRequest req) {
         if (isBot(req.getHoneypot())) return;
 
-        LocalDate start = parseDate(req.getStartDate(), "start date");
-        LocalDate end = parseDate(req.getEndDate(), "end date");
-        if (end.isBefore(start)) {
-            throw new IllegalArgumentException("The end date must be on or after the start date.");
+        String period;
+        if (req.isPermanent()) {
+            period = "Type: Permanent association poster (general, no fixed dates)";
+        } else {
+            if (isBlank(req.getStartDate()) || isBlank(req.getEndDate())) {
+                throw new IllegalArgumentException(
+                        "Please provide a start and end date, or mark this as a permanent poster.");
+            }
+            LocalDate start = parseDate(req.getStartDate(), "start date");
+            LocalDate end = parseDate(req.getEndDate(), "end date");
+            if (end.isBefore(start)) {
+                throw new IllegalArgumentException("The end date must be on or after the start date.");
+            }
+            period = "Start Date: " + req.getStartDate() + "\nEnd Date: " + req.getEndDate();
         }
         FormEmail.Attachment poster = requireFile(req.getFile(), SCREEN_TYPES,
                 "a JPG, PNG or MP4 poster");
@@ -98,8 +108,7 @@ public class FormService {
                 + "Association: " + req.getAssociation() + "\n"
                 + "Mail: " + req.getEmail() + "\n\n"
                 + "Cafe: " + cafeLabel(req.getCafe()) + "\n"
-                + "Start Date: " + req.getStartDate() + "\n"
-                + "End Date: " + req.getEndDate() + "\n"
+                + period + "\n"
                 + "Hex: " + orDash(req.getHexColor()) + "\n\n"
                 + "Message:\n" + orDash(req.getMessage()) + "\n";
 
@@ -206,6 +215,10 @@ public class FormService {
             case "METEOR" -> "Meteor";
             default -> "Both";
         };
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private String orDash(String value) {

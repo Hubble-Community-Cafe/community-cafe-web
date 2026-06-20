@@ -27,6 +27,7 @@ export function ScreensPage() {
     name: '', association: '', email: '', cafe: 'HUBBLE',
     startDate: '', endDate: '', hexColor: '', message: '', honeypot: '',
   })
+  const [permanent, setPermanent] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
@@ -34,18 +35,30 @@ export function ScreensPage() {
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
+  // A dated request longer than two weeks is allowed but normally won't be approved for an event.
+  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000
+  const periodTooLong =
+    !permanent && !!form.startDate && !!form.endDate &&
+    new Date(form.endDate).getTime() - new Date(form.startDate).getTime() > TWO_WEEKS_MS
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     if (!file) { setError('Please choose a poster file (JPG, PNG or MP4).'); return }
     if (!ACCEPTED.includes(file.type)) { setError('Unsupported file type. Use JPG, PNG or MP4.'); return }
     if (file.size > MAX_BYTES) { setError('That file is larger than 10 MB.'); return }
-    if (form.endDate < form.startDate) { setError('The end date must be on or after the start date.'); return }
+    if (!permanent) {
+      if (!form.startDate || !form.endDate) {
+        setError('Please choose a start and end date, or tick the permanent-poster box.'); return
+      }
+      if (form.endDate < form.startDate) { setError('The end date must be on or after the start date.'); return }
+    }
 
     setStatus('sending')
     try {
       const data = new FormData()
       Object.entries(form).forEach(([k, v]) => data.append(k, v))
+      data.append('permanent', String(permanent))
       data.append('file', file)
       await submitScreenForm(data)
       setStatus('sent')
@@ -110,14 +123,42 @@ export function ScreensPage() {
                 <option value="BOTH">Both</option>
               </select>
             </div>
+
+            <div className="sm:col-span-2">
+              <label className="flex items-start gap-2.5 text-sm text-hubble-900">
+                <input type="checkbox" checked={permanent}
+                  onChange={(e) => setPermanent(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-hubble-300 text-hubble-700 focus:ring-hubble-500/40" />
+                <span>I want to use this poster as our association&rsquo;s permanent poster (no dates).</span>
+              </label>
+              {permanent && (
+                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                  A permanent poster is a general association poster shown until you change it. It
+                  <strong> cannot promote a specific event</strong>; for an event, untick this and pick a
+                  start and end date.
+                </p>
+              )}
+            </div>
+
             <div>
-              <label htmlFor="s-start" className={label}>Start date *</label>
-              <input id="s-start" type="date" required value={form.startDate} onChange={set('startDate')} className={field} />
+              <label htmlFor="s-start" className={label}>Start date {!permanent && '*'}</label>
+              <input id="s-start" type="date" required={!permanent} disabled={permanent}
+                value={form.startDate} onChange={set('startDate')}
+                className={`${field} disabled:cursor-not-allowed disabled:bg-hubble-50 disabled:text-hubble-400`} />
             </div>
             <div>
-              <label htmlFor="s-end" className={label}>End date *</label>
-              <input id="s-end" type="date" required value={form.endDate} onChange={set('endDate')} className={field} />
+              <label htmlFor="s-end" className={label}>End date {!permanent && '*'}</label>
+              <input id="s-end" type="date" required={!permanent} disabled={permanent}
+                value={form.endDate} onChange={set('endDate')}
+                className={`${field} disabled:cursor-not-allowed disabled:bg-hubble-50 disabled:text-hubble-400`} />
             </div>
+
+            {periodTooLong && (
+              <p className="sm:col-span-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+                This period is more than 2 weeks and will normally not be approved for an event poster.
+                Exceptions must be requested with motivation. If this is a permanent poster, tick the box above.
+              </p>
+            )}
             <div>
               <label htmlFor="s-hex" className={label}>Clock / progress colour <span className="font-normal text-hubble-800/50">(optional hex)</span></label>
               <input id="s-hex" value={form.hexColor} onChange={set('hexColor')} className={field}

@@ -41,6 +41,23 @@ test.describe('Hubble poster screens form', () => {
     expect(mail.attachments[0].contentType).toContain('image/png')
   })
 
+  test('a permanent poster needs no dates and is flagged as general', async ({ page, request }) => {
+    await page.goto('/contact/screens')
+
+    await page.locator('#s-name').fill('Anke Woldman')
+    await page.locator('#s-assoc').fill('Doppio')
+    await page.locator('#s-email').fill('anke@example.com')
+    await page.locator('#s-cafe').selectOption('BOTH')
+    await page.getByRole('checkbox').check()
+    // Dates are now disabled; submit without them.
+    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
+    await page.getByRole('button', { name: 'Send request' }).click()
+
+    await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
+    const mail = await waitForMessageTo(request, 'screens@hubble.cafe')
+    expect(mail.text).toContain('Permanent association poster')
+  })
+
   test('end date before start date is rejected with a message', async ({ page }) => {
     await page.goto('/contact/screens')
     await page.locator('#s-name').fill('Anke')

@@ -125,6 +125,27 @@ class FormControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    @Test
+    void screen_permanentPoster_needsNoDates() throws Exception {
+        mockMvc.perform(multipart("/api/forms/screen").file(png())
+                        .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
+                        .param("cafe", "BOTH").param("permanent", "true"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail).send(sent.capture());
+        assertThat(sent.getValue().body()).contains("Permanent association poster");
+    }
+
+    @Test
+    void screen_missingDatesWithoutPermanent_isRejected() throws Exception {
+        mockMvc.perform(multipart("/api/forms/screen").file(png())
+                        .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
+                        .param("cafe", "BOTH"))
+                .andExpect(status().isBadRequest());
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
+    }
+
     // ── Declaration ──────────────────────────────────────────────────────────────
 
     @Test

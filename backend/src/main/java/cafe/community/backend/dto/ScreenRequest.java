@@ -32,13 +32,15 @@ public class ScreenRequest {
     @Pattern(regexp = "HUBBLE|METEOR|BOTH", message = "must be HUBBLE, METEOR or BOTH")
     private String cafe;
 
-    @NotBlank
+    /** Required unless {@link #permanent} is set; validated in the service. */
     @Size(max = 20)
     private String startDate;
 
-    @NotBlank
     @Size(max = 20)
     private String endDate;
+
+    /** A permanent (general) association poster has no fixed dates and is not an event poster. */
+    private boolean permanent;
 
     /** Optional clock/progress-bar colour, e.g. "#FFF200". */
     @Pattern(regexp = "^$|^#?[0-9A-Fa-f]{6}$", message = "must be a 6-digit hex colour like #FFF200")
