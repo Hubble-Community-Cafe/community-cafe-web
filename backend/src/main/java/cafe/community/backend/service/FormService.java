@@ -44,9 +44,9 @@ public class FormService {
     public FormService(
             FormMailService mail,
             FormSubmissionRepository repo,
-            @Value("${app.mail.forms.complaints:complaints@meteor.cafe}") String complaintsTo,
+            @Value("${app.mail.forms.complaints:nuisance@hubble.cafe}") String complaintsTo,
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
-            @Value("${app.mail.forms.declarations:treasurer@hubble.cafe}") String declarationsTo,
+            @Value("${app.mail.forms.declarations:finance@hubble.cafe}") String declarationsTo,
             @Value("${app.mail.forms.declarations-cc:}") String declarationsCc) {
         this.mail = mail;
         this.repo = repo;

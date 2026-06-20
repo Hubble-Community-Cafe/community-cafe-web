@@ -59,7 +59,7 @@ class FormControllerTest {
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
         verify(mail).send(sent.capture());
         FormEmail email = sent.getValue();
-        assertThat(email.to()).isEqualTo("complaints@meteor.cafe");
+        assertThat(email.to()).isEqualTo("nuisance@hubble.cafe");
         assertThat(email.replyTo()).isEqualTo("alice@x.com");
         assertThat(email.subject()).isEqualTo("Meteor Tip from Alice");
         assertThat(email.body()).contains("Name: Alice").contains("Lovely food");
@@ -138,7 +138,7 @@ class FormControllerTest {
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
         verify(mail).send(sent.capture());
         FormEmail email = sent.getValue();
-        assertThat(email.to()).isEqualTo("treasurer@hubble.cafe");
+        assertThat(email.to()).isEqualTo("finance@hubble.cafe");
         assertThat(email.body()).contains("Amount in Euros: 150.04").contains("IBAN: NL70TRIO033858901");
         assertThat(email.attachments()).hasSize(1);
         assertThat(email.attachments().get(0).contentType()).isEqualTo("application/pdf");

@@ -8,6 +8,10 @@ export { getUpcomingEvents } from './api/events'
 export { getBoard } from './api/board'
 export { getVacancies } from './api/vacancy'
 export { getAssociations } from './api/association'
+export {
+  FormError, submitComplaint, submitScreenForm, submitDeclarationForm,
+  type ComplaintInput, type ComplaintType,
+} from './api/forms'
 export { cn } from './lib/cn'
 export {
   groupWeeklyHours, groupKitchenHours, DAY_LABELS, DAY_ORDER, type HoursGroup,

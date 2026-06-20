@@ -8,6 +8,8 @@ import { EventsPage } from './pages/EventsPage'
 import { CurrentBoardPage, PreviousBoardsPage, SupervisoryBoardPage } from './pages/BoardPage'
 import { VacanciesPage } from './pages/VacanciesPage'
 import { AssociationsPage } from './pages/AssociationsPage'
+import { ScreensPage } from './pages/ScreensPage'
+import { DeclarationsPage } from './pages/DeclarationsPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
@@ -17,8 +19,6 @@ const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/contact', title: 'Contact' },
   { path: '/contact/tips', title: 'Tips, Complaints and Ideas' },
   { path: '/contact/information', title: 'Information form' },
-  { path: '/contact/declarations', title: 'Online Declarations' },
-  { path: '/contact/screens', title: 'Hubble Screens' },
   { path: '/contact/loan-equipment', title: 'Loan Equipment' },
 ]
 
@@ -35,6 +35,8 @@ function App() {
         <Route path="/community/board/supervisory" element={<SupervisoryBoardPage />} />
         <Route path="/vacancies" element={<VacanciesPage />} />
         <Route path="/community/associations" element={<AssociationsPage />} />
+        <Route path="/contact/screens" element={<ScreensPage />} />
+        <Route path="/contact/declarations" element={<DeclarationsPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}

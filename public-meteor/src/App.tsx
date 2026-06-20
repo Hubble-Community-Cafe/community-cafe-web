@@ -5,11 +5,11 @@ import { Home } from './pages/Home'
 import { MenuPage } from './pages/MenuPage'
 import { EventsPage } from './pages/EventsPage'
 import { CurrentBoardPage, PreviousBoardsPage } from './pages/BoardPage'
+import { ComplaintsPage } from './pages/ComplaintsPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/menu/discount-policy', title: 'Discount policy' },
-  { path: '/complaints', title: 'Complaints & Tips' },
 ]
 
 function App() {
@@ -21,6 +21,7 @@ function App() {
         <Route path="/agenda" element={<EventsPage />} />
         <Route path="/community/board" element={<CurrentBoardPage />} />
         <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
+        <Route path="/complaints" element={<ComplaintsPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}
