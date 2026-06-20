@@ -1,10 +1,6 @@
 # Community Café Web
 
-Self-maintained rebuild of **[hubble.cafe](https://hubble.cafe)** and
-**[meteor.cafe](https://meteor.cafe)**: two distinct public websites that share a single
-staff/board CMS, replacing the legacy WordPress sites. Content (menu, opening hours, events,
-board, vacancies) is entered **once** in the admin and published to the right site(s), so it
-no longer has to be maintained in two places.
+Self-maintained rebuild of **[hubble.cafe](https://hubble.cafe)** and **[meteor.cafe](https://meteor.cafe)**: two distinct public websites that share a single staff/board CMS, replacing the legacy WordPress sites. Content (menu, opening hours, events, board, vacancies) is entered **once** in the admin and published to the right site(s), so it no longer has to be maintained in two places.
 
 > Reservations (`harry.hubble.cafe`) and the food trackers (`food.*.cafe`) are **not** part of
 > this project. The sites link out to those existing apps.
@@ -22,14 +18,11 @@ no longer has to be maintained in two places.
 
 ## What staff/board can edit (the 5 CMS modules)
 
-Menu (incl. TU/e dual pricing and daily dish), opening hours (plus closed-banner), events (both
-bars), board (current shared, previous per-bar, supervisory), and vacancies. All other page copy
-is part of each site's code.
+Menu (incl. TU/e dual pricing and daily dish), opening hours (plus closed-banner), events (both bars), board (current shared, previous per-bar, supervisory), and vacancies. All other page copy is part of each site's code.
 
 ## Tech stack
 
-React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend),
-MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
+React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
 
 ## Getting started
 
@@ -53,11 +46,7 @@ docker compose up --build
 | Meteor | http://localhost:5175 |
 | Backend (Swagger) | http://localhost:8080/swagger-ui.html |
 
-Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`,
-`AZURE_CLIENT_SECRET`, `INITIAL_ADMIN_OID`, and `VITE_ALLOWED_GROUP_ID` are set in `.env`. The
-admin is served on `http://localhost:5173`, which is registered as an Entra redirect URI; your
-first sign-in is provisioned as ADMIN (via `INITIAL_ADMIN_OID`). For Portainer/test deployment,
-copy [`docker-compose.portainer.template.yml`](docker-compose.portainer.template.yml) and fill it in.
+Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `INITIAL_ADMIN_OID`, and `VITE_ALLOWED_GROUP_ID` are set in `.env`. The admin is served on `http://localhost:5173`, which is registered as an Entra redirect URI; your first sign-in is provisioned as ADMIN (via `INITIAL_ADMIN_OID`). For Portainer/test deployment, copy [`docker-compose.portainer.template.yml`](docker-compose.portainer.template.yml) and fill it in.
 
 ### Single app (hot reload)
 
@@ -72,15 +61,8 @@ See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage 
 
 ## Status
 
-Under active rebuild. Both sites run at `test.hubble.cafe` and `test.meteor.cafe` until they
-fully match the current sites, then DNS is cut over. Build progresses module by module with a
-design-parity and usability check at each step.
-
-## License
-
-_TODO: choose a license (this is a public repository)._
+Under active rebuild. Both sites run at `test.hubble.cafe` and `test.meteor.cafe` until they fully match the current sites, then DNS is cut over. Build progresses module by module with a design-parity and usability check at each step.
 
 ## Contributing
 
-Conventional Commits, branch off `main`, every PR requires owner approval (see
-[`.github/pull_request_template.md`](.github/pull_request_template.md)).
+Conventional Commits, branch off `main`, every PR requires owner approval (see [`.github/pull_request_template.md`](.github/pull_request_template.md)).
