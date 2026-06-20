@@ -17,11 +17,30 @@ npm run stack:down          # tear down + wipe the e2e database
 
 The stack is `docker-compose.e2e.yml`: MariaDB + backend (`e2e` Spring profile, header-auth
 bridge) + both public sites + the admin, on ports 6173 (Hubble), 6174 (admin), 6175 (Meteor),
-8080 (backend). Set `E2E_NO_WEBSERVER=1` to run specs against an already-running stack.
+8090 (backend, deliberately not the dev stack's 8080). Set `E2E_NO_WEBSERVER=1` to run specs
+against an already-running stack.
 
 Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin` (Desktop Chrome),
 and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, fixtures in
 `fixtures/` (`backend.ts` = reset/seed helpers, `evidence.ts` = report attachments).
+
+## Troubleshooting
+
+- **`/test/reset` rejected (403/401):** the backend answering on 8090 is not running the current
+  `e2e` security chain. Almost always a **stale backend image** (a plain `up --build` can reuse a
+  cached Maven layer, and `npm test` reuses an already-running stack). Force fresh bytecode:
+  ```bash
+  npm run stack:down
+  docker compose -f ../docker-compose.e2e.yml down --rmi local -v --remove-orphans
+  docker compose -f ../docker-compose.e2e.yml build --no-cache backend
+  npm run stack:up
+  curl -s -o /dev/null -w '%{http_code}\n' -X POST http://127.0.0.1:8090/test/reset   # want 204
+  ```
+- **Use `127.0.0.1`, not `localhost`,** when curling the stack: `localhost` resolves to both IPv4
+  and IPv6 and Node/curl may pick the address the container isn't bound to. The published ports are
+  pinned to `127.0.0.1` in the compose file for this reason.
+- **Iterating on specs:** keep one verified stack up and run `E2E_NO_WEBSERVER=1 npm test` so
+  Playwright doesn't try to manage docker each run.
 
 ## Coverage map
 
@@ -30,10 +49,10 @@ and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, f
 | Shell / nav / static pages | 🟡 | 🟡 | n/a | 🟡 |
 | Menu | 🟡 | 🟡 | ⬜ | 🟡 |
 | Daily dinner dish | 🟡 | n/a | 🟡 | ⬜ |
-| Opening hours (+ CMS footer) | 🟡 | ⬜ | ⬜ | 🟡 |
+| Opening hours (+ CMS footer) | 🟡 | ⬜ | 🟡 | 🟡 |
 | Status banner (Meteor) | n/a | 🟡 | n/a | ⬜ |
-| Events | 🟡 | 🟡 | ⬜ | ⬜ |
-| Board (current / previous / supervisory) | 🟡 | 🟡 | ⬜ | ⬜ |
+| Events | 🟡 | 🟡 | 🟡 | ⬜ |
+| Board (current / previous / supervisory) | 🟡 | 🟡 | 🟡 | ⬜ |
 | Vacancies | 🟡 | n/a | ⬜ | ⬜ |
 | Associations | 🟡 | n/a | 🟡 | 🟡 |
 | Roles / read-only viewer / DDD poster | n/a | n/a | 🟡 | ⬜ |
@@ -44,5 +63,5 @@ suite has been run against `docker-compose.e2e.yml`. Update this table as specs 
 
 ## Next specs
 
-Admin CRUD round-trips for the remaining modules (menu, events, board, hours, daily dish via the
-UI); opening-hours admin editing; more mobile coverage; and the Forms module once Step 7 lands.
+Admin CRUD-via-UI for menu (nested tabs/items, likely needs data-testid hooks) and vacancies;
+more mobile coverage (Meteor nav, admin on mobile); and the Forms module once Step 7 lands.

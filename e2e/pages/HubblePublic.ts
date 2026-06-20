@@ -9,7 +9,8 @@ export class HubblePublic {
 
   async gotoHome(): Promise<void> {
     await this.page.goto('/')
-    await expect(this.page.getByRole('heading', { name: 'Opening Times' })).toBeVisible()
+    // "Opening Times" appears in both the page body and the footer; scope to main.
+    await expect(this.page.getByRole('main').getByRole('heading', { name: 'Opening Times' })).toBeVisible()
   }
 
   async gotoAssociations(): Promise<void> {

@@ -4,10 +4,13 @@ import { defineConfig, devices } from '@playwright/test'
  * Service URLs. Defaults match docker-compose.e2e.yml's published ports, but can be
  * overridden (e.g. when pointing the suite at an already-running stack or staging).
  */
-export const HUBBLE_BASE_URL = process.env.HUBBLE_BASE_URL ?? 'http://localhost:6173'
-export const METEOR_BASE_URL = process.env.METEOR_BASE_URL ?? 'http://localhost:6175'
-export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL ?? 'http://localhost:6174'
-export const BACKEND_URL = process.env.BACKEND_URL ?? 'http://localhost:8080'
+// 127.0.0.1, not localhost: localhost resolves to both 127.0.0.1 and ::1, and Node's
+// Happy-Eyeballs alternates between them, which can land requests on a different listener
+// than the docker-published port. Pinning IPv4 keeps every request on the one e2e backend.
+export const HUBBLE_BASE_URL = process.env.HUBBLE_BASE_URL ?? 'http://127.0.0.1:6173'
+export const METEOR_BASE_URL = process.env.METEOR_BASE_URL ?? 'http://127.0.0.1:6175'
+export const ADMIN_BASE_URL = process.env.ADMIN_BASE_URL ?? 'http://127.0.0.1:6174'
+export const BACKEND_URL = process.env.BACKEND_URL ?? 'http://127.0.0.1:8090'
 
 // CI builds all images from scratch, so allow plenty of time for the stack to come up.
 const WEBSERVER_TIMEOUT = process.env.CI ? 600_000 : 240_000

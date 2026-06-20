@@ -18,7 +18,7 @@ test.describe('Hubble home opening times', () => {
     const hubble = new HubblePublic(page)
     await hubble.gotoHome()
 
-    const card = page.getByRole('heading', { name: 'Opening Times' }).locator('..')
+    const card = page.getByRole('main').getByRole('heading', { name: 'Opening Times' }).locator('..')
     await expect(card.getByText('Monday – Friday')).toBeVisible()
     await expect(card.getByText('11:00 – 02:00')).toBeVisible()
     await expect(card.getByText('Saturday')).toBeVisible()

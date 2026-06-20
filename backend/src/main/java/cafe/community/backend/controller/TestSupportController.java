@@ -64,6 +64,8 @@ public class TestSupportController {
     public void reset() {
         // Content that references media assets first.
         menuItems.deleteAllInBatch();
+        // menu_category self-references via parent_id, so drop sub-categories first.
+        menuCategories.deleteSubcategories();
         menuCategories.deleteAllInBatch();
         dailyDishes.deleteAllInBatch();
         boardMembers.deleteAllInBatch();

@@ -13,7 +13,7 @@ test.describe('Hubble home on mobile', () => {
     const hubble = new HubblePublic(page)
     await hubble.gotoHome()
 
-    await expect(page.getByRole('heading', { name: 'Opening Times' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('heading', { name: 'Opening Times' })).toBeVisible()
     await expect(hubble.footer().getByText('11:00 to 02:00')).toBeVisible()
 
     await captureScreenshot(testInfo, page, 'mobile-hubble-home')

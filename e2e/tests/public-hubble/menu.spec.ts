@@ -15,6 +15,7 @@ test.describe('Hubble menu', () => {
     await hubble.gotoMenu()
 
     await expect(page.getByText('House Pils')).toBeVisible()
-    await expect(page.getByText('2.50')).toBeVisible()
+    // Dual pricing renders euro-formatted with a comma decimal: "€3,00/€2,50".
+    await expect(page.getByText('2,50')).toBeVisible()
   })
 })

@@ -21,6 +21,14 @@ function authHeaders(oid: string): Record<string, string> {
 /** Wipe all content, media, audit, and users to a clean baseline. */
 export async function resetBackend(request: APIRequestContext): Promise<void> {
   const res = await request.post(`${BACKEND_URL}/test/reset`)
+  if (res.status() === 401 || res.status() === 403) {
+    throw new Error(
+      `/test/reset was rejected (${res.status()}). The backend at ${BACKEND_URL} is not serving ` +
+      `the e2e security chain. Ensure it runs with SPRING_PROFILES_ACTIVE=e2e (a stale image, or a ` +
+      `non-e2e backend already bound to the port, is the usual cause). Try a clean rebuild: ` +
+      `npm run stack:down && npm run stack:up.`,
+    )
+  }
   if (!res.ok()) throw new Error(`/test/reset failed: ${res.status()}`)
 }
 

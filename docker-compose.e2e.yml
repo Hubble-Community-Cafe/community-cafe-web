@@ -11,7 +11,11 @@
 #   Hubble  -> http://localhost:6173
 #   Admin   -> http://localhost:6174
 #   Meteor  -> http://localhost:6175
-#   Backend -> http://localhost:8080
+#   Backend -> http://localhost:8090
+
+# Fixed project name so `stack:up`, `stack:down`, the Playwright webServer, and any
+# manual command all target the SAME containers regardless of the working directory.
+name: community-cafe-e2e
 
 services:
   db:
@@ -20,7 +24,7 @@ services:
     tmpfs:
       - /var/lib/mysql
     ports:
-      - "3307:3306"
+      - "127.0.0.1:3307:3306"
     environment:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: cafeweb_e2e
@@ -39,8 +43,9 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    # Host port 8090 (not 8080) to stay isolated from the dev stack's backend.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8090:8080"
     depends_on:
       db:
         condition: service_healthy
@@ -54,7 +59,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=e2e_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - MEDIA_DIR=/data/media
-      - MEDIA_BASE_URL=http://localhost:8080
+      - MEDIA_BASE_URL=http://127.0.0.1:8090
     tmpfs:
       - /data/media
 
@@ -63,39 +68,39 @@ services:
       context: .
       dockerfile: public-hubble/Dockerfile
     ports:
-      - "6173:80"
+      - "127.0.0.1:6173:80"
     depends_on:
       - backend
     networks:
       - cafe-e2e
     environment:
-      - API_URL=http://localhost:8080
+      - API_URL=http://127.0.0.1:8090
 
   public-meteor:
     build:
       context: .
       dockerfile: public-meteor/Dockerfile
     ports:
-      - "6175:80"
+      - "127.0.0.1:6175:80"
     depends_on:
       - backend
     networks:
       - cafe-e2e
     environment:
-      - API_URL=http://localhost:8080
+      - API_URL=http://127.0.0.1:8090
 
   admin:
     build:
       context: .
       dockerfile: admin/Dockerfile
     ports:
-      - "6174:80"
+      - "127.0.0.1:6174:80"
     depends_on:
       - backend
     networks:
       - cafe-e2e
     environment:
-      - API_URL=http://localhost:8080
+      - API_URL=http://127.0.0.1:8090
       # Fixed e2e identity; the suite sets this user's role via POST /test/users.
       - E2E_AUTH_OID=e2e-user
       - E2E_AUTH_EMAIL=e2e@community.cafe

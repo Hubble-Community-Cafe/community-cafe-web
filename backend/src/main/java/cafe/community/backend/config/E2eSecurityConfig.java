@@ -57,7 +57,7 @@ public class E2eSecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/actuator/health").permitAll()
+                .requestMatchers("/", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/test/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
@@ -82,7 +82,9 @@ public class E2eSecurityConfig {
     @Bean
     public CorsConfigurationSource e2eCorsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("http://localhost:*"));
+        // Both localhost and 127.0.0.1: the e2e stack uses 127.0.0.1 origins, and the
+        // browser sends the exact host it loaded from, which must match a pattern here.
+        configuration.setAllowedOriginPatterns(List.of("http://localhost:*", "http://127.0.0.1:*"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

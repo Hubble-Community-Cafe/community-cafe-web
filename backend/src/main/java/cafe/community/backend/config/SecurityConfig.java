@@ -64,7 +64,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/actuator/health").permitAll()
+                .requestMatchers("/", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // Public sites read published CMS content without logging in.
                 .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
