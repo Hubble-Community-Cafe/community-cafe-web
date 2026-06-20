@@ -68,7 +68,8 @@ services:
       # APP_MAIL_PROVIDER=graph + the AZURE_* creds above in your .env, and point the
       # recipients at an inbox you control so you don't email the real lists.
       - APP_MAIL_PROVIDER=${APP_MAIL_PROVIDER:-log}
-      - APP_MAIL_FROM=${APP_MAIL_FROM:-noreply@hubble.cafe}
+      - APP_MAIL_FROM_HUBBLE=${APP_MAIL_FROM_HUBBLE:-noreply@hubble.cafe}
+      - APP_MAIL_FROM_METEOR=${APP_MAIL_FROM_METEOR:-noreply@meteor.cafe}
       - APP_MAIL_FORMS_COMPLAINTS=${APP_MAIL_FORMS_COMPLAINTS:-nuisance@hubble.cafe}
       - APP_MAIL_FORMS_SCREENS=${APP_MAIL_FORMS_SCREENS:-screens@hubble.cafe}
       - APP_MAIL_FORMS_DECLARATIONS=${APP_MAIL_FORMS_DECLARATIONS:-finance@hubble.cafe}

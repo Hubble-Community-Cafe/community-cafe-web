@@ -37,11 +37,13 @@ services:
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
       # Azure object id of the first admin (only used on first-ever login)
       - INITIAL_ADMIN_OID=__INITIAL_ADMIN_OID__
-      # Forms mail. provider=graph sends via Microsoft Graph; APP_MAIL_FROM must be a real,
-      # sendable mailbox in the tenant. Recipients default to the lists below; override here
-      # if they change. Set provider=log to disable sending (e.g. while validating).
+      # Forms mail. provider=graph sends via Microsoft Graph; each from address must be a real,
+      # sendable mailbox in the tenant. Meteor complaints send from the meteor address, Hubble
+      # forms from the Hubble one. Recipients default to the lists below; override if they change.
+      # Set provider=log to disable sending (e.g. while validating).
       - APP_MAIL_PROVIDER=graph
-      - APP_MAIL_FROM=noreply@hubble.cafe
+      - APP_MAIL_FROM_HUBBLE=noreply@hubble.cafe
+      - APP_MAIL_FROM_METEOR=noreply@meteor.cafe
       - APP_MAIL_FORMS_COMPLAINTS=nuisance@hubble.cafe
       - APP_MAIL_FORMS_SCREENS=screens@hubble.cafe
       - APP_MAIL_FORMS_DECLARATIONS=finance@hubble.cafe

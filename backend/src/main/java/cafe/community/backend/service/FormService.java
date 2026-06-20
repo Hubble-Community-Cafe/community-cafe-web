@@ -40,6 +40,8 @@ public class FormService {
     private final String screensTo;
     private final String declarationsTo;
     private final String declarationsCc;
+    private final String hubbleFrom;
+    private final String meteorFrom;
 
     public FormService(
             FormMailService mail,
@@ -47,13 +49,17 @@ public class FormService {
             @Value("${app.mail.forms.complaints:nuisance@hubble.cafe}") String complaintsTo,
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
             @Value("${app.mail.forms.declarations:finance@hubble.cafe}") String declarationsTo,
-            @Value("${app.mail.forms.declarations-cc:}") String declarationsCc) {
+            @Value("${app.mail.forms.declarations-cc:}") String declarationsCc,
+            @Value("${app.mail.from.hubble:noreply@hubble.cafe}") String hubbleFrom,
+            @Value("${app.mail.from.meteor:noreply@meteor.cafe}") String meteorFrom) {
         this.mail = mail;
         this.repo = repo;
         this.complaintsTo = complaintsTo;
         this.screensTo = screensTo;
         this.declarationsTo = declarationsTo;
         this.declarationsCc = declarationsCc;
+        this.hubbleFrom = hubbleFrom;
+        this.meteorFrom = meteorFrom;
     }
 
     // ── Complaint / tip / idea (Meteor) ──────────────────────────────────────────
@@ -75,7 +81,7 @@ public class FormService {
                 + "Message:\n" + req.message() + "\n";
 
         record(FormType.COMPLAINT, req.name(), req.email(), false, body);
-        mail.send(new FormEmail(complaintsTo, null, req.email(),
+        mail.send(new FormEmail(meteorFrom, complaintsTo, null, req.email(),
                 "Meteor " + label + " from " + req.name(), body, List.of()));
     }
 
@@ -113,7 +119,7 @@ public class FormService {
                 + "Message:\n" + orDash(req.getMessage()) + "\n";
 
         record(FormType.SCREEN, req.getName(), req.getEmail(), true, body);
-        mail.send(new FormEmail(screensTo, null, req.getEmail(),
+        mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
                 "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                 body, List.of(poster)));
     }
@@ -138,7 +144,7 @@ public class FormService {
                 + "Description: " + orDash(req.getDescription()) + "\n";
 
         record(FormType.DECLARATION, req.getFullName(), req.getEmail(), true, body);
-        mail.send(new FormEmail(declarationsTo,
+        mail.send(new FormEmail(hubbleFrom, declarationsTo,
                 declarationsCc != null && !declarationsCc.isBlank() ? declarationsCc : null,
                 req.getEmail(), "New E-Declaration from " + req.getFullName(),
                 body, List.of(receipt)));

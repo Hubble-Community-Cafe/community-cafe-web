@@ -32,18 +32,15 @@ public class GraphFormMailService implements FormMailService {
     private static final Logger log = LoggerFactory.getLogger(GraphFormMailService.class);
 
     private final GraphServiceClient graph;
-    private final String from;
 
     public GraphFormMailService(
             @Value("${app.mail.graph.tenant-id}") String tenantId,
             @Value("${app.mail.graph.client-id}") String clientId,
-            @Value("${app.mail.graph.client-secret}") String clientSecret,
-            @Value("${app.mail.from}") String from) {
-        this.from = from;
+            @Value("${app.mail.graph.client-secret}") String clientSecret) {
         ClientSecretCredential credential = new ClientSecretCredentialBuilder()
                 .tenantId(tenantId).clientId(clientId).clientSecret(clientSecret).build();
         this.graph = new GraphServiceClient(credential);
-        log.info("Microsoft Graph form-mail provider initialised (from {}).", from);
+        log.info("Microsoft Graph form-mail provider initialised.");
     }
 
     @Override
@@ -81,8 +78,9 @@ public class GraphFormMailService implements FormMailService {
             SendMailPostRequestBody requestBody = new SendMailPostRequestBody();
             requestBody.setMessage(message);
             requestBody.setSaveToSentItems(true);
-            graph.users().byUserId(from).sendMail().post(requestBody);
-            log.info("Sent form notification to {} via Microsoft Graph", email.to());
+            // Send as the per-site from address (must be a sendable mailbox in the tenant).
+            graph.users().byUserId(email.from()).sendMail().post(requestBody);
+            log.info("Sent form notification from {} to {} via Microsoft Graph", email.from(), email.to());
         } catch (Exception e) {
             log.error("Failed to send form notification to {} via Microsoft Graph", email.to(), e);
             throw new RuntimeException("Failed to send form notification", e);

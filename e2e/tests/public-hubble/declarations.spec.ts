@@ -28,6 +28,7 @@ test.describe('Hubble e-declaration form', () => {
     await captureScreenshot(testInfo, page, 'hubble-declaration-sent')
 
     const mail = await waitForMessageTo(request, 'finance@hubble.cafe')
+    expect(mail.from).toBe('noreply@hubble.cafe')
     expect(mail.subject).toBe('New E-Declaration from Sven Rooijakkers')
     expect(mail.text).toContain('Amount in Euros: 150.04')
     expect(mail.text).toContain('IBAN: NL70TRIO033858901') // normalised (spaces removed, upper-cased)

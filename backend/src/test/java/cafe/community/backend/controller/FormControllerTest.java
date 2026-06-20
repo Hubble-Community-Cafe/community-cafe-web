@@ -60,6 +60,7 @@ class FormControllerTest {
         verify(mail).send(sent.capture());
         FormEmail email = sent.getValue();
         assertThat(email.to()).isEqualTo("nuisance@hubble.cafe");
+        assertThat(email.from()).isEqualTo("noreply@meteor.cafe");
         assertThat(email.replyTo()).isEqualTo("alice@x.com");
         assertThat(email.subject()).isEqualTo("Meteor Tip from Alice");
         assertThat(email.body()).contains("Name: Alice").contains("Lovely food");
@@ -101,6 +102,7 @@ class FormControllerTest {
         verify(mail).send(sent.capture());
         FormEmail email = sent.getValue();
         assertThat(email.to()).isEqualTo("screens@hubble.cafe");
+        assertThat(email.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(email.subject()).isEqualTo("Screen Request from Anke - Doppio");
         assertThat(email.body()).contains("Association: Doppio").contains("Hex: #FFF200");
         assertThat(email.attachments()).hasSize(1);
@@ -160,6 +162,7 @@ class FormControllerTest {
         verify(mail).send(sent.capture());
         FormEmail email = sent.getValue();
         assertThat(email.to()).isEqualTo("finance@hubble.cafe");
+        assertThat(email.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(email.body()).contains("Amount in Euros: 150.04").contains("IBAN: NL70TRIO033858901");
         assertThat(email.attachments()).hasSize(1);
         assertThat(email.attachments().get(0).contentType()).isEqualTo("application/pdf");

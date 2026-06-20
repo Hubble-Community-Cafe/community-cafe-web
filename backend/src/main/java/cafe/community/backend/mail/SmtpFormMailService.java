@@ -3,7 +3,6 @@ package cafe.community.backend.mail;
 import jakarta.mail.internet.MimeMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -21,11 +20,9 @@ public class SmtpFormMailService implements FormMailService {
     private static final Logger log = LoggerFactory.getLogger(SmtpFormMailService.class);
 
     private final JavaMailSender mailSender;
-    private final String from;
 
-    public SmtpFormMailService(JavaMailSender mailSender, @Value("${app.mail.from}") String from) {
+    public SmtpFormMailService(JavaMailSender mailSender) {
         this.mailSender = mailSender;
-        this.from = from;
     }
 
     @Override
@@ -34,7 +31,7 @@ public class SmtpFormMailService implements FormMailService {
             MimeMessage message = mailSender.createMimeMessage();
             boolean multipart = email.attachments() != null && !email.attachments().isEmpty();
             MimeMessageHelper helper = new MimeMessageHelper(message, multipart, "UTF-8");
-            helper.setFrom(from);
+            helper.setFrom(email.from());
             helper.setTo(email.to());
             if (email.cc() != null && !email.cc().isBlank()) {
                 helper.setCc(email.cc());

@@ -34,6 +34,7 @@ test.describe('Hubble poster screens form', () => {
     await captureScreenshot(testInfo, page, 'hubble-screen-sent')
 
     const mail = await waitForMessageTo(request, 'screens@hubble.cafe')
+    expect(mail.from).toBe('noreply@hubble.cafe')
     expect(mail.subject).toBe('Screen Request from Anke Woldman - Doppio')
     expect(mail.text).toContain('Association: Doppio')
     expect(mail.text).toContain('Hex: #FFF200')

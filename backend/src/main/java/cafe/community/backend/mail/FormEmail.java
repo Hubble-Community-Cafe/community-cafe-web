@@ -8,6 +8,7 @@ import java.util.List;
  * reply-to so staff can answer directly.
  */
 public record FormEmail(
+        String from,
         String to,
         String cc,
         String replyTo,

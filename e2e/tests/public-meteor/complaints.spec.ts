@@ -20,6 +20,7 @@ test.describe('Meteor tips/complaints form', () => {
     await captureScreenshot(testInfo, page, 'meteor-complaint-sent')
 
     const mail = await waitForMessageTo(request, 'nuisance@hubble.cafe')
+    expect(mail.from).toBe('noreply@meteor.cafe')
     expect(mail.subject).toBe('Meteor Tip from Jamie Tester')
     expect(mail.text).toContain('Jamie Tester')
     expect(mail.text).toContain('terrace music')
