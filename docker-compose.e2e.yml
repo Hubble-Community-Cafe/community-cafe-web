@@ -60,8 +60,20 @@ services:
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       - MEDIA_DIR=/data/media
       - MEDIA_BASE_URL=http://127.0.0.1:8090
+      # Forms deliver to Mailpit; the suite asserts on the captured messages.
+      - SPRING_MAIL_HOST=mailpit
+      - SPRING_MAIL_PORT=1025
     tmpfs:
       - /data/media
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      # SMTP on 1026 (host), HTTP API/UI on 8025 (host) for the Playwright fixture.
+      - "127.0.0.1:1026:1025"
+      - "127.0.0.1:8025:8025"
+    networks:
+      - cafe-e2e
 
   public-hubble:
     build:

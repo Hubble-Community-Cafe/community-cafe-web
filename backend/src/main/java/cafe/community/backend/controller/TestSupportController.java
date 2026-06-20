@@ -34,6 +34,7 @@ public class TestSupportController {
     private final MediaAssetRepository mediaAssets;
     private final AuditLogRepository auditLogs;
     private final AdminUserRepository adminUsers;
+    private final FormSubmissionRepository formSubmissions;
 
     public TestSupportController(
             MenuItemRepository menuItems, MenuCategoryRepository menuCategories,
@@ -41,7 +42,8 @@ public class TestSupportController {
             BoardTermRepository boardTerms, EventRepository events, VacancyRepository vacancies,
             AssociationRepository associations, OpeningHoursRepository openingHours,
             HoursOverrideRepository hoursOverrides, MediaAssetRepository mediaAssets,
-            AuditLogRepository auditLogs, AdminUserRepository adminUsers) {
+            AuditLogRepository auditLogs, AdminUserRepository adminUsers,
+            FormSubmissionRepository formSubmissions) {
         this.menuItems = menuItems;
         this.menuCategories = menuCategories;
         this.dailyDishes = dailyDishes;
@@ -55,6 +57,7 @@ public class TestSupportController {
         this.mediaAssets = mediaAssets;
         this.auditLogs = auditLogs;
         this.adminUsers = adminUsers;
+        this.formSubmissions = formSubmissions;
     }
 
     /** Wipe all mutable state to a clean baseline. FK-safe order: children, then media, then users. */
@@ -75,6 +78,7 @@ public class TestSupportController {
         associations.deleteAllInBatch();
         openingHours.deleteAllInBatch();
         hoursOverrides.deleteAllInBatch();
+        formSubmissions.deleteAllInBatch();
         // Then the media assets they pointed at.
         mediaAssets.deleteAllInBatch();
         // Audit trail and users last.

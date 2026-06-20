@@ -75,6 +75,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
+                // Public form submissions (honeypot + rate-limit protected).
+                .requestMatchers(HttpMethod.POST, "/api/forms/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                 // Everything under /api/admin requires a valid staff token.
                 .requestMatchers("/api/admin/**").authenticated()

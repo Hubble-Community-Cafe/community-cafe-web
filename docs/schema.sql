@@ -193,4 +193,15 @@ CREATE TABLE IF NOT EXISTS association (
     CONSTRAINT fk_association_logo FOREIGN KEY (logo_id) REFERENCES media_asset (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS form_submission (
+    id              BIGINT       NOT NULL AUTO_INCREMENT,
+    type            VARCHAR(20)  NOT NULL,
+    submitter_name  VARCHAR(200),
+    submitter_email VARCHAR(200),
+    had_attachment  TINYINT(1)   NOT NULL DEFAULT 0,
+    summary         TEXT         NOT NULL,
+    created_at      DATETIME     NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
