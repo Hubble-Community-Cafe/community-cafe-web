@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.altcha.AltchaService;
 import cafe.community.backend.dto.ComplaintRequest;
 import cafe.community.backend.dto.DeclarationRequest;
 import cafe.community.backend.dto.ScreenRequest;
@@ -19,9 +20,17 @@ import org.springframework.web.bind.annotation.*;
 public class PublicFormController {
 
     private final FormService service;
+    private final AltchaService altcha;
 
-    public PublicFormController(FormService service) {
+    public PublicFormController(FormService service, AltchaService altcha) {
         this.service = service;
+        this.altcha = altcha;
+    }
+
+    /** A fresh ALTCHA challenge for the form widget to solve. */
+    @GetMapping("/challenge")
+    public AltchaService.Challenge challenge() {
+        return altcha.createChallenge();
     }
 
     @PostMapping("/complaint")

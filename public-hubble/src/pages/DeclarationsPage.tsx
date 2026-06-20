@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { submitDeclarationForm, FormError } from '@cafe/shared-web'
+import { submitDeclarationForm, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { AltchaWidget } from '../components/AltchaWidget'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const ACCEPTED = ['application/pdf', 'image/jpeg', 'image/png']
@@ -17,6 +18,7 @@ export function DeclarationsPage() {
     amount: '', category: 'Board Costs', description: '', honeypot: '',
   })
   const [file, setFile] = useState<File | null>(null)
+  const [altcha, setAltcha] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
 
@@ -34,6 +36,7 @@ export function DeclarationsPage() {
     try {
       const data = new FormData()
       Object.entries(form).forEach(([k, v]) => data.append(k, v))
+      data.append('altcha', altcha ?? '')
       data.append('file', file)
       await submitDeclarationForm(data)
       setStatus('sent')
@@ -105,6 +108,10 @@ export function DeclarationsPage() {
 
           <input type="text" tabIndex={-1} autoComplete="off" aria-hidden="true" name="website"
             value={form.honeypot} onChange={set('honeypot')} className="hidden" />
+
+          <div className="pb-2">
+            <AltchaWidget challengeUrl={formsChallengeUrl()} onVerified={setAltcha} />
+          </div>
 
           {error && (
             <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>

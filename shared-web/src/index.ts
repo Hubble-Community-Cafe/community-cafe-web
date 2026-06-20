@@ -9,7 +9,7 @@ export { getBoard } from './api/board'
 export { getVacancies } from './api/vacancy'
 export { getAssociations } from './api/association'
 export {
-  FormError, submitComplaint, submitScreenForm, submitDeclarationForm,
+  FormError, submitComplaint, submitScreenForm, submitDeclarationForm, formsChallengeUrl,
   type ComplaintInput, type ComplaintType,
 } from './api/forms'
 export { cn } from './lib/cn'

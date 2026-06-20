@@ -68,6 +68,7 @@ public class E2eSecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/forms/challenge").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/forms/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
                 .anyRequest().authenticated()

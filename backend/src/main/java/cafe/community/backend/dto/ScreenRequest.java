@@ -52,4 +52,7 @@ public class ScreenRequest {
     private MultipartFile file;
 
     private String honeypot;
+
+    /** ALTCHA proof-of-work payload (base64). */
+    private String altcha;
 }

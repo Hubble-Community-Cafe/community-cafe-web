@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { submitComplaint, FormError, type ComplaintType } from '@cafe/shared-web'
+import { submitComplaint, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
+import { AltchaWidget } from '../components/AltchaWidget'
 
 const TYPES: { value: ComplaintType; label: string }[] = [
   { value: 'TIP', label: 'Tip' },
@@ -20,6 +21,7 @@ export function ComplaintsPage() {
   const [type, setType] = useState<ComplaintType>('TIP')
   const [message, setMessage] = useState('')
   const [honeypot, setHoneypot] = useState('')
+  const [altcha, setAltcha] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
 
@@ -28,7 +30,7 @@ export function ComplaintsPage() {
     setStatus('sending')
     setError(null)
     try {
-      await submitComplaint({ name, email, phone, date, type, message, honeypot })
+      await submitComplaint({ name, email, phone, date, type, message, honeypot, altcha: altcha ?? '' })
       setStatus('sent')
     } catch (err) {
       setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
@@ -109,6 +111,10 @@ export function ComplaintsPage() {
             onChange={(e) => setHoneypot(e.target.value)} aria-hidden="true"
             className="hidden" name="website"
           />
+
+          <div className="pb-2">
+            <AltchaWidget challengeUrl={formsChallengeUrl()} onVerified={setAltcha} />
+          </div>
 
           {error && (
             <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>

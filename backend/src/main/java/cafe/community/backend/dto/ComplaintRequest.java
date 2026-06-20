@@ -17,5 +17,7 @@ public record ComplaintRequest(
         @NotBlank @Pattern(regexp = "TIP|COMPLAINT|IDEA", message = "must be TIP, COMPLAINT or IDEA")
         String type,
         @NotBlank @Size(max = 5000) String message,
-        String honeypot
+        String honeypot,
+        /** ALTCHA proof-of-work payload (base64). */
+        String altcha
 ) {}

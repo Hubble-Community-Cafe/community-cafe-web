@@ -39,6 +39,21 @@ export interface ComplaintInput {
   message: string
   /** Honeypot: leave empty; a value marks the sender as a bot. */
   honeypot?: string
+  /** ALTCHA proof-of-work payload (base64). */
+  altcha?: string
+}
+
+/**
+ * The backend endpoint the ALTCHA widget fetches a challenge from. Resolved at render time,
+ * so it must never throw: if the API base URL isn't configured (e.g. a preview without a
+ * backend), fall back to a same-origin relative path rather than crashing the form.
+ */
+export function formsChallengeUrl(): string {
+  try {
+    return `${getApiBaseUrl()}/api/forms/challenge`
+  } catch {
+    return '/api/forms/challenge'
+  }
 }
 
 export function submitComplaint(input: ComplaintInput): Promise<void> {

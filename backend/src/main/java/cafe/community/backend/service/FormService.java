@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.altcha.AltchaService;
 import cafe.community.backend.dto.ComplaintRequest;
 import cafe.community.backend.dto.DeclarationRequest;
 import cafe.community.backend.dto.ScreenRequest;
@@ -35,6 +36,7 @@ public class FormService {
     private static final Set<String> RECEIPT_TYPES = Set.of("application/pdf", "image/jpeg", "image/png");
 
     private final FormMailService mail;
+    private final AltchaService altcha;
     private final FormSubmissionRepository repo;
     private final String complaintsTo;
     private final String screensTo;
@@ -45,6 +47,7 @@ public class FormService {
 
     public FormService(
             FormMailService mail,
+            AltchaService altcha,
             FormSubmissionRepository repo,
             @Value("${app.mail.forms.complaints:nuisance@hubble.cafe}") String complaintsTo,
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
@@ -53,6 +56,7 @@ public class FormService {
             @Value("${app.mail.from.hubble:noreply@hubble.cafe}") String hubbleFrom,
             @Value("${app.mail.from.meteor:noreply@meteor.cafe}") String meteorFrom) {
         this.mail = mail;
+        this.altcha = altcha;
         this.repo = repo;
         this.complaintsTo = complaintsTo;
         this.screensTo = screensTo;
@@ -66,6 +70,7 @@ public class FormService {
 
     public void submitComplaint(ComplaintRequest req) {
         if (isBot(req.honeypot())) return;
+        requireCaptcha(req.altcha());
 
         String label = switch (req.type()) {
             case "TIP" -> "Tip";
@@ -89,6 +94,7 @@ public class FormService {
 
     public void submitScreen(ScreenRequest req) {
         if (isBot(req.getHoneypot())) return;
+        requireCaptcha(req.getAltcha());
 
         String period;
         if (req.isPermanent()) {
@@ -128,6 +134,7 @@ public class FormService {
 
     public void submitDeclaration(DeclarationRequest req) {
         if (isBot(req.getHoneypot())) return;
+        requireCaptcha(req.getAltcha());
 
         BigDecimal amount = parseAmount(req.getAmount());
         FormEmail.Attachment receipt = requireFile(req.getFile(), RECEIPT_TYPES,
@@ -151,6 +158,13 @@ public class FormService {
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    /** Reject the submission if the ALTCHA proof-of-work is missing or invalid. */
+    private void requireCaptcha(String altchaPayload) {
+        if (!altcha.verify(altchaPayload)) {
+            throw new IllegalArgumentException("Captcha verification failed. Please try again.");
+        }
+    }
 
     /** Honeypot: a hidden field a human never fills. A non-blank value is a bot; drop silently. */
     private boolean isBot(String honeypot) {
