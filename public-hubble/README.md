@@ -1,16 +1,10 @@
 # public-hubble
 
-Vite + React SPA for **hubble.cafe**, Hubble's own design and identity: a white header with the
-duck logo, a dark-teal canvas with white "floating" content cards, AXIS titles + Lato body.
-Renders the shared CMS content (menu, opening hours, events, board, vacancies) plus Hubble's
-hardcoded page copy. Consumes `@cafe/shared-web`.
+Vite + React SPA for **hubble.cafe**, Hubble's own design and identity: a white header with the duck logo, a dark-teal canvas with white "floating" content cards, AXIS titles + Lato body. Renders the shared CMS content (menu, opening hours, events, board, vacancies) plus Hubble's  hardcoded page copy. Consumes `@cafe/shared-web`.
 
 ## Status
 
-Base shell in place: sticky header with the full primary navigation (desktop dropdowns + mobile
-menu), home hero with the live CTAs, footer with Hubble's contact details, client-side routing with
-placeholder pages for every nav target, and Sentry wiring. Reservations and the food tracker link
-out (`harry.hubble.cafe`, `food.hubble.cafe`). CMS-driven modules fill in over later milestones.
+Base shell in place: sticky header with the full primary navigation (desktop dropdowns + mobile menu), home hero with the live CTAs, footer with Hubble's contact details, client-side routing with placeholder pages for every nav target, and Sentry wiring. Reservations and the food tracker link out (`harry.hubble.cafe`, `food.hubble.cafe`). CMS-driven modules fill in over later milestones.
 
 ## Develop
 
@@ -19,8 +13,7 @@ npm install                                   # from the repo root (workspaces)
 npm run dev --workspace @cafe/public-hubble   # http://localhost:5173
 ```
 
-Set `VITE_PUBLIC_API_URL` (and optionally `VITE_PUBLIC_HUBBLE_SENTRY_DSN`) in a local `.env`, or
-inject `API_URL` / `SENTRY_DSN` at runtime via `config.js` in the container.
+Set `VITE_PUBLIC_API_URL` (and optionally `VITE_PUBLIC_HUBBLE_SENTRY_DSN`) in a local `.env`, or inject `API_URL` / `SENTRY_DSN` at runtime via `config.js` in the container.
 
 ## Verify
 
