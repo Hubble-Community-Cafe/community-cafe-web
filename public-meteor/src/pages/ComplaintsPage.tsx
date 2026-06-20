@@ -68,6 +68,7 @@ export function ComplaintsPage() {
       ) : (
         <form
           onSubmit={submit}
+          noValidate
           className="mt-8 space-y-5 rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm md:p-8"
         >
           <div className="grid gap-5 sm:grid-cols-2">

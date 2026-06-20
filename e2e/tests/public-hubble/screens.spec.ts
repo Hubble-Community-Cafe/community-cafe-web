@@ -49,7 +49,7 @@ test.describe('Hubble poster screens form', () => {
     await page.locator('#s-assoc').fill('Doppio')
     await page.locator('#s-email').fill('anke@example.com')
     await page.locator('#s-cafe').selectOption('BOTH')
-    await page.getByRole('checkbox').check()
+    await page.getByRole('checkbox', { name: /permanent poster/i }).check()
     // Dates are now disabled; submit without them.
     await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
     await page.getByRole('button', { name: 'Send request' }).click()
@@ -69,7 +69,8 @@ test.describe('Hubble poster screens form', () => {
     await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
     await page.getByRole('button', { name: 'Send request' }).click()
 
-    await expect(page.getByRole('alert')).toContainText('end date')
+    // Scope to our form error (the ALTCHA widget also renders a role="alert" popover).
+    await expect(page.getByText(/end date must be on or after/i)).toBeVisible()
     await expect(page.getByRole('heading', { name: 'Request received' })).toHaveCount(0)
   })
 
