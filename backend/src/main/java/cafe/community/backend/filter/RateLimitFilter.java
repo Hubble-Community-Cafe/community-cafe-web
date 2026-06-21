@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,18 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private static final String PATH_PREFIX = "/api/forms/";
 
     private final ConcurrentHashMap<String, List<Long>> hits = new ConcurrentHashMap<>();
-    private volatile long lastCleanup = System.currentTimeMillis();
+    private final Clock clock;
+    private volatile long lastCleanup;
+
+    public RateLimitFilter() {
+        this(Clock.systemUTC());
+    }
+
+    /** Package-private: lets tests drive the sliding window with a controllable clock. */
+    RateLimitFilter(Clock clock) {
+        this.clock = clock;
+        this.lastCleanup = clock.millis();
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
@@ -55,7 +67,7 @@ public class RateLimitFilter extends OncePerRequestFilter {
     }
 
     private boolean isRateLimited(String ip) {
-        long now = System.currentTimeMillis();
+        long now = clock.millis();
         cleanupIfNeeded(now);
         List<Long> timestamps = hits.computeIfAbsent(ip, k -> Collections.synchronizedList(new ArrayList<>()));
         synchronized (timestamps) {
