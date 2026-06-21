@@ -13,21 +13,21 @@ import { DeclarationsPage } from './pages/DeclarationsPage'
 import { TipsPage } from './pages/TipsPage'
 import { InformationPage } from './pages/InformationPage'
 import { LoanPage } from './pages/LoanPage'
-
-/** Routed pages whose content arrives in later milestones. */
-const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
-  { path: '/cafe', title: 'The Cafe', intro: 'About Hubble Community Cafe.' },
-  { path: '/cafe/discount-policy', title: 'Discount policy' },
-  { path: '/community/committees', title: 'Committees' },
-  { path: '/contact', title: 'Contact' },
-]
+import { CafePage } from './pages/CafePage'
+import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
+import { CommitteesPage } from './pages/CommitteesPage'
+import { ContactPage } from './pages/ContactPage'
 
 function App() {
   return (
     <Layout>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/cafe" element={<CafePage />} />
         <Route path="/cafe/menu" element={<MenuPage />} />
+        <Route path="/cafe/discount-policy" element={<DiscountPolicyPage />} />
+        <Route path="/community/committees" element={<CommitteesPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path="/cafe/daily-dish" element={<DailyDishPage />} />
         <Route path="/events" element={<EventsPage />} />
         <Route path="/community/board" element={<CurrentBoardPage />} />
@@ -40,13 +40,6 @@ function App() {
         <Route path="/contact/tips" element={<TipsPage />} />
         <Route path="/contact/information" element={<InformationPage />} />
         <Route path="/contact/loan-equipment" element={<LoanPage />} />
-        {PLACEHOLDER_PAGES.map((page) => (
-          <Route
-            key={page.path}
-            path={page.path}
-            element={<PageShell title={page.title} intro={page.intro} placeholder />}
-          />
-        ))}
         <Route
           path="*"
           element={

@@ -6,11 +6,7 @@ import { MenuPage } from './pages/MenuPage'
 import { EventsPage } from './pages/EventsPage'
 import { CurrentBoardPage, PreviousBoardsPage } from './pages/BoardPage'
 import { ComplaintsPage } from './pages/ComplaintsPage'
-
-/** Routed pages whose content arrives in later milestones. */
-const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
-  { path: '/menu/discount-policy', title: 'Discount policy' },
-]
+import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
 
 function App() {
   return (
@@ -22,13 +18,7 @@ function App() {
         <Route path="/community/board" element={<CurrentBoardPage />} />
         <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
         <Route path="/complaints" element={<ComplaintsPage />} />
-        {PLACEHOLDER_PAGES.map((page) => (
-          <Route
-            key={page.path}
-            path={page.path}
-            element={<PageShell title={page.title} intro={page.intro} placeholder />}
-          />
-        ))}
+        <Route path="/menu/discount-policy" element={<DiscountPolicyPage />} />
         <Route
           path="*"
           element={
