@@ -26,6 +26,7 @@ import java.util.Set;
  * Validates and processes public form submissions: honeypot screening, field/file validation,
  * a stored audit record (no file persisted), and a plain-text staff notification with the
  * uploaded file attached. Recipients are configured per form via {@code app.mail.forms.*}.
+ * The submitter also receives a best-effort confirmation email (reply-to the relevant team).
  */
 @Service
 public class FormService {
@@ -88,6 +89,18 @@ public class FormService {
         record(FormType.COMPLAINT, req.name(), req.email(), false, body);
         mail.send(new FormEmail(meteorFrom, complaintsTo, null, req.email(),
                 "Meteor " + label + " from " + req.name(), body, List.of()));
+
+        String confirmation = "Hi " + req.name() + ",\n\n"
+                + "Thanks for contacting Meteor. We have received your " + label.toLowerCase()
+                + " and the team will look into it.\n\n"
+                + "For your records, this is what you sent:\n\n"
+                + "Type: " + label + "\n"
+                + "Date: " + orDash(req.date()) + "\n\n"
+                + "Message:\n" + req.message() + "\n\n"
+                + "You can reply to this email if you would like to add anything.\n\n"
+                + "Kind regards,\nMeteor Community Cafe\n";
+        sendConfirmation(meteorFrom, req.email(),
+                "We received your " + label.toLowerCase(), confirmation);
     }
 
     // ── Poster screens (Hubble) ──────────────────────────────────────────────────
@@ -128,6 +141,18 @@ public class FormService {
         mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
                 "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                 body, List.of(poster)));
+
+        String confirmation = "Hi " + req.getName() + ",\n\n"
+                + "Thanks! We have received your poster screen request for " + req.getAssociation()
+                + " and the screens team will review it.\n\n"
+                + "For your records:\n\n"
+                + "Cafe: " + cafeLabel(req.getCafe()) + "\n"
+                + period + "\n\n"
+                + "Please note that the board may approve or deny any request. You can reply to this "
+                + "email with questions.\n\n"
+                + "Kind regards,\nHubble Community Cafe\n";
+        sendConfirmation(hubbleFrom, req.getEmail(),
+                "We received your poster screen request", confirmation);
     }
 
     // ── E-declaration (Hubble) ───────────────────────────────────────────────────
@@ -155,9 +180,34 @@ public class FormService {
                 declarationsCc != null && !declarationsCc.isBlank() ? declarationsCc : null,
                 req.getEmail(), "New E-Declaration from " + req.getFullName(),
                 body, List.of(receipt)));
+
+        String confirmation = "Hi " + req.getFullName() + ",\n\n"
+                + "Thanks! We have received your declaration and the treasurer will process it.\n\n"
+                + "For your records:\n\n"
+                + "Amount in euros: " + amount.toPlainString() + "\n"
+                + "Category: " + req.getCategory() + "\n"
+                + "Date of purchase: " + req.getDateOfPurchase() + "\n\n"
+                + "If anything is unclear we will contact you. You can reply to this email with "
+                + "questions.\n\n"
+                + "Kind regards,\nHubble Community Cafe\n";
+        sendConfirmation(hubbleFrom, req.getEmail(),
+                "We received your declaration", confirmation);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    /**
+     * Best-effort acknowledgment to the submitter. The staff notification is already sent, so a
+     * failure here (e.g. a bounced confirmation) must not fail the submission.
+     */
+    private void sendConfirmation(String from, String to, String subject, String body) {
+        try {
+            // Reply-to stays the site noreply address; this is an acknowledgment, not a thread.
+            mail.send(new FormEmail(from, to, null, from, subject, body, List.of()));
+        } catch (RuntimeException e) {
+            log.warn("Could not send submitter confirmation to {}: {}", to, e.getMessage());
+        }
+    }
 
     /** Reject the submission if the ALTCHA proof-of-work is missing or invalid. */
     private void requireCaptcha(String altchaPayload) {

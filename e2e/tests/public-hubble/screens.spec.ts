@@ -40,6 +40,13 @@ test.describe('Hubble poster screens form', () => {
     expect(mail.text).toContain('Hex: #FFF200')
     expect(mail.attachments).toHaveLength(1)
     expect(mail.attachments[0].contentType).toContain('image/png')
+
+    // The submitter also receives a confirmation (no attachment echoed back).
+    const ack = await waitForMessageTo(request, 'anke@example.com')
+    expect(ack.from).toBe('noreply@hubble.cafe')
+    expect(ack.subject).toBe('We received your poster screen request')
+    expect(ack.text).toContain('Doppio')
+    expect(ack.attachments).toHaveLength(0)
   })
 
   test('a permanent poster needs no dates and is flagged as general', async ({ page, request }) => {

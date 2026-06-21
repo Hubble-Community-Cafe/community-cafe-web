@@ -62,7 +62,8 @@ export function ComplaintsPage() {
         <div className="mt-8 rounded-2xl border border-meteor-200 bg-meteor-50 p-6 text-meteor-900">
           <h2 className="font-title text-xl font-bold">Thank you!</h2>
           <p className="mt-2 text-sm text-meteor-800/80">
-            Your message has been sent to the team. We appreciate you taking the time.
+            Your message has been sent to the team. We appreciate you taking the time. A
+            confirmation has been sent to your email address.
           </p>
         </div>
       ) : (

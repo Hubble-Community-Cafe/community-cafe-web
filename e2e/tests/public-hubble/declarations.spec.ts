@@ -34,5 +34,12 @@ test.describe('Hubble e-declaration form', () => {
     expect(mail.text).toContain('IBAN: NL70TRIO033858901') // normalised (spaces removed, upper-cased)
     expect(mail.attachments).toHaveLength(1)
     expect(mail.attachments[0].contentType).toContain('application/pdf')
+
+    // The submitter also receives a confirmation (no receipt echoed back).
+    const ack = await waitForMessageTo(request, 'sven@example.com')
+    expect(ack.from).toBe('noreply@hubble.cafe')
+    expect(ack.subject).toBe('We received your declaration')
+    expect(ack.text).toContain('Amount in euros: 150.04')
+    expect(ack.attachments).toHaveLength(0)
   })
 })

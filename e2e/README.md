@@ -47,6 +47,8 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
+Form specs assert both the staff notification (to the per-form team list, with the upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
+
 ## Next specs
 
-Admin CRUD-via-UI for menu (nested tabs/items, likely needs data-testid hooks) and vacancies; more mobile coverage (Meteor nav, admin on mobile); and the Forms module once Step 7 lands.
+Admin CRUD-via-UI for menu (nested tabs/items, likely needs data-testid hooks) and vacancies; more mobile coverage (Meteor nav, admin on mobile).

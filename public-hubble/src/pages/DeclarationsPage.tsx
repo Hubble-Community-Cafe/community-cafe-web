@@ -57,7 +57,8 @@ export function DeclarationsPage() {
         <div className="mt-8 rounded-xl border border-hubble-100 bg-hubble-50 p-6">
           <h2 className="font-title text-xl font-bold text-hubble-700">Declaration submitted</h2>
           <p className="mt-2 text-sm text-hubble-800/80">
-            Thanks! Your declaration and receipt have been sent to the treasurer.
+            Thanks! Your declaration and receipt have been sent to the treasurer. A confirmation
+            has been sent to your email address.
           </p>
         </div>
       ) : (

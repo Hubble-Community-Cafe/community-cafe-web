@@ -100,7 +100,8 @@ export function ScreensPage() {
         <div className="mt-8 rounded-xl border border-hubble-100 bg-hubble-50 p-6">
           <h2 className="font-title text-xl font-bold text-hubble-700">Request received</h2>
           <p className="mt-2 text-sm text-hubble-800/80">
-            Thanks! Your screen request and poster have been sent to the screens team.
+            Thanks! Your screen request and poster have been sent to the screens team. A
+            confirmation has been sent to your email address.
           </p>
         </div>
       ) : (

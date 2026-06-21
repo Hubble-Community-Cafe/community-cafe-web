@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -57,13 +58,22 @@ class FormControllerTest {
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
-        verify(mail).send(sent.capture());
-        FormEmail email = sent.getValue();
-        assertThat(email.to()).isEqualTo("nuisance@hubble.cafe");
-        assertThat(email.from()).isEqualTo("noreply@meteor.cafe");
-        assertThat(email.replyTo()).isEqualTo("alice@x.com");
-        assertThat(email.subject()).isEqualTo("Meteor Tip from Alice");
-        assertThat(email.body()).contains("Name: Alice").contains("Lovely food");
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail staff = to(sent, "nuisance@hubble.cafe");
+        assertThat(staff.from()).isEqualTo("noreply@meteor.cafe");
+        assertThat(staff.replyTo()).isEqualTo("alice@x.com");
+        assertThat(staff.subject()).isEqualTo("Meteor Tip from Alice");
+        assertThat(staff.body()).contains("Name: Alice").contains("Lovely food");
+
+        // The submitter also gets a confirmation, with replies routed back to the team.
+        FormEmail ack = to(sent, "alice@x.com");
+        assertThat(ack.from()).isEqualTo("noreply@meteor.cafe");
+        assertThat(ack.replyTo()).isEqualTo("noreply@meteor.cafe");
+        assertThat(ack.subject()).isEqualTo("We received your tip");
+        assertThat(ack.body()).contains("Hi Alice").contains("Lovely food");
+        assertThat(ack.attachments()).isEmpty();
+
         assertThat(repo.count()).isEqualTo(1);
     }
 
@@ -99,14 +109,21 @@ class FormControllerTest {
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
-        verify(mail).send(sent.capture());
-        FormEmail email = sent.getValue();
-        assertThat(email.to()).isEqualTo("screens@hubble.cafe");
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail email = to(sent, "screens@hubble.cafe");
         assertThat(email.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(email.subject()).isEqualTo("Screen Request from Anke - Doppio");
         assertThat(email.body()).contains("Association: Doppio").contains("Hex: #FFF200");
         assertThat(email.attachments()).hasSize(1);
         assertThat(email.attachments().get(0).contentType()).isEqualTo("image/png");
+
+        FormEmail ack = to(sent, "anke@x.com");
+        assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.subject()).isEqualTo("We received your poster screen request");
+        assertThat(ack.body()).contains("Hi Anke").contains("Doppio");
+        assertThat(ack.attachments()).isEmpty();
     }
 
     @Test
@@ -135,8 +152,9 @@ class FormControllerTest {
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
-        verify(mail).send(sent.capture());
-        assertThat(sent.getValue().body()).contains("Permanent association poster");
+        verify(mail, times(2)).send(sent.capture());
+        assertThat(to(sent, "screens@hubble.cafe").body()).contains("Permanent association poster");
+        assertThat(to(sent, "anke@x.com").body()).contains("Permanent association poster");
     }
 
     @Test
@@ -159,13 +177,20 @@ class FormControllerTest {
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
-        verify(mail).send(sent.capture());
-        FormEmail email = sent.getValue();
-        assertThat(email.to()).isEqualTo("finance@hubble.cafe");
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail email = to(sent, "finance@hubble.cafe");
         assertThat(email.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(email.body()).contains("Amount in Euros: 150.04").contains("IBAN: NL70TRIO033858901");
         assertThat(email.attachments()).hasSize(1);
         assertThat(email.attachments().get(0).contentType()).isEqualTo("application/pdf");
+
+        FormEmail ack = to(sent, "sven@x.com");
+        assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.subject()).isEqualTo("We received your declaration");
+        assertThat(ack.body()).contains("Hi Sven Rooijakkers").contains("Amount in euros: 150.04");
+        assertThat(ack.attachments()).isEmpty();
     }
 
     @Test
@@ -184,5 +209,13 @@ class FormControllerTest {
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "10,00").param("category", "Other"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /** Pick the captured email addressed to a given recipient (staff notification or confirmation). */
+    private FormEmail to(ArgumentCaptor<FormEmail> captor, String recipient) {
+        return captor.getAllValues().stream()
+                .filter(e -> recipient.equals(e.to()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("No email sent to " + recipient));
     }
 }

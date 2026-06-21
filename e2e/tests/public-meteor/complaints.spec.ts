@@ -24,6 +24,12 @@ test.describe('Meteor tips/complaints form', () => {
     expect(mail.subject).toBe('Meteor Tip from Jamie Tester')
     expect(mail.text).toContain('Jamie Tester')
     expect(mail.text).toContain('terrace music')
+
+    // The submitter also receives a confirmation, from the site noreply address.
+    const ack = await waitForMessageTo(request, 'jamie@example.com')
+    expect(ack.from).toBe('noreply@meteor.cafe')
+    expect(ack.subject).toBe('We received your tip')
+    expect(ack.text).toContain('terrace music')
   })
 
   test('a missing message is rejected client-side (required)', async ({ page, request }) => {
