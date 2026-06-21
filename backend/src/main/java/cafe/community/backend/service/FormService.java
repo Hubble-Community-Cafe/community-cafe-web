@@ -97,7 +97,6 @@ public class FormService {
                 + "Type: " + label + "\n"
                 + "Date: " + orDash(req.date()) + "\n\n"
                 + "Message:\n" + req.message() + "\n\n"
-                + "You can reply to this email if you would like to add anything.\n\n"
                 + "Kind regards,\nMeteor Community Cafe\n";
         sendConfirmation(meteorFrom, req.email(),
                 "We received your " + label.toLowerCase(), confirmation);
@@ -148,8 +147,6 @@ public class FormService {
                 + "For your records:\n\n"
                 + "Cafe: " + cafeLabel(req.getCafe()) + "\n"
                 + period + "\n\n"
-                + "Please note that the board may approve or deny any request. You can reply to this "
-                + "email with questions.\n\n"
                 + "Kind regards,\nHubble Community Cafe\n";
         sendConfirmation(hubbleFrom, req.getEmail(),
                 "We received your poster screen request", confirmation);
@@ -187,8 +184,7 @@ public class FormService {
                 + "Amount in euros: " + amount.toPlainString() + "\n"
                 + "Category: " + req.getCategory() + "\n"
                 + "Date of purchase: " + req.getDateOfPurchase() + "\n\n"
-                + "If anything is unclear we will contact you. You can reply to this email with "
-                + "questions.\n\n"
+                + "If anything is unclear we will contact you. \n\n"
                 + "Kind regards,\nHubble Community Cafe\n";
         sendConfirmation(hubbleFrom, req.getEmail(),
                 "We received your declaration", confirmation);
