@@ -22,8 +22,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * third-party captcha. In-memory and best-effort (single instance); a reverse proxy should
  * set {@code X-Real-IP}.
  */
+// Disabled under test and e2e: the per-IP counter is process-wide and is not cleared by the
+// e2e reset, so leaving it on would couple otherwise-independent form specs together.
 @Component
-@Profile("!test")
+@Profile("!test & !e2e")
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Logger log = LoggerFactory.getLogger(RateLimitFilter.class);

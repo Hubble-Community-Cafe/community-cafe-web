@@ -34,18 +34,18 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
-| Menu | ✅ | ✅ | 🟡 | ✅ |
-| Daily dinner dish | ✅ | n/a | ✅ | ⬜ |
-| Opening hours (+ CMS footer) | ✅ | ⬜ | ✅ | ✅ |
-| Status banner (Meteor) | n/a | ✅ | n/a | ⬜ |
-| Events | ✅ | ✅ | ✅ | ⬜ |
-| Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ⬜ |
-| Vacancies | ✅ | n/a | 🟡 | ⬜ |
+| Menu | ✅ | ✅ | ✅ | ✅ |
+| Daily dinner dish | ✅ | n/a | ✅ | 🟡 |
+| Opening hours (+ CMS footer) | ✅ | 🟡 | ✅ | ✅ |
+| Status banner (Meteor) | n/a | ✅ | n/a | 🟡 |
+| Events | ✅ | ✅ | ✅ | 🟡 |
+| Board (current / previous / supervisory) | ✅ | ✅ | ✅ | 🟡 |
+| Vacancies | ✅ | n/a | ✅ | 🟡 |
 | Associations | ✅ | n/a | ✅ | ✅ |
-| Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ⬜ |
-| Forms: Meteor complaints | n/a | ✅ | n/a | ⬜ |
+| Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | 🟡 |
+| Forms: Meteor complaints | n/a | ✅ | n/a | 🟡 |
 | Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
-| Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ⬜ |
+| Forms: Hubble tips / information / loan | ✅ | n/a | n/a | 🟡 |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
@@ -53,5 +53,9 @@ Form specs assert both the staff notification (to the per-form team list, with a
 
 ## Next specs
 
-More mobile coverage (Meteor nav, admin on mobile) and the public-meteor opening-hours footer. The
-admin menu/vacancies CRUD specs have landed (🟡); they flip to ✅ after the next green stack run.
+Mobile coverage is now broad (daily dish, status banner, vacancies, events, board, RBAC, plus the
+Meteor complaints and Hubble tips forms on a phone, via the new `mobile-admin` project). The only
+remaining `⬜` is the Hubble file-upload forms (screens/declarations) on mobile. The rate-limit
+filter is disabled under the `e2e` profile, so form specs no longer share a per-IP counter; the
+filter itself is not exercised end-to-end (worth a focused backend test). Everything tagged 🟡 flips
+to ✅ after the next green stack run.

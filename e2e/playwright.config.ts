@@ -94,5 +94,10 @@ export default defineConfig({
       testDir: './tests/mobile-meteor',
       use: { ...devices['Pixel 5'], baseURL: METEOR_BASE_URL },
     },
+    {
+      name: 'mobile-admin',
+      testDir: './tests/mobile-admin',
+      use: { ...devices['Pixel 5'], baseURL: ADMIN_BASE_URL },
+    },
   ],
 })
