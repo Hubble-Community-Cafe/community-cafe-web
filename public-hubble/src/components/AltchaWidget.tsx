@@ -24,5 +24,7 @@ export function AltchaWidget({
     return () => el.removeEventListener('statechange', handler)
   }, [onVerified])
 
-  return createElement('altcha-widget', { ref: attach, challengeurl: challengeUrl, auto: 'onload' })
+  // `challenge` carries the challenge URL in altcha 3.x (it was `challengeurl` in 2.x). With the
+  // wrong name the widget has no URL and `auto="onload"` fetches the current page (text/html).
+  return createElement('altcha-widget', { ref: attach, challenge: challengeUrl, auto: 'onload' })
 }
