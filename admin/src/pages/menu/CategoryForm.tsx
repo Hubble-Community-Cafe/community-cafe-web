@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { BarLocation, MenuCategory, MenuCategoryRequest, MenuKind } from '../../lib/api'
 
 interface Props {
@@ -19,6 +19,7 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
   const [bar, setBar] = useState<BarLocation | 'SHARED'>(initial?.bar ?? defaultBar)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const nameId = useId()
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -46,8 +47,9 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label htmlFor={nameId} className="mb-1 block text-xs font-medium text-slate-600">Name</label>
           <input
+            id={nameId}
             required
             maxLength={100}
             value={name}

@@ -34,13 +34,13 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
-| Menu | ✅ | ✅ | ⬜ | ✅ |
+| Menu | ✅ | ✅ | 🟡 | ✅ |
 | Daily dinner dish | ✅ | n/a | ✅ | ⬜ |
 | Opening hours (+ CMS footer) | ✅ | ⬜ | ✅ | ✅ |
 | Status banner (Meteor) | n/a | ✅ | n/a | ⬜ |
 | Events | ✅ | ✅ | ✅ | ⬜ |
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ⬜ |
-| Vacancies | ✅ | n/a | ⬜ | ⬜ |
+| Vacancies | ✅ | n/a | 🟡 | ⬜ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ⬜ |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ⬜ |
@@ -53,4 +53,5 @@ Form specs assert both the staff notification (to the per-form team list, with a
 
 ## Next specs
 
-Admin CRUD-via-UI for menu (nested tabs/items, likely needs data-testid hooks) and vacancies; more mobile coverage (Meteor nav, admin on mobile).
+More mobile coverage (Meteor nav, admin on mobile) and the public-meteor opening-hours footer. The
+admin menu/vacancies CRUD specs have landed (🟡); they flip to ✅ after the next green stack run.

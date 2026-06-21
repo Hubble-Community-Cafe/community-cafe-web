@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import type { MenuItem, MenuItemRequest } from '../../lib/api'
 
 interface Props {
@@ -35,6 +35,9 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
   const [active, setActive] = useState(initial?.active ?? true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const nameId = useId()
+  const regularId = useId()
+  const studentId = useId()
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -72,8 +75,9 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-slate-600">Name</label>
+          <label htmlFor={nameId} className="mb-1 block text-xs font-medium text-slate-600">Name</label>
           <input
+            id={nameId}
             required
             maxLength={200}
             value={name}
@@ -93,10 +97,11 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={regularId} className="mb-1 block text-xs font-medium text-slate-600">
             Regular price (€)
           </label>
           <input
+            id={regularId}
             required
             type="number"
             step="0.01"
@@ -107,10 +112,11 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={studentId} className="mb-1 block text-xs font-medium text-slate-600">
             TU/e student price (€) <span className="text-slate-400">(optional)</span>
           </label>
           <input
+            id={studentId}
             type="number"
             step="0.01"
             min="0"
