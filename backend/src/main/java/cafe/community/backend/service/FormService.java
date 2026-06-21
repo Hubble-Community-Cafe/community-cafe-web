@@ -3,7 +3,10 @@ package cafe.community.backend.service;
 import cafe.community.backend.altcha.AltchaService;
 import cafe.community.backend.dto.ComplaintRequest;
 import cafe.community.backend.dto.DeclarationRequest;
+import cafe.community.backend.dto.InformationRequest;
+import cafe.community.backend.dto.LoanRequest;
 import cafe.community.backend.dto.ScreenRequest;
+import cafe.community.backend.dto.TipRequest;
 import cafe.community.backend.mail.FormEmail;
 import cafe.community.backend.mail.FormMailService;
 import cafe.community.backend.model.FormSubmission;
@@ -43,6 +46,8 @@ public class FormService {
     private final String screensTo;
     private final String declarationsTo;
     private final String declarationsCc;
+    private final String informationTo;
+    private final String loanTo;
     private final String hubbleFrom;
     private final String meteorFrom;
 
@@ -54,6 +59,8 @@ public class FormService {
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
             @Value("${app.mail.forms.declarations:finance@hubble.cafe}") String declarationsTo,
             @Value("${app.mail.forms.declarations-cc:}") String declarationsCc,
+            @Value("${app.mail.forms.information:info@hubble.cafe}") String informationTo,
+            @Value("${app.mail.forms.loan:loan@hubble.cafe}") String loanTo,
             @Value("${app.mail.from.hubble:noreply@hubble.cafe}") String hubbleFrom,
             @Value("${app.mail.from.meteor:noreply@meteor.cafe}") String meteorFrom) {
         this.mail = mail;
@@ -63,6 +70,8 @@ public class FormService {
         this.screensTo = screensTo;
         this.declarationsTo = declarationsTo;
         this.declarationsCc = declarationsCc;
+        this.informationTo = informationTo;
+        this.loanTo = loanTo;
         this.hubbleFrom = hubbleFrom;
         this.meteorFrom = meteorFrom;
     }
@@ -188,6 +197,98 @@ public class FormService {
                 + "Kind regards,\nHubble Community Cafe\n";
         sendConfirmation(hubbleFrom, req.getEmail(),
                 "We received your declaration", confirmation);
+    }
+
+    // ── Tips / complaints / ideas (Hubble) ───────────────────────────────────────
+
+    public void submitTip(TipRequest req) {
+        if (isBot(req.honeypot())) return;
+        requireCaptcha(req.altcha());
+
+        String label = switch (req.type()) {
+            case "TIP" -> "Tip";
+            case "IDEA" -> "Idea";
+            default -> "Complaint";
+        };
+        String body = "New " + label.toLowerCase() + " from the Hubble website\n\n"
+                + "Name: " + req.name() + "\n"
+                + "Email: " + req.email() + "\n"
+                + "Phone: " + orDash(req.phone()) + "\n"
+                + "Date: " + orDash(req.date()) + "\n"
+                + "Type: " + label + "\n"
+                + "Wants updates on this subject: "
+                + (Boolean.TRUE.equals(req.wantsUpdates()) ? "Yes" : "No") + "\n\n"
+                + "Message:\n" + req.message() + "\n";
+
+        record(FormType.COMPLAINT, req.name(), req.email(), false, body);
+        mail.send(new FormEmail(hubbleFrom, complaintsTo, null, req.email(),
+                "Hubble " + label + " from " + req.name(), body, List.of()));
+
+        String confirmation = "Hi " + req.name() + ",\n\n"
+                + "Thanks for contacting Hubble. We have received your " + label.toLowerCase()
+                + " and the team will look into it.\n\n"
+                + "For your records, this is what you sent:\n\n"
+                + "Type: " + label + "\n"
+                + "Date: " + orDash(req.date()) + "\n\n"
+                + "Message:\n" + req.message() + "\n\n"
+                + "Kind regards,\nHubble Community Cafe\n";
+        sendConfirmation(hubbleFrom, req.email(),
+                "We received your " + label.toLowerCase(), confirmation);
+    }
+
+    // ── Information form (Hubble) ─────────────────────────────────────────────────
+
+    public void submitInformation(InformationRequest req) {
+        if (isBot(req.honeypot())) return;
+        requireCaptcha(req.altcha());
+
+        String body = "New information request from the Hubble website\n\n"
+                + "Name: " + req.name() + "\n"
+                + "Email: " + req.email() + "\n"
+                + "Phone: " + orDash(req.phone()) + "\n\n"
+                + "Message:\n" + req.message() + "\n";
+
+        record(FormType.INFORMATION, req.name(), req.email(), false, body);
+        mail.send(new FormEmail(hubbleFrom, informationTo, null, req.email(),
+                "Hubble information request from " + req.name(), body, List.of()));
+
+        String confirmation = "Hi " + req.name() + ",\n\n"
+                + "Thanks for contacting Hubble. We have received your message and will get back "
+                + "to you.\n\n"
+                + "For your records:\n\n"
+                + "Message:\n" + req.message() + "\n\n"
+                + "Kind regards,\nHubble Community Cafe\n";
+        sendConfirmation(hubbleFrom, req.email(), "We received your message", confirmation);
+    }
+
+    // ── Loan equipment (Hubble) ───────────────────────────────────────────────────
+
+    public void submitLoan(LoanRequest req) {
+        if (isBot(req.honeypot())) return;
+        requireCaptcha(req.altcha());
+
+        String body = "New loan equipment request from the Hubble website\n\n"
+                + "Name: " + req.name() + "\n"
+                + "Association: " + req.association() + "\n"
+                + "Email: " + req.email() + "\n\n"
+                + "Pick-up: " + req.pickupDate() + " at " + req.pickupTime() + "\n"
+                + "Return: " + req.returnDate() + " at " + req.returnTime() + "\n\n"
+                + "Message:\n" + req.message() + "\n";
+
+        record(FormType.LOAN, req.name(), req.email(), false, body);
+        mail.send(new FormEmail(hubbleFrom, loanTo, null, req.email(),
+                "Hubble loan request from " + req.name() + " - " + req.association(),
+                body, List.of()));
+
+        String confirmation = "Hi " + req.name() + ",\n\n"
+                + "Thanks! We have received your equipment loan request for " + req.association()
+                + " and the community manager will review it. This is a request, not a confirmed "
+                + "booking.\n\n"
+                + "For your records:\n\n"
+                + "Pick-up: " + req.pickupDate() + " at " + req.pickupTime() + "\n"
+                + "Return: " + req.returnDate() + " at " + req.returnTime() + "\n\n"
+                + "Kind regards,\nHubble Community Cafe\n";
+        sendConfirmation(hubbleFrom, req.email(), "We received your loan request", confirmation);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────

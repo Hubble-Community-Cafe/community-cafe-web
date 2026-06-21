@@ -10,7 +10,9 @@ export { getVacancies } from './api/vacancy'
 export { getAssociations } from './api/association'
 export {
   FormError, submitComplaint, submitScreenForm, submitDeclarationForm, formsChallengeUrl,
+  submitTip, submitInformation, submitLoan,
   type ComplaintInput, type ComplaintType,
+  type TipInput, type InformationInput, type LoanInput,
 } from './api/forms'
 export { cn } from './lib/cn'
 export {

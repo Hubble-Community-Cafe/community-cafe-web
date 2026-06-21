@@ -4,5 +4,7 @@ package cafe.community.backend.model;
 public enum FormType {
     COMPLAINT,
     SCREEN,
-    DECLARATION
+    DECLARATION,
+    INFORMATION,
+    LOAN
 }

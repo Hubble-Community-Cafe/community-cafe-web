@@ -71,3 +71,59 @@ export function submitScreenForm(data: FormData): Promise<void> {
 export function submitDeclarationForm(data: FormData): Promise<void> {
   return postForm('/api/forms/declaration', data)
 }
+
+export interface TipInput {
+  name: string
+  email: string
+  phone?: string
+  date?: string
+  type: ComplaintType
+  message: string
+  /** Whether the submitter wants updates on this subject. */
+  wantsUpdates: boolean
+  honeypot?: string
+  altcha?: string
+}
+
+/** Submit the Hubble "Tips, Complaints & Ideas" form (JSON). */
+export function submitTip(input: TipInput): Promise<void> {
+  return postForm('/api/forms/tips', JSON.stringify(input), {
+    'Content-Type': 'application/json',
+  })
+}
+
+export interface InformationInput {
+  name: string
+  email: string
+  phone?: string
+  message: string
+  honeypot?: string
+  altcha?: string
+}
+
+/** Submit the Hubble "Information form" (JSON). */
+export function submitInformation(input: InformationInput): Promise<void> {
+  return postForm('/api/forms/information', JSON.stringify(input), {
+    'Content-Type': 'application/json',
+  })
+}
+
+export interface LoanInput {
+  name: string
+  association: string
+  email: string
+  pickupDate: string
+  pickupTime: string
+  returnDate: string
+  returnTime: string
+  message: string
+  honeypot?: string
+  altcha?: string
+}
+
+/** Submit the Hubble "Loan Equipment" request (JSON). */
+export function submitLoan(input: LoanInput): Promise<void> {
+  return postForm('/api/forms/loan', JSON.stringify(input), {
+    'Content-Type': 'application/json',
+  })
+}

@@ -211,6 +211,117 @@ class FormControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    // ── Tips, Complaints & Ideas (Hubble) ─────────────────────────────────────────
+
+    @Test
+    void tips_sendsToNuisanceFromHubbleWithUpdatesFlag() throws Exception {
+        mockMvc.perform(post("/api/forms/tips").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Pim","email":"pim@x.com","type":"COMPLAINT",
+                                 "message":"Music too loud upstairs","wantsUpdates":true}
+                                """))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail staff = to(sent, "nuisance@hubble.cafe");
+        assertThat(staff.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(staff.subject()).isEqualTo("Hubble Complaint from Pim");
+        assertThat(staff.body()).contains("Music too loud upstairs")
+                .contains("Wants updates on this subject: Yes");
+
+        FormEmail ack = to(sent, "pim@x.com");
+        assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
+        assertThat(ack.subject()).isEqualTo("We received your complaint");
+        assertThat(repo.count()).isEqualTo(1);
+    }
+
+    @Test
+    void tips_honeypot_isSilentlyDropped() throws Exception {
+        mockMvc.perform(post("/api/forms/tips").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Bot","email":"bot@x.com","type":"TIP","message":"spam","honeypot":"x"}
+                                """))
+                .andExpect(status().isNoContent());
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
+        assertThat(repo.count()).isZero();
+    }
+
+    // ── Information form (Hubble) ─────────────────────────────────────────────────
+
+    @Test
+    void information_sendsToInfoListAndConfirms() throws Exception {
+        mockMvc.perform(post("/api/forms/information").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Tess","email":"tess@x.com","phone":"+316 12345678",
+                                 "message":"Can we host a borrel next month?"}
+                                """))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail staff = to(sent, "info@hubble.cafe");
+        assertThat(staff.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(staff.subject()).isEqualTo("Hubble information request from Tess");
+        assertThat(staff.body()).contains("borrel next month");
+
+        FormEmail ack = to(sent, "tess@x.com");
+        assertThat(ack.subject()).isEqualTo("We received your message");
+        assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
+    }
+
+    @Test
+    void information_missingMessage_isRejected() throws Exception {
+        mockMvc.perform(post("/api/forms/information").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Tess","email":"tess@x.com"}
+                                """))
+                .andExpect(status().isBadRequest());
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
+    }
+
+    // ── Loan equipment (Hubble) ───────────────────────────────────────────────────
+
+    @Test
+    void loan_sendsToLoanListWithPickupReturn() throws Exception {
+        mockMvc.perform(post("/api/forms/loan").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Lotte","association":"Doppio","email":"lotte@x.com",
+                                 "pickupDate":"2026-07-01","pickupTime":"14:00",
+                                 "returnDate":"2026-07-03","returnTime":"12:00",
+                                 "message":"Two cantus tables please"}
+                                """))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+
+        FormEmail staff = to(sent, "loan@hubble.cafe");
+        assertThat(staff.from()).isEqualTo("noreply@hubble.cafe");
+        assertThat(staff.subject()).isEqualTo("Hubble loan request from Lotte - Doppio");
+        assertThat(staff.body()).contains("Pick-up: 2026-07-01 at 14:00")
+                .contains("Return: 2026-07-03 at 12:00").contains("cantus tables");
+
+        FormEmail ack = to(sent, "lotte@x.com");
+        assertThat(ack.subject()).isEqualTo("We received your loan request");
+        assertThat(ack.body()).contains("Doppio");
+    }
+
+    @Test
+    void loan_missingTimes_isRejected() throws Exception {
+        mockMvc.perform(post("/api/forms/loan").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"Lotte","association":"Doppio","email":"lotte@x.com",
+                                 "pickupDate":"2026-07-01","returnDate":"2026-07-03",
+                                 "message":"Two cantus tables please"}
+                                """))
+                .andExpect(status().isBadRequest());
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
+    }
+
     /** Pick the captured email addressed to a given recipient (staff notification or confirmation). */
     private FormEmail to(ArgumentCaptor<FormEmail> captor, String recipient) {
         return captor.getAllValues().stream()

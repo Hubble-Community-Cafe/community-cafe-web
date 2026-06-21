@@ -47,6 +47,8 @@ services:
       - APP_MAIL_FORMS_COMPLAINTS=nuisance@hubble.cafe
       - APP_MAIL_FORMS_SCREENS=screens@hubble.cafe
       - APP_MAIL_FORMS_DECLARATIONS=finance@hubble.cafe
+      - APP_MAIL_FORMS_INFORMATION=info@hubble.cafe
+      - APP_MAIL_FORMS_LOAN=loan@hubble.cafe
       # ALTCHA bot protection (self-hosted proof-of-work). Use a long, stable random secret.
       - APP_ALTCHA_ENABLED=true
       - APP_ALTCHA_HMAC_KEY=__ALTCHA_HMAC_KEY__

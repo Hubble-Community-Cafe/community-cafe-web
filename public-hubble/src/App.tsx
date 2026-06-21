@@ -10,6 +10,9 @@ import { VacanciesPage } from './pages/VacanciesPage'
 import { AssociationsPage } from './pages/AssociationsPage'
 import { ScreensPage } from './pages/ScreensPage'
 import { DeclarationsPage } from './pages/DeclarationsPage'
+import { TipsPage } from './pages/TipsPage'
+import { InformationPage } from './pages/InformationPage'
+import { LoanPage } from './pages/LoanPage'
 
 /** Routed pages whose content arrives in later milestones. */
 const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
@@ -17,9 +20,6 @@ const PLACEHOLDER_PAGES: { path: string; title: string; intro?: string }[] = [
   { path: '/cafe/discount-policy', title: 'Discount policy' },
   { path: '/community/committees', title: 'Committees' },
   { path: '/contact', title: 'Contact' },
-  { path: '/contact/tips', title: 'Tips, Complaints and Ideas' },
-  { path: '/contact/information', title: 'Information form' },
-  { path: '/contact/loan-equipment', title: 'Loan Equipment' },
 ]
 
 function App() {
@@ -37,6 +37,9 @@ function App() {
         <Route path="/community/associations" element={<AssociationsPage />} />
         <Route path="/contact/screens" element={<ScreensPage />} />
         <Route path="/contact/declarations" element={<DeclarationsPage />} />
+        <Route path="/contact/tips" element={<TipsPage />} />
+        <Route path="/contact/information" element={<InformationPage />} />
+        <Route path="/contact/loan-equipment" element={<LoanPage />} />
         {PLACEHOLDER_PAGES.map((page) => (
           <Route
             key={page.path}
