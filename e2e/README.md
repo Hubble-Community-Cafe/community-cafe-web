@@ -35,17 +35,17 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
 | Menu | ✅ | ✅ | ✅ | ✅ |
-| Daily dinner dish | ✅ | n/a | ✅ | 🟡 |
-| Opening hours (+ CMS footer) | ✅ | 🟡 | ✅ | ✅ |
-| Status banner (Meteor) | n/a | ✅ | n/a | 🟡 |
-| Events | ✅ | ✅ | ✅ | 🟡 |
-| Board (current / previous / supervisory) | ✅ | ✅ | ✅ | 🟡 |
-| Vacancies | ✅ | n/a | ✅ | 🟡 |
+| Daily dinner dish | ✅ | n/a | ✅ | ✅ |
+| Opening hours (+ CMS footer) | ✅ | ✅ | ✅ | ✅ |
+| Status banner (Meteor) | n/a | ✅ | n/a | ✅ |
+| Events | ✅ | ✅ | ✅ | ✅ |
+| Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
+| Vacancies | ✅ | n/a | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
-| Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | 🟡 |
-| Forms: Meteor complaints | n/a | ✅ | n/a | 🟡 |
+| Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
+| Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
 | Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
-| Forms: Hubble tips / information / loan | ✅ | n/a | n/a | 🟡 |
+| Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ✅ |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
@@ -53,9 +53,9 @@ Form specs assert both the staff notification (to the per-form team list, with a
 
 ## Next specs
 
-Mobile coverage is now broad (daily dish, status banner, vacancies, events, board, RBAC, plus the
-Meteor complaints and Hubble tips forms on a phone, via the new `mobile-admin` project). The only
-remaining `⬜` is the Hubble file-upload forms (screens/declarations) on mobile. The rate-limit
-filter is disabled under the `e2e` profile, so form specs no longer share a per-IP counter; the
-filter itself is not exercised end-to-end (worth a focused backend test). Everything tagged 🟡 flips
-to ✅ after the next green stack run.
+The backfill is essentially complete: every shipped module is green on its sites, in admin CRUD, and
+on mobile (via the `mobile-admin` project for admin-on-a-phone). The one remaining `⬜` is the Hubble
+file-upload forms (screens/declarations) on mobile, the desktop specs already cover the upload path,
+so this is a low-priority responsive-layout check. The rate-limit filter is disabled under the `e2e`
+profile (its per-IP counter would otherwise leak across form specs) and is covered directly by
+`RateLimitFilterTest` in the backend.
