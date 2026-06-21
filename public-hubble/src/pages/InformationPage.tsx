@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { submitInformation, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
@@ -38,9 +37,10 @@ export function InformationPage() {
     <PageShell title="Information Form">
       <p className="mt-3 text-hubble-800/80">
         Have a question for Hubble? Send us a message below. Organizing something in Hubble?{' '}
-        <Link to="/events" className="font-semibold text-hubble-700 hover:underline">
+        <a href="https://harry.hubble.cafe" target="_blank" rel="noreferrer"
+          className="font-semibold text-hubble-700 hover:underline">
           Use our event form.
-        </Link>
+        </a>
       </p>
 
       {status === 'sent' ? (

@@ -43,9 +43,9 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Vacancies | ✅ | n/a | ⬜ | ⬜ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ⬜ |
-| Forms: Meteor complaints | n/a | 🟡 | n/a | ⬜ |
-| Forms: Hubble screens / declarations | 🟡 | n/a | n/a | ⬜ |
-| Forms: Hubble tips / information / loan | 🟡 | n/a | n/a | ⬜ |
+| Forms: Meteor complaints | n/a | ✅ | n/a | ⬜ |
+| Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
+| Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ⬜ |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
