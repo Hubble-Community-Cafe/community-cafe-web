@@ -32,7 +32,7 @@ test.describe('Hubble shell and static pages', () => {
 
   test('the contact hub links out to each form', async ({ page }) => {
     await page.goto('/contact')
-    await expect(page.getByRole('heading', { name: 'Contact' })).toBeVisible()
+    await expect(page.getByRole('main').getByRole('heading', { name: 'Contact' })).toBeVisible()
     await expect(page.getByRole('link', { name: /Loan equipment/ }))
       .toHaveAttribute('href', '/contact/loan-equipment')
     await page.getByRole('link', { name: /Online declarations/ }).click()
