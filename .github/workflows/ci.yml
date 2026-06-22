@@ -20,7 +20,7 @@ jobs:
     name: Backend (Maven · JDK 21)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Check backend exists
         id: check
         run: test -f backend/pom.xml && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
@@ -42,7 +42,7 @@ jobs:
       matrix:
         app: [shared-web, public-hubble, public-meteor, admin]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Check app exists
         id: check
         run: test -f ${{ matrix.app }}/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
@@ -67,7 +67,7 @@ jobs:
     name: E2E (Playwright · full stack)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Check e2e exists
         id: check
         run: test -f e2e/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
@@ -127,7 +127,7 @@ jobs:
           - { service: public-meteor, context: ., dockerfile: ./public-meteor/Dockerfile }
           - { service: admin, context: ., dockerfile: ./admin/Dockerfile }
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Resolve version and image name
         id: meta
         run: |
@@ -187,7 +187,7 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Resolve version
@@ -217,7 +217,7 @@ jobs:
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Resolve version
