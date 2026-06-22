@@ -41,9 +41,9 @@ test.describe('Admin dashboard', () => {
     const admin = new AdminApp(page)
     await admin.goto('/')
 
-    await expect(page.getByText('Upcoming events')).toBeVisible()
-    await expect(page.getByText("Today’s daily dish")).toHaveCount(0)
-    await expect(page.getByText('Recent activity')).toHaveCount(0)
+    await expect(page.getByText('Upcoming events', { exact: true })).toBeVisible()
+    await expect(page.getByText('Today’s daily dish', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('Recent activity', { exact: true })).toHaveCount(0)
   })
 
   test('an admin sees the recent-activity widget', async ({ page, request }) => {
