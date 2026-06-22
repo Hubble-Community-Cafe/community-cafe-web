@@ -24,51 +24,22 @@ updates:
           - "com.microsoft*"
           - "com.azure*"
 
-  # ── Frontends (npm) ──────────────────────────────────────────────────────────
+  # ── Frontends (npm workspace) ────────────────────────────────────────────────
+  # Single entry at the workspace root so Dependabot regenerates the shared
+  # package-lock.json (in /) when it bumps any workspace member's package.json.
   - package-ecosystem: "npm"
-    directory: "/public-hubble"
+    directory: "/"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 25
     reviewers: ["PimVanLeeuwen"]
-    labels: ["dependencies", "frontend", "hubble"]
-    groups:
-      react:
-        patterns: ["react*", "@types/react*", "react-*"]
-      build-tools:
-        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
-
-  - package-ecosystem: "npm"
-    directory: "/public-meteor"
-    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
-    reviewers: ["PimVanLeeuwen"]
-    labels: ["dependencies", "frontend", "meteor"]
-    groups:
-      react:
-        patterns: ["react*", "@types/react*", "react-*"]
-      build-tools:
-        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
-
-  - package-ecosystem: "npm"
-    directory: "/admin"
-    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
-    reviewers: ["PimVanLeeuwen"]
-    labels: ["dependencies", "frontend", "admin"]
+    labels: ["dependencies", "frontend"]
     groups:
       react:
         patterns: ["react*", "@types/react*", "react-*"]
       msal:
         patterns: ["@azure/msal-*"]
       build-tools:
-        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*"]
-
-  - package-ecosystem: "npm"
-    directory: "/shared-web"
-    schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
-    reviewers: ["PimVanLeeuwen"]
-    labels: ["dependencies", "shared-web"]
+        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@eslint/*", "typescript-eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*", "@tailwindcss/*"]
 
   - package-ecosystem: "npm"
     directory: "/e2e"
