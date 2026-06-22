@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getTodaysDishes, type DailyDish } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 export function DailyDishPage() {
+  usePageSeo('Daily Dinner Dish', 'Today’s affordable dinner dish at Hubble Community Cafe.')
   const [dishes, setDishes] = useState<DailyDish[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(false)

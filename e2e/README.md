@@ -34,6 +34,7 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
+| SEO meta (title/OG/canonical/404 noindex) | 🟡 | ⬜ | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
 | Daily dinner dish | ✅ | n/a | ✅ | ✅ |
 | Opening hours (+ CMS footer) | ✅ | ✅ | ✅ | ✅ |

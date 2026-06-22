@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { submitScreenForm, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const ACCEPTED = ['image/jpeg', 'image/png', 'video/mp4']
@@ -24,6 +25,7 @@ const REQUIREMENTS = [
 ]
 
 export function ScreensPage() {
+  usePageSeo('Hubble Poster Screens', 'Request a poster slide on the screens throughout Hubble, with the requirements and guidelines.')
   const [form, setForm] = useState({
     name: '', association: '', email: '', cafe: 'HUBBLE',
     startDate: '', endDate: '', hexColor: '', message: '', honeypot: '',

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { submitInformation, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
@@ -9,6 +10,7 @@ const field =
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function InformationPage() {
+  usePageSeo('Information form', 'Ask Hubble Community Cafe a general question.')
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', honeypot: '' })
   const [altcha, setAltcha] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')

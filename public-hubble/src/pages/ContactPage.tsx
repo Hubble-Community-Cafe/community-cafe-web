@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 const FORMS: { to: string; title: string; desc: string }[] = [
   { to: '/contact/tips', title: 'Tips, Complaints & Ideas', desc: 'Share a tip, raise a complaint, or suggest an idea for Hubble.' },
@@ -10,6 +11,7 @@ const FORMS: { to: string; title: string; desc: string }[] = [
 ]
 
 export function ContactPage() {
+  usePageSeo('Contact', 'Reach the right Hubble team: tips and complaints, information, declarations, poster screens, or loan equipment.')
   return (
     <PageShell
       title="Contact"

@@ -1,6 +1,8 @@
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 export function CafePage() {
+  usePageSeo('The Cafe', 'Hubble is the living room of the TU/e campus: food, drinks and events, open to everyone.')
   return (
     <PageShell title="Living room of the Campus">
       <div className="mt-4 space-y-4 text-hubble-800/90">

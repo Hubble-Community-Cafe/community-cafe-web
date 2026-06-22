@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { submitDeclarationForm, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const MAX_BYTES = 10 * 1024 * 1024
 const ACCEPTED = ['application/pdf', 'image/jpeg', 'image/png']
@@ -13,6 +14,7 @@ const field =
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function DeclarationsPage() {
+  usePageSeo('Online Declarations', 'Submit an expense declaration to the Hubble treasurer with your receipt.')
   const [form, setForm] = useState({
     fullName: '', email: '', phone: '', iban: '', dateOfPurchase: '',
     amount: '', category: 'Board Costs', description: '', honeypot: '',

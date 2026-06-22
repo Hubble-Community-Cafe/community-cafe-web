@@ -1,4 +1,5 @@
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 const COMMITTEES: { name: string; img: string }[] = [
   { name: 'IntroDuckCie', img: '/images/committees/introduckcie.jpg' },
@@ -10,6 +11,7 @@ const COMMITTEES: { name: string; img: string }[] = [
 ]
 
 export function CommitteesPage() {
+  usePageSeo('Committees', 'Hubble’s committees are run by enthusiastic students improving student life in Eindhoven. Join in.')
   return (
     <PageShell title="Committees">
       <figure className="mt-5 overflow-hidden rounded-xl">

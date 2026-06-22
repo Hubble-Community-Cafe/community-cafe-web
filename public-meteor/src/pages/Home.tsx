@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
+import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
 
 const DAY_LABELS: Record<string, string> = {
@@ -37,6 +38,7 @@ function groupHours(hours: WeeklyHours[]): { label: string; open: string; close:
 }
 
 export function Home() {
+  usePageSeo('', 'Meteor Community Cafe on the TU/e campus: a lively cafe and meeting space by day, a relaxed spot for events by night.')
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [hoursLoaded, setHoursLoaded] = useState(false)
   const [overrides, setOverrides] = useState<HoursOverride[]>([])

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getMenu, type MenuTab, type MenuCategoryWithItems, type MenuItem } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 function formatPrice(regular: number, student: number | null): string {
   const fmt = (n: number) => `€${n.toFixed(2).replace('.', ',')}`
@@ -56,6 +57,7 @@ function CategoryBlock({ category }: { category: MenuCategoryWithItems }) {
 }
 
 export function MenuPage() {
+  usePageSeo('Menu', 'The Meteor drinks and food menu, with TU/e student pricing.')
   const [tabs, setTabs] = useState<MenuTab[]>([])
   const [activeTabId, setActiveTabId] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(true)

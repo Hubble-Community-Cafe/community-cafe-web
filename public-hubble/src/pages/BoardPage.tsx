@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getBoard, type BoardTerm, type BoardMember } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
   const [terms, setTerms] = useState<BoardTerm[]>([])
@@ -38,6 +39,7 @@ function MemberCard({ member }: { member: BoardMember }) {
 }
 
 export function CurrentBoardPage() {
+  usePageSeo('Board', 'The current board of Hubble Community Cafe.')
   const { terms, loaded } = useBoard()
   const term = terms.find((t) => t.type === 'EXECUTIVE' && t.current)
 
@@ -77,6 +79,7 @@ export function CurrentBoardPage() {
 // ── Previous boards ──────────────────────────────────────────────────────────
 
 export function PreviousBoardsPage() {
+  usePageSeo('Previous boards', 'Previous boards of Hubble Community Cafe.')
   const { terms, loaded } = useBoard()
   const previous = terms.filter(
     (t) => t.type === 'EXECUTIVE' && !t.current && (t.bar === 'HUBBLE' || t.bar === null),
@@ -121,6 +124,7 @@ export function PreviousBoardsPage() {
 // ── Supervisory board ────────────────────────────────────────────────────────
 
 export function SupervisoryBoardPage() {
+  usePageSeo('Supervisory Board', 'The supervisory board of Hubble Community Cafe.')
   const { terms, loaded } = useBoard()
   const supervisory = terms.filter((t) => t.type === 'SUPERVISORY')
 

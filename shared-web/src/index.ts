@@ -15,6 +15,7 @@ export {
   type TipInput, type InformationInput, type LoanInput,
 } from './api/forms'
 export { cn } from './lib/cn'
+export { applyPageMeta, type PageMeta } from './lib/seo'
 export {
   groupWeeklyHours, groupKitchenHours, DAY_LABELS, DAY_ORDER, type HoursGroup,
 } from './lib/hours'

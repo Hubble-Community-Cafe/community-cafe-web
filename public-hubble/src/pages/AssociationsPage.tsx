@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 import { getAssociations, type Association } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 export function AssociationsPage() {
+  usePageSeo('Associations', 'The student associations that are part of the Hubble community.')
   const [associations, setAssociations] = useState<Association[]>([])
   const [loaded, setLoaded] = useState(false)
 

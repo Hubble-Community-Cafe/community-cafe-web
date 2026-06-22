@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
 import { getUpcomingEvents, type CafeEvent } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 function formatEventDate(dateStr: string, startTime: string | null): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -49,6 +50,7 @@ function EventCard({ event }: { event: CafeEvent }) {
 }
 
 export function EventsPage() {
+  usePageSeo('Agenda', 'Upcoming events at Meteor Community Cafe.')
   const [events, setEvents] = useState<CafeEvent[]>([])
   const [loaded, setLoaded] = useState(false)
 

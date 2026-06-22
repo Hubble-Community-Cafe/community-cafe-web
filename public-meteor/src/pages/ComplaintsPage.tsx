@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { submitComplaint, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const TYPES: { value: ComplaintType; label: string }[] = [
   { value: 'TIP', label: 'Tip' },
@@ -14,6 +15,7 @@ const fieldClass =
 const labelClass = 'block text-sm font-semibold text-meteor-900'
 
 export function ComplaintsPage() {
+  usePageSeo('Tips, Complaints & Ideas', 'Share a tip, raise a complaint or suggest an idea for Meteor Community Cafe.')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')

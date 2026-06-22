@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getVacancies, type Vacancy } from '@cafe/shared-web'
+import { usePageSeo } from '../lib/seo'
 
 const TEAM_PHOTOS = [
   { src: '/images/josselyn.jpg', alt: 'Manager' },
@@ -45,6 +46,7 @@ function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
 }
 
 export function VacanciesPage() {
+  usePageSeo('Vacancies', 'Open positions and volunteer roles at Hubble Community Cafe.')
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [loaded, setLoaded] = useState(false)
 

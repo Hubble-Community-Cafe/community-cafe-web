@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { submitLoan, FormError, formsChallengeUrl } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
@@ -31,6 +32,7 @@ export function LoanPage() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
   const [preview, setPreview] = useState<{ src: string; alt: string } | null>(null)
+  usePageSeo('Loan Equipment', 'Connected associations can borrow tables, taps, speakers and more from Hubble.')
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { submitTip, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { usePageSeo } from '../lib/seo'
 
 const TYPES: { value: ComplaintType; label: string }[] = [
   { value: 'TIP', label: 'Tip' },
@@ -15,6 +16,7 @@ const field =
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function TipsPage() {
+  usePageSeo('Tips, Complaints & Ideas', 'Share a tip, raise a complaint or suggest an idea for Hubble Community Cafe.')
   const [form, setForm] = useState({
     name: '', email: '', phone: '', date: '', message: '', honeypot: '',
   })

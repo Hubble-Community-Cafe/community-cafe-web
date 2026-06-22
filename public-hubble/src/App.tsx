@@ -1,6 +1,5 @@
 import { Route, Routes } from 'react-router-dom'
 import { Layout } from './components/Layout'
-import { PageShell } from './components/PageShell'
 import { Home } from './pages/Home'
 import { MenuPage } from './pages/MenuPage'
 import { DailyDishPage } from './pages/DailyDishPage'
@@ -17,6 +16,7 @@ import { CafePage } from './pages/CafePage'
 import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
 import { CommitteesPage } from './pages/CommitteesPage'
 import { ContactPage } from './pages/ContactPage'
+import { NotFoundPage } from './pages/NotFoundPage'
 
 function App() {
   return (
@@ -40,15 +40,7 @@ function App() {
         <Route path="/contact/tips" element={<TipsPage />} />
         <Route path="/contact/information" element={<InformationPage />} />
         <Route path="/contact/loan-equipment" element={<LoanPage />} />
-        <Route
-          path="*"
-          element={
-            <PageShell
-              title="Page not found"
-              intro="The page you were looking for does not exist."
-            />
-          }
-        />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>
   )

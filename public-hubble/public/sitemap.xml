@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://hubble.cafe/</loc><priority>1.0</priority></url>
+  <url><loc>https://hubble.cafe/cafe</loc><priority>0.8</priority></url>
+  <url><loc>https://hubble.cafe/cafe/menu</loc><priority>0.9</priority></url>
+  <url><loc>https://hubble.cafe/cafe/daily-dish</loc><priority>0.7</priority></url>
+  <url><loc>https://hubble.cafe/cafe/discount-policy</loc><priority>0.6</priority></url>
+  <url><loc>https://hubble.cafe/events</loc><priority>0.8</priority></url>
+  <url><loc>https://hubble.cafe/community/associations</loc><priority>0.7</priority></url>
+  <url><loc>https://hubble.cafe/community/committees</loc><priority>0.6</priority></url>
+  <url><loc>https://hubble.cafe/community/board</loc><priority>0.6</priority></url>
+  <url><loc>https://hubble.cafe/community/board/previous</loc><priority>0.4</priority></url>
+  <url><loc>https://hubble.cafe/community/board/supervisory</loc><priority>0.4</priority></url>
+  <url><loc>https://hubble.cafe/vacancies</loc><priority>0.6</priority></url>
+  <url><loc>https://hubble.cafe/contact</loc><priority>0.7</priority></url>
+  <url><loc>https://hubble.cafe/contact/tips</loc><priority>0.5</priority></url>
+  <url><loc>https://hubble.cafe/contact/information</loc><priority>0.5</priority></url>
+  <url><loc>https://hubble.cafe/contact/declarations</loc><priority>0.5</priority></url>
+  <url><loc>https://hubble.cafe/contact/screens</loc><priority>0.5</priority></url>
+  <url><loc>https://hubble.cafe/contact/loan-equipment</loc><priority>0.5</priority></url>
+</urlset>

@@ -1,6 +1,8 @@
 import { PageShell } from '../components/PageShell'
+import { usePageSeo } from '../lib/seo'
 
 export function DiscountPolicyPage() {
+  usePageSeo('Discount policy', 'How Hubble’s pricing works: discounts for TU/e students, campus residents and affiliated associations.')
   return (
     <PageShell title="Discount policy">
       <figure className="mt-5 overflow-hidden rounded-xl">

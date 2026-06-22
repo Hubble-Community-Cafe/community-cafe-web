@@ -6,6 +6,7 @@ import {
   DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
 } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
+import { usePageSeo } from '../lib/seo'
 
 function formatOverrideDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
@@ -31,6 +32,7 @@ const FEATURES = [
 ]
 
 export function Home() {
+  usePageSeo('', 'Hubble Community Cafe on the TU/e campus: food, drinks, events, and a living room for over 70 student associations.')
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [hoursLoaded, setHoursLoaded] = useState(false)
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
