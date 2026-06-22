@@ -2,7 +2,7 @@
 #   docker build -f public-hubble/Dockerfile -t public-hubble .
 
 # Build stage
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 
 # Security patches
 RUN apk upgrade --no-cache
