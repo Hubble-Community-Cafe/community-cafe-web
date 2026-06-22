@@ -2,7 +2,7 @@
 #   docker build -f public-meteor/Dockerfile -t public-meteor .
 
 # Build stage
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 
 # Security patches
 RUN apk upgrade --no-cache
