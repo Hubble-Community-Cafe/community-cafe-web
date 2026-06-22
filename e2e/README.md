@@ -44,6 +44,7 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 | Vacancies | ✅ | n/a | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
+| Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
 | Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
 | Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ✅ |

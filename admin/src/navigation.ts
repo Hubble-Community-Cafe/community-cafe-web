@@ -32,6 +32,17 @@ export interface NavSection {
   items: NavItem[]
 }
 
+/** Whether a signed-in user with the given capability flags may see a nav item. */
+export function canSee(
+  item: NavItem,
+  perms: { isViewer: boolean; isEditor: boolean; isAdmin: boolean },
+): boolean {
+  if (item.requires === 'admin') return perms.isAdmin
+  if (item.requires === 'editor') return perms.isEditor
+  if (item.requires === 'viewer') return perms.isViewer
+  return true
+}
+
 export const NAV: NavSection[] = [
   {
     items: [{ label: 'Dashboard', to: '/', icon: LayoutDashboard }],
