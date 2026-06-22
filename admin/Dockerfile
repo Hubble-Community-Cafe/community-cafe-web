@@ -2,7 +2,7 @@
 #   docker build -f admin/Dockerfile -t community-cafe-admin .
 
 # Build stage
-FROM node:20-alpine AS build
+FROM node:26-alpine AS build
 RUN apk upgrade --no-cache
 WORKDIR /app
 
