@@ -17,11 +17,15 @@ import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
 import { CommitteesPage } from './pages/CommitteesPage'
 import { ContactPage } from './pages/ContactPage'
 import { NotFoundPage } from './pages/NotFoundPage'
+import { PlazaPage } from './pages/PlazaPage'
 
 function App() {
   return (
-    <Layout>
-      <Routes>
+    <Routes>
+      {/* Full-bleed kiosk screen (the plaza display out front), no header/footer. */}
+      <Route path="/plaza-page" element={<PlazaPage />} />
+      {/* Everything else renders inside the standard site chrome. */}
+      <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/cafe" element={<CafePage />} />
         <Route path="/cafe/menu" element={<MenuPage />} />
@@ -41,8 +45,8 @@ function App() {
         <Route path="/contact/information" element={<InformationPage />} />
         <Route path="/contact/loan-equipment" element={<LoanPage />} />
         <Route path="*" element={<NotFoundPage />} />
-      </Routes>
-    </Layout>
+      </Route>
+    </Routes>
   )
 }
 
