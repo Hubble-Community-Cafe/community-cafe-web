@@ -15,7 +15,7 @@
   },
   "dependencies": {
     "@cafe/shared-web": "*",
-    "@sentry/react": "^10.57.0",
+    "@sentry/react": "^10.59.0",
     "altcha": "^3.1.0",
     "lucide-react": "^1.18.0",
     "react": "^19.2.7",
