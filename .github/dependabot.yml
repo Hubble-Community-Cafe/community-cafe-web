@@ -3,66 +3,67 @@ updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
     directory: "/backend"
+    target-branch: "deps"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     reviewers:
       - "PimVanLeeuwen"
     labels:
       - "dependencies"
       - "backend"
     groups:
-      spring-boot:
-        patterns:
-          - "org.springframework*"
-          - "spring-*"
-      microsoft-azure:
-        patterns:
-          - "com.microsoft*"
-          - "com.azure*"
+      all-deps:
+        patterns: ["*"]
 
   # ── Frontends (npm workspace) ────────────────────────────────────────────────
   # Single entry at the workspace root so Dependabot regenerates the shared
   # package-lock.json (in /) when it bumps any workspace member's package.json.
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "deps"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 25
+    open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "frontend"]
     groups:
-      react:
-        patterns: ["react*", "@types/react*", "react-*"]
-      msal:
-        patterns: ["@azure/msal-*"]
-      build-tools:
-        patterns: ["vite*", "@vitejs/*", "typescript", "eslint*", "@eslint/*", "typescript-eslint*", "@typescript-eslint/*", "vitest*", "@vitest/*", "tailwindcss*", "@tailwindcss/*"]
+      all-deps:
+        patterns: ["*"]
 
   - package-ecosystem: "npm"
     directory: "/e2e"
+    target-branch: "deps"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "e2e"]
     groups:
-      playwright:
-        patterns: ["@playwright/*", "playwright*"]
+      all-deps:
+        patterns: ["*"]
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "deps"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "ci"]
+    groups:
+      all-deps:
+        patterns: ["*"]
 
-  # ── Docker images (activate once Dockerfiles land) ─────────────────────────────
+  # ── Docker images ─────────────────────────────────────────────────────────────
   - package-ecosystem: "docker"
     directories: ["/backend", "/public-hubble", "/public-meteor", "/admin"]
+    target-branch: "deps"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "docker"]
+    groups:
+      all-deps:
+        patterns: ["*"]
