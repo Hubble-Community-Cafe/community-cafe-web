@@ -7,7 +7,7 @@ COPY src ./src
 RUN mvn -q -B clean package -DskipTests
 
 # Stage 2: run
-FROM eclipse-temurin:21-jre
+FROM eclipse-temurin:25-jre
 WORKDIR /app
 
 # curl for the health check; run as a non-root user
