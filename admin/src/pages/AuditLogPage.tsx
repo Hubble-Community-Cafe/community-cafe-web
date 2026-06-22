@@ -58,7 +58,7 @@ export function AuditLogPage() {
                       <td className="py-3 pr-4 whitespace-nowrap text-slate-500">
                         {new Date(e.createdAt).toLocaleString()}
                       </td>
-                      <td className="py-3 pr-4 text-slate-700">{e.actorName || e.actorEmail || '—'}</td>
+                      <td className="py-3 pr-4 text-slate-700">{e.actorName || e.actorEmail || '–'}</td>
                       <td className="py-3 pr-4">
                         <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
                           {e.action}
@@ -68,7 +68,7 @@ export function AuditLogPage() {
                         {e.entityType}
                         {e.entityLabel ? `: ${e.entityLabel}` : ''}
                       </td>
-                      <td className="py-3 text-slate-600">{e.summary || '—'}</td>
+                      <td className="py-3 text-slate-600">{e.summary || '–'}</td>
                     </tr>
                   ))}
                 </tbody>

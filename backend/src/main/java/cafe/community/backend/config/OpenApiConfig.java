@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Configuration;
             Shared staff/board CMS for the Hubble and Meteor community cafes.
 
             ## Endpoints
-            - `GET /api/public/**` — published CMS content for the public sites (no login)
-            - `GET/POST/PUT/DELETE /api/admin/**` — staff/board management (Entra login + role)
-            - `GET /actuator/health` — health check
+            - `GET /api/public/**`: published CMS content for the public sites (no login)
+            - `GET/POST/PUT/DELETE /api/admin/**`: staff/board management (Entra login + role)
+            - `GET /actuator/health`: health check
             """,
         contact = @Contact(name = "Hubble & Meteor Community Cafes", url = "https://hubble.cafe")
     ),

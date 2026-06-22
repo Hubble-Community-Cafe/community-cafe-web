@@ -1,20 +1,21 @@
 # backend
 
-Spring Boot 4 + Java 21 + JPA API on MariaDB. Serves the 5 CMS modules to the public sites and admin, with content scoped by `BarLocation { HUBBLE, METEOR }` (nullable = shared). Reuses the Harry List patterns: Microsoft Entra resource-server auth, audit log, Sentry. Email-template + Graph mail (forms) arrive with the Forms milestone.
+Spring Boot 4 + Java 21 + JPA API on MariaDB. Serves the CMS modules to the public sites and admin, with content scoped by `BarLocation { HUBBLE, METEOR }` (nullable = shared). Reuses the Harry List patterns: Microsoft Entra resource-server auth, audit log, Sentry. Public form submissions email staff via Microsoft Graph (Mailpit in dev/e2e), protected by a honeypot, a per-IP rate limit, and self-hosted ALTCHA proof-of-work.
 
-## Status (skeleton)
+## Status
 
-- **Auth.** OAuth2 resource server validating Entra JWTs (`SecurityConfig`, `!e2e`); a header-auth bridge for end-to-end tests (`E2eSecurityConfig`, `e2e` profile). `/api/public/**` reads are open; `/api/admin/**` requires a token. `RoleAuthorizationFilter` auto-provisions the user on first login  and adds hierarchical roles (VIEWER < EDITOR < ADMIN); `app.initial-admin-oid` bootstraps the first admin.
+- **Content.** Menu (+ TU/e dual pricing and daily dish), opening hours (+ overrides and a derived `BarStatus`), events, board (executive/supervisory terms + members), vacancies, and associations, each with public read endpoints and admin CRUD.
+- **Forms.** `FormSubmission` records and per-form notifications for the Hubble (tips, information, declarations, screens, loan) and Meteor (complaints) forms, sent from the per-site noreply address with a submitter confirmation. Mail provider is pluggable (`log` / `smtp` / `graph`).
+- **Auth.** OAuth2 resource server validating Entra JWTs (`SecurityConfig`, `!e2e`); a header-auth bridge for end-to-end tests (`E2eSecurityConfig`, `e2e` profile). `/api/public/**` reads are open; `/api/admin/**` requires a token. `RoleAuthorizationFilter` auto-provisions the user on first login and adds hierarchical roles (VIEWER < DDD_POSTER < EDITOR < ADMIN); `app.initial-admin-oid` bootstraps the first admin.
 - **Audit log.** `AuditService` records who/what/when with field-level diffs; never breaks the underlying operation. Read via `GET /api/admin/audit` (admin).
-- **Media.** `MediaAsset` entity + repository + read endpoint (byte upload lands with the first image-bearing module).
+- **Media.** `MediaAsset` entity + repository + upload/serve endpoints for event/board/menu/vacancy/association images.
 - **Ops.** Sentry wired (blank DSN disables it), actuator health, OpenAPI/Swagger UI, CORS, global exception handling. Multi-stage `Dockerfile` (non-root, health check).
-- **Endpoints.** `GET /` info, `GET /actuator/health`, `GET /api/admin/users/me`,`GET /api/admin/users` + `PATCH /api/admin/users/{id}/role` (admin), `GET /api/admin/audit`,`GET /api/admin/media`.
 
 ## Build & test
 
 ```bash
 cd backend
-./mvnw test                       # 13 tests (audit, RBAC, security wiring)
+./mvnw test                       # full suite (content, forms, RBAC, rate limit, ALTCHA, security)
 ./mvnw -q -DskipTests package     # boot jar in target/
 ```
 

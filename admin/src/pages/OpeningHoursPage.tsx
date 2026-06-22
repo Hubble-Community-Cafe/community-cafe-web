@@ -247,7 +247,7 @@ export function OpeningHoursPage() {
       await deleteOverride(id)
       setOverrides((prev) => prev.filter((o) => o.id !== id))
     } catch {
-      // silently ignore — user can retry
+      // silently ignore, the user can retry
     }
   }
 

@@ -1,10 +1,10 @@
 # public-hubble
 
-Vite + React SPA for **hubble.cafe**, Hubble's own design and identity: a white header with the duck logo, a dark-teal canvas with white "floating" content cards, AXIS titles + Lato body. Renders the shared CMS content (menu, opening hours, events, board, vacancies) plus Hubble's  hardcoded page copy. Consumes `@cafe/shared-web`.
+Vite + React SPA for **hubble.cafe**, Hubble's own design and identity: a white header with the duck logo, a dark-teal canvas with white "floating" content cards, AXIS titles + Lato body. Renders the shared CMS content (menu, daily dish, opening hours, events, board, vacancies, associations) plus Hubble's hardcoded page copy and the on-site forms. Consumes `@cafe/shared-web`.
 
 ## Status
 
-Base shell in place: sticky header with the full primary navigation (desktop dropdowns + mobile menu), home hero with the live CTAs, footer with Hubble's contact details, client-side routing with placeholder pages for every nav target, and Sentry wiring. Reservations and the food tracker link out (`harry.hubble.cafe`, `food.hubble.cafe`). CMS-driven modules fill in over later milestones.
+Complete. Sticky header with the primary navigation (desktop dropdowns + mobile menu), home with live opening hours, and every page: menu, daily dish, events, board (current / previous / supervisory), vacancies, associations, the café / discount-policy / committees pages, the five contact forms (tips, information, declarations, screens, loan equipment) protected by honeypot + rate-limit + self-hosted ALTCHA, and the full-screen plaza kiosk at `/plaza-page`. Per-route SEO/OpenGraph meta, a real 404, robots/sitemap, and 301 redirects from the old WordPress permalinks are in place; the site is cookieless with self-hosted fonts and assets. Reservations and the food tracker link out (`harry.hubble.cafe`, `food.hubble.cafe`). Sentry wired.
 
 ## Develop
 

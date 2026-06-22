@@ -75,7 +75,7 @@ export function UsersPage() {
                   const isSelf = currentUser?.id === u.id
                   return (
                     <tr key={u.id} className="border-b border-slate-100">
-                      <td className="py-3 pr-4 text-slate-800">{u.displayName || '—'}</td>
+                      <td className="py-3 pr-4 text-slate-800">{u.displayName || '–'}</td>
                       <td className="py-3 pr-4 text-slate-600">{u.email}</td>
                       <td className="py-3">
                         <select

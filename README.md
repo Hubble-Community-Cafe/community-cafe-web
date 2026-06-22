@@ -16,9 +16,9 @@ Self-maintained rebuild of **[hubble.cafe](https://hubble.cafe)** and **[meteor.
 | `backend/`       | Spring Boot + JPA + MariaDB; content scoped by `BarLocation` (Hubble/Meteor) |
 | `e2e/`           | Playwright tests (desktop + mobile), page objects, coverage map |
 
-## What staff/board can edit (the 5 CMS modules)
+## What staff/board can edit (the CMS modules)
 
-Menu (incl. TU/e dual pricing and daily dish), opening hours (plus closed-banner), events (both bars), board (current shared, previous per-bar, supervisory), and vacancies. All other page copy is part of each site's code.
+Menu (incl. TU/e dual pricing), daily dinner dish, opening hours (plus the Meteor closed-banner), events (both bars), board (current shared, previous per-bar, supervisory), vacancies, and associations. All other page copy (forms, static pages, the plaza screen) is part of each site's code.
 
 ## Tech stack
 
@@ -61,7 +61,7 @@ See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage 
 
 ## Status
 
-Under active rebuild. Both sites run at `test.hubble.cafe` and `test.meteor.cafe` until they fully match the current sites, then DNS is cut over. Build progresses module by module with a design-parity and usability check at each step.
+Feature-complete and running at `test.hubble.cafe` and `test.meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place. Remaining before the apex DNS cutover is the production configuration (point the stack at the live domains) and a final content-parity check against the current sites.
 
 ## Contributing
 
