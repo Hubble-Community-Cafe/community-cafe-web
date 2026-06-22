@@ -47,7 +47,15 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     chmod +x /docker-entrypoint.d/40-inject-config.sh
 
+# Substitute the API origin (from API_URL) into the CSP's __API_ORIGIN__ placeholder at startup,
+# so connect-src/img-src match the environment (localhost, test, or the live apex).
+RUN echo '#!/bin/sh' > /docker-entrypoint.d/41-inject-csp.sh && \
+    echo 'O="${API_URL:-}"; O="${O%/}"' >> /docker-entrypoint.d/41-inject-csp.sh && \
+    echo 'sed -i "s#__API_ORIGIN__#${O}#g" /etc/nginx/conf.d/default.conf' >> /docker-entrypoint.d/41-inject-csp.sh && \
+    chmod +x /docker-entrypoint.d/41-inject-csp.sh
+
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/conf.d && \
     chown -R nginx:nginx /var/cache/nginx && \
     touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid

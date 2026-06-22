@@ -35,6 +35,7 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
 | SEO meta (title/OG/canonical/404 noindex) | 🟡 | ⬜ | n/a | n/a |
+| Plaza kiosk screen (`/plaza-page`) | 🟡 | n/a | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
 | Daily dinner dish | ✅ | n/a | ✅ | ✅ |
 | Opening hours (+ CMS footer) | ✅ | ✅ | ✅ | ✅ |
