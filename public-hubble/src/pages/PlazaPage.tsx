@@ -18,11 +18,16 @@ const HEROES: { img: string; title: string; subtitle: string }[] = [
 const ROTATE_MS = 8000
 const HOURS_REFRESH_MS = 10 * 60 * 1000
 const RELOAD_MS = 60 * 60 * 1000
+// The order manager (food.hubble.cafe) exposes the ready order numbers as JSON; poll it often.
+// Until that endpoint exists the fetch just fails and the panel stays hidden.
+const ORDERS_URL = 'https://food.hubble.cafe/api/orders'
+const ORDERS_REFRESH_MS = 4000
 
 export function PlazaPage() {
   usePageSeo('Plaza', 'The Hubble plaza display.', { index: false })
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [active, setActive] = useState(0)
+  const [orders, setOrders] = useState<string[]>([])
 
   useEffect(() => {
     const load = () => getWeeklyHours('HUBBLE').then(setHours).catch(() => {})
@@ -33,6 +38,19 @@ export function PlazaPage() {
 
   useEffect(() => {
     const id = setInterval(() => setActive((p) => (p + 1) % HEROES.length), ROTATE_MS)
+    return () => clearInterval(id)
+  }, [])
+
+  // Ready order numbers from the order manager. Best-effort: on any error keep the last list.
+  useEffect(() => {
+    const load = () =>
+      fetch(ORDERS_URL)
+        .then((r) => (r.ok ? r.json() : Promise.reject(new Error('bad status'))))
+        .then((d: { orders?: unknown }) =>
+          setOrders(Array.isArray(d.orders) ? d.orders.map(String) : []))
+        .catch(() => {})
+    load()
+    const id = setInterval(load, ORDERS_REFRESH_MS)
     return () => clearInterval(id)
   }, [])
 
@@ -68,6 +86,22 @@ export function PlazaPage() {
           </div>
         ))}
       </div>
+
+      {/* Ready orders (only shown when the order manager reports any) */}
+      {orders.length > 0 && (
+        <section className="shrink-0 bg-hubble-50 px-[5vw] py-[2.5vh] text-hubble-900">
+          <h2 className="text-center font-title text-[3vw] font-bold uppercase tracking-wide text-hubble-700">
+            {orders.length === 1 ? 'Order ready' : 'Orders ready'}
+          </h2>
+          <div className="mt-[1.5vh] flex flex-wrap justify-center gap-[2vw]">
+            {orders.map((n) => (
+              <span key={n} className="rounded-[1vw] bg-hubble-700 px-[3vw] py-[0.8vh] text-[5vw] font-bold tabular-nums text-white">
+                {n}
+              </span>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Opening times */}
       <section className="shrink-0 px-[6vw] py-[3vh]">
