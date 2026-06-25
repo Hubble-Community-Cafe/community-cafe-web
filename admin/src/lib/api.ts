@@ -144,8 +144,17 @@ export const updateUserRole = (userId: number, role: AdminRole) =>
     body: JSON.stringify({ role }),
   })
 
-export const fetchAuditLog = (page = 0, size = 50) =>
-  getJson<Page<AuditLogEntry>>(`/api/admin/audit?page=${page}&size=${size}`)
+export interface AuditLogFilters {
+  entityType?: string
+  action?: string
+}
+
+export const fetchAuditLog = (page = 0, size = 50, filters: AuditLogFilters = {}) => {
+  const params = new URLSearchParams({ page: String(page), size: String(size) })
+  if (filters.entityType) params.set('entityType', filters.entityType)
+  if (filters.action) params.set('action', filters.action)
+  return getJson<Page<AuditLogEntry>>(`/api/admin/audit?${params.toString()}`)
+}
 
 // ── Menu types ─────────────────────────────────────────────────────────────────
 export type MenuKind = 'DRINK' | 'FOOD'

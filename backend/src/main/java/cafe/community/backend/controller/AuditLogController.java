@@ -1,6 +1,8 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.dto.AuditLogDto;
+import cafe.community.backend.model.AuditAction;
+import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.repository.AuditLogRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -25,10 +27,12 @@ public class AuditLogController {
     @PreAuthorize("hasRole('ADMIN')")
     public Page<AuditLogDto> list(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "50") int size) {
+            @RequestParam(defaultValue = "50") int size,
+            @RequestParam(required = false) AuditEntityType entityType,
+            @RequestParam(required = false) AuditAction action) {
         int capped = Math.min(Math.max(size, 1), 200);
         return auditLogRepository
-                .findAllByOrderByCreatedAtDesc(PageRequest.of(Math.max(page, 0), capped))
+                .findFiltered(entityType, action, PageRequest.of(Math.max(page, 0), capped))
                 .map(AuditLogDto::from);
     }
 }
