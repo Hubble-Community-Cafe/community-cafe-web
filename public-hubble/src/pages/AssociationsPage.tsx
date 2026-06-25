@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getAssociations, type Association } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 export function AssociationsPage() {
@@ -21,7 +22,17 @@ export function AssociationsPage() {
       intro="Hubble is home to many student associations that were formerly resident in the Bunker. We provide a place for like-minded people to connect, organise events, and enjoy campus life together."
     >
       {!loaded && (
-        <p className="mt-8 text-sm text-hubble-500">Loading associations…</p>
+        <ul
+          className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4"
+          data-testid="associations-skeleton"
+        >
+          {Array.from({ length: 8 }).map((_, i) => (
+            <li key={i} className="flex flex-col items-center gap-3">
+              <Shimmer className="h-24 w-full rounded-xl" />
+              <Shimmer className="h-3 w-20" />
+            </li>
+          ))}
+        </ul>
       )}
 
       {loaded && associations.length === 0 && (
@@ -30,8 +41,12 @@ export function AssociationsPage() {
 
       {loaded && associations.length > 0 && (
         <ul className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4">
-          {associations.map((a) => (
-            <li key={a.id} className="flex flex-col items-center gap-3">
+          {associations.map((a, i) => (
+            <li
+              key={a.id}
+              className="flex animate-fade-up flex-col items-center gap-3"
+              style={{ animationDelay: `${Math.min(i * 0.07, 0.5)}s` }}
+            >
               {a.logoUrl ? (
                 <div className="flex h-24 w-full items-center justify-center rounded-xl border border-hubble-100 bg-hubble-50 p-3">
                   <img

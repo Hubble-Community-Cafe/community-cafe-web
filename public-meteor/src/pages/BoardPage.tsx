@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getBoard, type BoardTerm, type BoardMember } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
@@ -15,11 +16,40 @@ function useBoard() {
   return { terms, loaded }
 }
 
+/** Placeholder grid mirroring the member cards while the board loads. */
+function BoardGridSkeleton() {
+  return (
+    <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3" data-testid="board-skeleton">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i} className="flex flex-col items-center border border-meteor-200 bg-white p-5">
+          <Shimmer className="h-24 w-24 rounded-full" />
+          <Shimmer className="mt-3 h-4 w-24" />
+          <Shimmer className="mt-1.5 h-3 w-16" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** A few shimmer lines for the text-only previous-boards page. */
+function BoardLinesSkeleton() {
+  return (
+    <div className="mt-6 space-y-2 text-center" data-testid="board-skeleton">
+      <Shimmer className="mx-auto h-5 w-40" />
+      <Shimmer className="mx-auto h-3 w-32" />
+      <Shimmer className="mx-auto h-3 w-28" />
+    </div>
+  )
+}
+
 // ── Current executive board ──────────────────────────────────────────────────
 
-function MemberCard({ member }: { member: BoardMember }) {
+function MemberCard({ member, index }: { member: BoardMember; index: number }) {
   return (
-    <div className="flex flex-col items-center border border-meteor-200 bg-white p-5 text-center">
+    <div
+      className="flex animate-fade-up flex-col items-center border border-meteor-200 bg-white p-5 text-center"
+      style={{ animationDelay: `${Math.min(index * 0.07, 0.5)}s` }}
+    >
       {member.photoUrl ? (
         <img
           src={member.photoUrl}
@@ -45,14 +75,14 @@ export function CurrentBoardPage() {
 
   return (
     <PageShell title="Current board">
-      {!loaded && <p className="text-sm text-meteor-700/50">Loading…</p>}
+      {!loaded && <BoardGridSkeleton />}
       {loaded && (
         <>
           {term && term.members.length > 0 && (
             <>
               <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3">
-                {term.members.map((m) => (
-                  <MemberCard key={m.id} member={m} />
+                {term.members.map((m, i) => (
+                  <MemberCard key={m.id} member={m} index={i} />
                 ))}
               </div>
               {term.photoCredit && (
@@ -80,7 +110,7 @@ export function PreviousBoardsPage() {
 
   return (
     <PageShell title="Previous boards">
-      {!loaded && <p className="text-sm text-meteor-700/50">Loading…</p>}
+      {!loaded && <BoardLinesSkeleton />}
       {loaded && previous.length === 0 && (
         <p className="text-sm text-meteor-700/60">No previous board information available.</p>
       )}

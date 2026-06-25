@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getBoard, type BoardTerm, type BoardMember } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
@@ -15,11 +16,37 @@ function useBoard() {
   return { terms, loaded }
 }
 
+/** Placeholder grid mirroring the member cards while the board loads. */
+function BoardGridSkeleton() {
+  return (
+    <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3" data-testid="board-skeleton">
+      {Array.from({ length: 6 }).map((_, i) => (
+        <div key={i}>
+          <Shimmer className="aspect-[3/4] w-full rounded-lg" />
+          <Shimmer className="mt-3 h-4 w-24" />
+          <Shimmer className="mt-1.5 h-3 w-16" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** A few shimmer lines for the text-only board sub-pages. */
+function BoardLinesSkeleton() {
+  return (
+    <div className="mt-6 space-y-2" data-testid="board-skeleton">
+      <Shimmer className="h-5 w-40" />
+      <Shimmer className="h-3 w-32" />
+      <Shimmer className="h-3 w-28" />
+    </div>
+  )
+}
+
 // ── Current executive board ──────────────────────────────────────────────────
 
-function MemberCard({ member }: { member: BoardMember }) {
+function MemberCard({ member, index }: { member: BoardMember; index: number }) {
   return (
-    <div>
+    <div className="animate-fade-up" style={{ animationDelay: `${Math.min(index * 0.07, 0.5)}s` }}>
       {member.photoUrl ? (
         <img
           src={member.photoUrl}
@@ -45,7 +72,7 @@ export function CurrentBoardPage() {
 
   return (
     <PageShell title="Board">
-      {!loaded && <p className="text-sm text-hubble-700/50">Loading…</p>}
+      {!loaded && <BoardGridSkeleton />}
       {loaded && (
         <>
           <p className="text-hubble-800">
@@ -57,8 +84,8 @@ export function CurrentBoardPage() {
           {term && term.members.length > 0 && (
             <>
               <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3">
-                {term.members.map((m) => (
-                  <MemberCard key={m.id} member={m} />
+                {term.members.map((m, i) => (
+                  <MemberCard key={m.id} member={m} index={i} />
                 ))}
               </div>
               {term.photoCredit && (
@@ -87,7 +114,7 @@ export function PreviousBoardsPage() {
 
   return (
     <PageShell title="Previous boards">
-      {!loaded && <p className="text-sm text-hubble-700/50">Loading…</p>}
+      {!loaded && <BoardLinesSkeleton />}
       {loaded && previous.length === 0 && (
         <p className="text-sm text-hubble-700/60">No previous board information available.</p>
       )}
@@ -130,7 +157,7 @@ export function SupervisoryBoardPage() {
 
   return (
     <PageShell title="The supervisory board of Hubble">
-      {!loaded && <p className="text-sm text-hubble-700/50">Loading…</p>}
+      {!loaded && <BoardLinesSkeleton />}
       {loaded && supervisory.map((term) => (
         <section key={term.id} className="mt-6">
           <p className="text-hubble-800">Currently consisting of:</p>

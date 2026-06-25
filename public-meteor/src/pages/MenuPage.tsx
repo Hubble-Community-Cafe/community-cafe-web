@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { getMenu, type MenuTab, type MenuCategoryWithItems, type MenuItem } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function formatPrice(regular: number, student: number | null): string {
@@ -8,10 +9,26 @@ function formatPrice(regular: number, student: number | null): string {
   return student != null ? `${fmt(regular)}/${fmt(student)}` : fmt(regular)
 }
 
-function MenuItemRow({ item }: { item: MenuItem }) {
+/** Left-bar widths cycle so the skeleton does not look uniform. */
+const SKELETON_WIDTHS = ['58%', '42%', '66%', '38%', '52%']
+
+function MenuSkeleton() {
+  return (
+    <div className="mt-8 max-w-md" data-testid="menu-skeleton">
+      {SKELETON_WIDTHS.map((width, i) => (
+        <div key={i} className="flex items-center justify-between py-[11px]">
+          <Shimmer className="h-[13px]" style={{ width }} />
+          <Shimmer className="h-[13px] w-[46px]" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function MenuItemRow({ item, index }: { item: MenuItem; index: number }) {
   const tags = [...item.dietaryTags, ...item.allergens].filter(Boolean)
   return (
-    <div className="py-1.5">
+    <div className="animate-fade-up py-1.5" style={{ animationDelay: `${Math.min(index * 0.07, 0.5)}s` }}>
       <div className="flex items-baseline">
         <span className="text-sm font-bold uppercase tracking-wide text-meteor-900">
           {item.name}
@@ -45,8 +62,8 @@ function CategoryBlock({ category }: { category: MenuCategoryWithItems }) {
         </p>
       )}
       <div>
-        {category.items.map((item) => (
-          <MenuItemRow key={item.id} item={item} />
+        {category.items.map((item, i) => (
+          <MenuItemRow key={item.id} item={item} index={i} />
         ))}
         {category.items.length === 0 && (
           <p className="py-2 text-sm text-meteor-700/50">No items yet.</p>
@@ -83,7 +100,7 @@ export function MenuPage() {
       </p>
       <p className="mt-1 text-sm text-meteor-800/70">Regular price / TU/e student price</p>
 
-      {isLoading && <p className="mt-8 text-sm text-meteor-700/60">Loading menu…</p>}
+      {isLoading && <MenuSkeleton />}
       {error && (
         <p className="mt-8 text-sm text-red-700">Could not load the menu. Please try again later.</p>
       )}
@@ -109,7 +126,7 @@ export function MenuPage() {
 
           {/* Active tab content */}
           {activeTab && (
-            <div className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2">
+            <div key={activeTab.id} className="mt-10 grid gap-x-12 gap-y-10 sm:grid-cols-2">
               {activeTab.categories.map((cat) => (
                 <CategoryBlock key={cat.id} category={cat} />
               ))}
