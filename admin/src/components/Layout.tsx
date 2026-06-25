@@ -1,13 +1,24 @@
 import { useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
-import { LogOut, Menu, X } from 'lucide-react'
+import { BarChart3, ExternalLink, LogOut, Menu, X } from 'lucide-react'
 import { cn } from '@cafe/shared-web'
 import { BrandLogos } from './BrandLogos'
 import { NAV, canSee } from '../navigation'
 import { useRole } from '../lib/RoleContext'
 import { usePermissions } from '../lib/usePermissions'
 import { isE2E } from '../lib/e2eAuth'
+
+/** External link to the self-hosted analytics dashboard. */
+const STATS_URL = 'https://stats.hubble.cafe'
+
+/** Badge colour per role (keys match the uppercase AdminRole values). */
+const ROLE_BADGE: Record<string, string> = {
+  ADMIN: 'bg-hubble-100 text-hubble-700',
+  EDITOR: 'bg-emerald-100 text-emerald-700',
+  DDD_POSTER: 'bg-amber-100 text-amber-700',
+  VIEWER: 'bg-slate-100 text-slate-500',
+}
 
 export function Layout() {
   const { instance } = useMsal()
@@ -26,7 +37,7 @@ export function Layout() {
   })).filter((section) => section.items.length > 0)
 
   const nav = (
-    <nav className="flex-1 space-y-6 px-3 py-4" aria-label="Admin">
+    <nav className="min-h-0 flex-1 space-y-6 overflow-y-auto px-3 py-4" aria-label="Admin">
       {sections.map((section, i) => (
         <div key={section.title ?? i}>
           {section.title && (
@@ -72,8 +83,27 @@ export function Layout() {
         <p className="truncate text-sm font-semibold text-slate-800">
           {user?.displayName || user?.email || 'Signed in'}
         </p>
-        <p className="truncate text-xs text-slate-400">{role ? `${role} role` : ''}</p>
+        {role && (
+          <span
+            className={cn(
+              'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+              ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-500',
+            )}
+          >
+            {role.replace('_', ' ')}
+          </span>
+        )}
       </div>
+      <a
+        href={STATS_URL}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+      >
+        <BarChart3 className="h-4 w-4" />
+        Statistics
+        <ExternalLink className="ml-auto h-3.5 w-3.5 text-slate-400" />
+      </a>
       <button
         type="button"
         onClick={handleSignOut}
@@ -97,8 +127,8 @@ export function Layout() {
   )
 
   return (
-    <div className="flex min-h-screen bg-slate-100">
-      {/* Desktop sidebar */}
+    <div className="flex h-screen overflow-hidden bg-slate-100">
+      {/* Desktop sidebar: fixed, does not scroll with the content */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
         {brand}
         {nav}
@@ -106,7 +136,7 @@ export function Layout() {
       </aside>
 
       {/* Mobile top bar */}
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
           {brand}
           <button
@@ -121,13 +151,13 @@ export function Layout() {
         </header>
 
         {mobileOpen && (
-          <div className="border-b border-slate-200 bg-white lg:hidden">
+          <div className="flex max-h-[calc(100vh-3.5rem)] flex-col overflow-y-auto border-b border-slate-200 bg-white lg:hidden">
             {nav}
             {footer}
           </div>
         )}
 
-        <main className="flex-1 p-4 md:p-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </main>
       </div>

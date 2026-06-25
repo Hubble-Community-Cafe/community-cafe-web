@@ -62,3 +62,23 @@ describe('Layout role-gated navigation', () => {
     expect(within(nav).getByText('Audit log')).toBeInTheDocument()
   })
 })
+
+describe('Layout footer', () => {
+  it('renders the role as a badge', () => {
+    renderLayoutAs('ADMIN')
+    expect(screen.getByText('ADMIN')).toBeInTheDocument()
+  })
+
+  it('formats a multi-word role for the badge', () => {
+    renderLayoutAs('DDD_POSTER')
+    expect(screen.getByText('DDD POSTER')).toBeInTheDocument()
+  })
+
+  it('links out to the statistics dashboard in a new tab', () => {
+    renderLayoutAs('ADMIN')
+    const stats = screen.getByRole('link', { name: /statistics/i })
+    expect(stats).toHaveAttribute('href', 'https://stats.hubble.cafe')
+    expect(stats).toHaveAttribute('target', '_blank')
+    expect(stats).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+})
