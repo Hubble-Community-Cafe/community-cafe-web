@@ -35,6 +35,8 @@ import java.util.Set;
 public class FormService {
 
     private static final Logger log = LoggerFactory.getLogger(FormService.class);
+    /** Dedicated, routable logger for privacy-safe usage analytics (no submitter data). */
+    private static final Logger analytics = LoggerFactory.getLogger("APP_ANALYTICS");
     private static final long MAX_FILE_BYTES = 10L * 1024 * 1024; // 10 MB
     private static final Set<String> SCREEN_TYPES = Set.of("image/jpeg", "image/png", "video/mp4");
     private static final Set<String> RECEIPT_TYPES = Set.of("application/pdf", "image/jpeg", "image/png");
@@ -98,6 +100,7 @@ public class FormService {
         record(FormType.COMPLAINT, false);
         mail.send(new FormEmail(meteorFrom, complaintsTo, null, req.email(),
                 "Meteor " + label + " from " + req.name(), body, List.of()));
+        logSubmission("complaint", null);
 
         String confirmation = "Hi " + req.name() + ",\n\n"
                 + "Thanks for contacting Meteor. We have received your " + label.toLowerCase()
@@ -149,6 +152,7 @@ public class FormService {
         mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
                 "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                 body, List.of(poster)));
+        logSubmission("screen", req.getCafe());
 
         String confirmation = "Hi " + req.getName() + ",\n\n"
                 + "Thanks! We have received your poster screen request for " + req.getAssociation()
@@ -186,6 +190,7 @@ public class FormService {
                 declarationsCc != null && !declarationsCc.isBlank() ? declarationsCc : null,
                 req.getEmail(), "New E-Declaration from " + req.getFullName(),
                 body, List.of(receipt)));
+        logSubmission("declaration", null);
 
         String confirmation = "Hi " + req.getFullName() + ",\n\n"
                 + "Thanks! We have received your declaration and the treasurer will process it.\n\n"
@@ -223,6 +228,7 @@ public class FormService {
         record(FormType.COMPLAINT, false);
         mail.send(new FormEmail(hubbleFrom, complaintsTo, null, req.email(),
                 "Hubble " + label + " from " + req.name(), body, List.of()));
+        logSubmission("tips", null);
 
         String confirmation = "Hi " + req.name() + ",\n\n"
                 + "Thanks for contacting Hubble. We have received your " + label.toLowerCase()
@@ -251,6 +257,7 @@ public class FormService {
         record(FormType.INFORMATION, false);
         mail.send(new FormEmail(hubbleFrom, informationTo, null, req.email(),
                 "Hubble information request from " + req.name(), body, List.of()));
+        logSubmission("information", null);
 
         String confirmation = "Hi " + req.name() + ",\n\n"
                 + "Thanks for contacting Hubble. We have received your message and will get back "
@@ -279,6 +286,7 @@ public class FormService {
         mail.send(new FormEmail(hubbleFrom, loanTo, null, req.email(),
                 "Hubble loan request from " + req.name() + " - " + req.association(),
                 body, List.of()));
+        logSubmission("loan", null);
 
         String confirmation = "Hi " + req.name() + ",\n\n"
                 + "Thanks! We have received your equipment loan request for " + req.association()
@@ -332,6 +340,16 @@ public class FormService {
         s.setType(type);
         s.setHadAttachment(hadAttachment);
         repo.save(s);
+    }
+
+    /**
+     * Privacy-safe analytics: one line per successful submission, carrying only the form type and
+     * (for the screen form) the chosen bar. No name, email, message or attachment content is logged,
+     * matching the privacy statement's disclosed "minimal, non-identifying note".
+     */
+    private void logSubmission(String form, String bar) {
+        analytics.info("APP_ANALYTICS event=form_submitted form={} bar={}",
+                form, bar == null || bar.isBlank() ? "none" : bar);
     }
 
     private FormEmail.Attachment requireFile(MultipartFile file, Set<String> allowedTypes, String what) {
