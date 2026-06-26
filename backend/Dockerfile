@@ -7,12 +7,14 @@ COPY src ./src
 RUN mvn -q -B clean package -DskipTests
 
 # Stage 2: run
-FROM eclipse-temurin:25-jre
+# Alpine/musl JRE: much smaller attack surface than the Ubuntu-based tag (no perl etc.).
+# The app is pure Java (no native libs, no AWT, JDK-bundled tzdata) so musl is safe here.
+FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
-# curl for the health check; run as a non-root user
-RUN apt-get update && apt-get install -y --no-install-recommends curl && rm -rf /var/lib/apt/lists/* \
-    && addgroup --system appgroup && adduser --system --ingroup appgroup appuser \
+# curl for the health check; run as a non-root user (busybox adduser/addgroup syntax)
+RUN apk add --no-cache curl \
+    && addgroup -S appgroup && adduser -S -G appgroup appuser \
     && mkdir -p /data/media && chown appuser:appgroup /data/media
 
 COPY --from=build /app/target/community-cafe-backend-*.jar app.jar
