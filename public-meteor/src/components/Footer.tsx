@@ -106,7 +106,10 @@ export function Footer() {
       <div className="border-t border-white/10">
         <div className="mx-auto flex max-w-6xl flex-col gap-1 px-4 py-5 text-xs text-white/60 sm:flex-row sm:items-center sm:justify-between">
           <span>© {new Date().getFullYear()} Meteor Community Cafe. All rights reserved.</span>
-          <span>The Uniform Conditions for the Hotel and Catering Industry (UVH) apply.</span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+            <Link to="/privacy" className="hover:underline">Privacy statement</Link>
+            <span>The Uniform Conditions for the Hotel and Catering Industry (UVH) apply.</span>
+          </div>
         </div>
       </div>
       {/* Gold accent strip, echoing the live site. */}

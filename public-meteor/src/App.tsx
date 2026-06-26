@@ -6,6 +6,7 @@ import { EventsPage } from './pages/EventsPage'
 import { CurrentBoardPage, PreviousBoardsPage } from './pages/BoardPage'
 import { ComplaintsPage } from './pages/ComplaintsPage'
 import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
         <Route path="/complaints" element={<ComplaintsPage />} />
         <Route path="/menu/discount-policy" element={<DiscountPolicyPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </Layout>

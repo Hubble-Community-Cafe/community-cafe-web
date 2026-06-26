@@ -16,6 +16,7 @@ import { CafePage } from './pages/CafePage'
 import { DiscountPolicyPage } from './pages/DiscountPolicyPage'
 import { CommitteesPage } from './pages/CommitteesPage'
 import { ContactPage } from './pages/ContactPage'
+import { PrivacyPage } from './pages/PrivacyPage'
 import { NotFoundPage } from './pages/NotFoundPage'
 import { PlazaPage } from './pages/PlazaPage'
 
@@ -44,6 +45,7 @@ function App() {
         <Route path="/contact/tips" element={<TipsPage />} />
         <Route path="/contact/information" element={<InformationPage />} />
         <Route path="/contact/loan-equipment" element={<LoanPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

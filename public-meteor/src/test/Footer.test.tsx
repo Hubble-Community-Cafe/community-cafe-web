@@ -26,4 +26,12 @@ describe('Footer', () => {
     renderFooter()
     expect(screen.getByText(/UVH/)).toBeInTheDocument()
   })
+
+  it('links to the privacy statement', () => {
+    renderFooter()
+    expect(screen.getByRole('link', { name: /privacy statement/i })).toHaveAttribute(
+      'href',
+      '/privacy',
+    )
+  })
 })
