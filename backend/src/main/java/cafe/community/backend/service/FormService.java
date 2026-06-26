@@ -95,7 +95,7 @@ public class FormService {
                 + "Type: " + label + "\n\n"
                 + "Message:\n" + req.message() + "\n";
 
-        record(FormType.COMPLAINT, req.name(), req.email(), false, body);
+        record(FormType.COMPLAINT, false);
         mail.send(new FormEmail(meteorFrom, complaintsTo, null, req.email(),
                 "Meteor " + label + " from " + req.name(), body, List.of()));
 
@@ -145,7 +145,7 @@ public class FormService {
                 + "Hex: " + orDash(req.getHexColor()) + "\n\n"
                 + "Message:\n" + orDash(req.getMessage()) + "\n";
 
-        record(FormType.SCREEN, req.getName(), req.getEmail(), true, body);
+        record(FormType.SCREEN, true);
         mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
                 "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                 body, List.of(poster)));
@@ -181,7 +181,7 @@ public class FormService {
                 + "Category: " + req.getCategory() + "\n"
                 + "Description: " + orDash(req.getDescription()) + "\n";
 
-        record(FormType.DECLARATION, req.getFullName(), req.getEmail(), true, body);
+        record(FormType.DECLARATION, true);
         mail.send(new FormEmail(hubbleFrom, declarationsTo,
                 declarationsCc != null && !declarationsCc.isBlank() ? declarationsCc : null,
                 req.getEmail(), "New E-Declaration from " + req.getFullName(),
@@ -220,7 +220,7 @@ public class FormService {
                 + (Boolean.TRUE.equals(req.wantsUpdates()) ? "Yes" : "No") + "\n\n"
                 + "Message:\n" + req.message() + "\n";
 
-        record(FormType.COMPLAINT, req.name(), req.email(), false, body);
+        record(FormType.COMPLAINT, false);
         mail.send(new FormEmail(hubbleFrom, complaintsTo, null, req.email(),
                 "Hubble " + label + " from " + req.name(), body, List.of()));
 
@@ -248,7 +248,7 @@ public class FormService {
                 + "Phone: " + orDash(req.phone()) + "\n\n"
                 + "Message:\n" + req.message() + "\n";
 
-        record(FormType.INFORMATION, req.name(), req.email(), false, body);
+        record(FormType.INFORMATION, false);
         mail.send(new FormEmail(hubbleFrom, informationTo, null, req.email(),
                 "Hubble information request from " + req.name(), body, List.of()));
 
@@ -275,7 +275,7 @@ public class FormService {
                 + "Return: " + req.returnDate() + " at " + req.returnTime() + "\n\n"
                 + "Message:\n" + req.message() + "\n";
 
-        record(FormType.LOAN, req.name(), req.email(), false, body);
+        record(FormType.LOAN, false);
         mail.send(new FormEmail(hubbleFrom, loanTo, null, req.email(),
                 "Hubble loan request from " + req.name() + " - " + req.association(),
                 body, List.of()));
@@ -322,13 +322,15 @@ public class FormService {
         return false;
     }
 
-    private void record(FormType type, String name, String email, boolean hadAttachment, String summary) {
+    /**
+     * Records a privacy-minimised stub that a submission happened: only the form type and
+     * whether a file was attached. The submitter's details and message are intentionally not
+     * persisted; they exist only in the notification email sent to staff.
+     */
+    private void record(FormType type, boolean hadAttachment) {
         FormSubmission s = new FormSubmission();
         s.setType(type);
-        s.setSubmitterName(name);
-        s.setSubmitterEmail(email);
         s.setHadAttachment(hadAttachment);
-        s.setSummary(summary);
         repo.save(s);
     }
 
