@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>cafe.community</groupId>
 	<artifactId>community-cafe-backend</artifactId>
-	<version>0.0.30</version>
+	<version>0.0.31</version>
 	<name>community-cafe-backend</name>
 	<description>Backend for the Hubble and Meteor community cafes: shared staff/board CMS.</description>
 
@@ -84,7 +84,7 @@
 		<dependency>
 			<groupId>io.sentry</groupId>
 			<artifactId>sentry</artifactId>
-			<version>8.44.1</version>
+			<version>8.46.0</version>
 		</dependency>
 
 		<!-- H2 for tests -->
