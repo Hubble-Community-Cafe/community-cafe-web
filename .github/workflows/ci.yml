@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
+    branches: [main, deps]   # deps: Dependabot PRs target this branch (dependabot.yml target-branch)
 
 # Cancel superseded runs for the same ref.
 concurrency:
@@ -47,7 +47,7 @@ jobs:
         id: check
         run: test -f ${{ matrix.app }}/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
       - if: steps.check.outputs.present == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
@@ -72,7 +72,7 @@ jobs:
         id: check
         run: test -f e2e/package.json && echo "present=true" >> "$GITHUB_OUTPUT" || echo "present=false" >> "$GITHUB_OUTPUT"
       - if: steps.check.outputs.present == 'true'
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: "20"
           cache: npm
