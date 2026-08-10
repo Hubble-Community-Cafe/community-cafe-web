@@ -14,5 +14,8 @@
     "lint": "npm run lint --workspaces --if-present",
     "test:run": "npm run test:run --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
+  },
+  "engines": {
+    "node": ">=26"
   }
 }

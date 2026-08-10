@@ -15,9 +15,15 @@ updates:
     labels:
       - "dependencies"
       - "backend"
+    # Majors are split from minor/patch so one blocked major cannot hold back
+    # routine (often security) updates. See the npm "/" entry for the full rationale.
     groups:
-      all-deps:
+      minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── Frontends (npm workspace) ────────────────────────────────────────────────
   # Single entry at the workspace root so Dependabot regenerates the shared
@@ -29,9 +35,24 @@ updates:
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "frontend"]
+    # Split majors from minor/patch: a single unusable major (e.g. a bump that no
+    # longer supports our toolchain) would otherwise block every routine update in
+    # the same grouped PR, which is what kept this PR red for weeks.
     groups:
-      all-deps:
+      minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
+    ignore:
+      # typescript-eslint peers cap TypeScript at <6.1.0 (latest and canary alike),
+      # so TypeScript 7 breaks `npm ci` here with an ERESOLVE peer conflict. Minor
+      # and patch updates still flow. Remove this once typescript-eslint supports
+      # TypeScript 7. Deliberately NOT applied to /e2e, which has no eslint and
+      # already runs TypeScript 7.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "npm"
     directory: "/e2e"
@@ -40,9 +61,15 @@ updates:
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "e2e"]
+    # No TypeScript ignore here: /e2e is a separate project with its own lockfile
+    # and no eslint, so it already runs TypeScript 7 without issue.
     groups:
-      all-deps:
+      minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
@@ -53,8 +80,12 @@ updates:
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "ci"]
     groups:
-      all-deps:
+      minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
 
   # ── Docker images ─────────────────────────────────────────────────────────────
   - package-ecosystem: "docker"
@@ -65,5 +96,9 @@ updates:
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "docker"]
     groups:
-      all-deps:
+      minor-patch:
         patterns: ["*"]
+        update-types: ["minor", "patch"]
+      major:
+        patterns: ["*"]
+        update-types: ["major"]
