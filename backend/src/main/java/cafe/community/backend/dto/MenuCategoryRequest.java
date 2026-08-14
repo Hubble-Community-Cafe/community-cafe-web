@@ -12,5 +12,13 @@ public record MenuCategoryRequest(
         @Size(max = 255) String availabilityNote,
         int sortOrder,
         BarLocation bar,
-        Long parentId
-) {}
+        Long parentId,
+        /** Null means "visible": callers that omit the flag get an active category. */
+        Boolean active
+) {
+    /** Convenience for callers that do not set visibility; the category stays visible. */
+    public MenuCategoryRequest(String name, MenuKind kind, String availabilityNote,
+                               int sortOrder, BarLocation bar, Long parentId) {
+        this(name, kind, availabilityNote, sortOrder, bar, parentId, null);
+    }
+}

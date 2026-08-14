@@ -91,4 +91,62 @@ class MenuControllerTest {
                                 .claim("name", "Admin"))))
                 .andExpect(status().isOk());
     }
+
+    // ===== Visibility toggle endpoints =====
+
+    private org.springframework.test.web.servlet.request.RequestPostProcessor asAdmin() {
+        return jwt().jwt(j -> j.claim("oid", "menu-admin-oid")
+                .claim("preferred_username", "admin@hubble.cafe")
+                .claim("name", "Admin"));
+    }
+
+    @Test
+    void toggleCategory_requiresAuth() throws Exception {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+
+        mockMvc.perform(patch("/api/admin/menu/categories/" + tab.id() + "/active")
+                        .contentType("application/json").content("{\"active\":false}"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void toggleCategory_hidesItFromThePublicMenu() throws Exception {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto cat = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
+        menuService.createItem(cat.id(), new MenuItemRequest(
+                "Heineken", null, new BigDecimal("3.50"), null,
+                List.of(), List.of(), List.of(), null, 1, true));
+
+        mockMvc.perform(get("/api/menu/HUBBLE")).andExpect(jsonPath("$.length()").value(1));
+
+        mockMvc.perform(patch("/api/admin/menu/categories/" + tab.id() + "/active")
+                        .with(asAdmin())
+                        .contentType("application/json").content("{\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(get("/api/menu/HUBBLE")).andExpect(jsonPath("$.length()").value(0));
+    }
+
+    @Test
+    void toggleItem_hidesItFromThePublicMenu() throws Exception {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto cat = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
+        MenuItemDto item = menuService.createItem(cat.id(), new MenuItemRequest(
+                "Heineken", null, new BigDecimal("3.50"), null,
+                List.of(), List.of(), List.of(), null, 1, true));
+
+        mockMvc.perform(patch("/api/admin/menu/items/" + item.id() + "/active")
+                        .with(asAdmin())
+                        .contentType("application/json").content("{\"active\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.active").value(false));
+
+        mockMvc.perform(get("/api/menu/HUBBLE")).andExpect(jsonPath("$.length()").value(0));
+    }
 }

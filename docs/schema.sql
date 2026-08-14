@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS menu_category (
     sort_order        INT             NOT NULL,
     bar               VARCHAR(20),
     parent_id         BIGINT,
+    -- Hidden categories (and everything under them) are left out of the public menu.
+    active            TINYINT(1)      NOT NULL DEFAULT 1,
     PRIMARY KEY (id),
     CONSTRAINT fk_menu_category_parent FOREIGN KEY (parent_id) REFERENCES menu_category (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

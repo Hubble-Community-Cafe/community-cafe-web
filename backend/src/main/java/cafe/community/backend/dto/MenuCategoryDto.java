@@ -11,11 +11,13 @@ public record MenuCategoryDto(
         String availabilityNote,
         int sortOrder,
         BarLocation bar,
-        Long parentId
+        Long parentId,
+        boolean active
 ) {
     public static MenuCategoryDto from(MenuCategory c) {
         return new MenuCategoryDto(c.getId(), c.getName(), c.getKind(),
                 c.getAvailabilityNote(), c.getSortOrder(), c.getBar(),
-                c.getParent() != null ? c.getParent().getId() : null);
+                c.getParent() != null ? c.getParent().getId() : null,
+                c.isActive());
     }
 }

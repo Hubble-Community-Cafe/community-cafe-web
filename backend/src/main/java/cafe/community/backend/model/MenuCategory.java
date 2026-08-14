@@ -42,4 +42,12 @@ public class MenuCategory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "parent_id")
     private MenuCategory parent;
+
+    /**
+     * Whether this category is shown on the public site. Hiding a category also hides
+     * everything under it (sub-headings and items) without touching their own flags, so
+     * re-enabling it restores exactly what was visible before.
+     */
+    @Column(nullable = false)
+    private boolean active = true;
 }

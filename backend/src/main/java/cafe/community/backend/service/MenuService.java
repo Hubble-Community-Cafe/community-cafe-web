@@ -35,21 +35,31 @@ public class MenuService {
 
     // ===== Public =====
 
+    /**
+     * The public menu for a bar. Hiding cascades downwards and is evaluated here rather than
+     * written to the rows below, so re-enabling a category restores exactly the items that were
+     * visible before: an inactive tab hides its sub-headings and their items, and an inactive
+     * sub-heading hides its items, whatever those items' own flags say. Sub-headings that end up
+     * with no visible items, and tabs with no visible sub-headings, are dropped entirely so
+     * hiding never leaves an empty heading behind on the site.
+     */
     @Transactional(readOnly = true)
     public List<MenuTabDto> getMenuPage(BarLocation bar) {
-        return categoryRepo.findTopLevelForBar(bar).stream()
+        return categoryRepo.findActiveTopLevelForBar(bar).stream()
                 .map(tab -> {
                     List<MenuCategoryWithItemsDto> cats =
-                            categoryRepo.findByParentOrderBySortOrderAsc(tab).stream()
+                            categoryRepo.findByParentAndActiveOrderBySortOrderAsc(tab, true).stream()
                                     .map(cat -> {
                                         List<MenuItemDto> items = itemRepo
                                                 .findByCategoryAndActiveOrderBySortOrderAsc(cat, true)
                                                 .stream().map(MenuItemDto::from).toList();
                                         return MenuCategoryWithItemsDto.from(cat, items);
                                     })
+                                    .filter(cat -> !cat.items().isEmpty())
                                     .toList();
                     return MenuTabDto.from(tab, cats);
                 })
+                .filter(tab -> !tab.categories().isEmpty())
                 .toList();
     }
 
@@ -83,6 +93,22 @@ public class MenuService {
         MenuCategory saved = categoryRepo.save(cat);
         auditService.recordAction(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
                 AuditAction.UPDATE, List.of(), "Updated category: " + saved.getName());
+        return MenuCategoryDto.from(saved);
+    }
+
+    /**
+     * Show or hide a category on the public site. Kept separate from
+     * {@link #updateCategory} so a one-click toggle cannot clobber fields another editor
+     * changed in the meantime, and so the change is audited as a toggle rather than an edit.
+     */
+    public MenuCategoryDto setCategoryActive(Long id, boolean active) {
+        MenuCategory cat = categoryRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+        cat.setActive(active);
+        MenuCategory saved = categoryRepo.save(cat);
+        auditService.recordAction(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
+                AuditAction.TOGGLE, List.of(),
+                (active ? "Showed" : "Hid") + " category: " + saved.getName());
         return MenuCategoryDto.from(saved);
     }
 
@@ -121,6 +147,18 @@ public class MenuService {
         MenuItem saved = itemRepo.save(item);
         auditService.recordAction(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
                 AuditAction.UPDATE, List.of(), "Updated item: " + saved.getName());
+        return MenuItemDto.from(saved);
+    }
+
+    /** Show or hide a single item. See {@link #setCategoryActive} for why this is its own path. */
+    public MenuItemDto setItemActive(Long id, boolean active) {
+        MenuItem item = itemRepo.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+        item.setActive(active);
+        MenuItem saved = itemRepo.save(item);
+        auditService.recordAction(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
+                AuditAction.TOGGLE, List.of(),
+                (active ? "Showed" : "Hid") + " item: " + saved.getName());
         return MenuItemDto.from(saved);
     }
 
@@ -175,6 +213,8 @@ public class MenuService {
         cat.setAvailabilityNote(req.availabilityNote());
         cat.setSortOrder(req.sortOrder());
         cat.setBar(req.bar());
+        // Omitting the flag means "visible", so older payloads keep creating visible categories.
+        cat.setActive(req.active() == null || req.active());
         if (req.parentId() != null) {
             cat.setParent(categoryRepo.findById(req.parentId())
                     .orElseThrow(() -> new IllegalArgumentException("Parent category not found: " + req.parentId())));

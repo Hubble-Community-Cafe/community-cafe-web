@@ -22,10 +22,17 @@ public interface MenuCategoryRepository extends JpaRepository<MenuCategory, Long
     @Query("DELETE FROM MenuCategory c WHERE c.parent IS NOT NULL")
     void deleteSubcategories();
 
-    /** Top-level tab categories visible to a given bar (parent IS NULL). */
+    /** Top-level tab categories for a given bar (parent IS NULL), hidden ones included. */
     @Query("SELECT c FROM MenuCategory c WHERE (c.bar = :bar OR c.bar IS NULL) AND c.parent IS NULL ORDER BY c.sortOrder ASC")
     List<MenuCategory> findTopLevelForBar(@Param("bar") BarLocation bar);
 
+    /** As {@link #findTopLevelForBar} but only tabs shown on the public site. */
+    @Query("SELECT c FROM MenuCategory c WHERE (c.bar = :bar OR c.bar IS NULL) AND c.parent IS NULL AND c.active = true ORDER BY c.sortOrder ASC")
+    List<MenuCategory> findActiveTopLevelForBar(@Param("bar") BarLocation bar);
+
     /** Sub-heading categories that belong to a given tab, in sort order. */
     List<MenuCategory> findByParentOrderBySortOrderAsc(MenuCategory parent);
+
+    /** Sub-heading categories of a tab filtered by visibility, in sort order. */
+    List<MenuCategory> findByParentAndActiveOrderBySortOrderAsc(MenuCategory parent, boolean active);
 }
