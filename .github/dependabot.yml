@@ -3,7 +3,7 @@ updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
     directory: "/backend"
-    target-branch: "deps"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -30,7 +30,7 @@ updates:
   # package-lock.json (in /) when it bumps any workspace member's package.json.
   - package-ecosystem: "npm"
     directory: "/"
-    target-branch: "deps"
+    target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
@@ -56,7 +56,7 @@ updates:
 
   - package-ecosystem: "npm"
     directory: "/e2e"
-    target-branch: "deps"
+    target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
@@ -74,7 +74,7 @@ updates:
   # ── GitHub Actions ────────────────────────────────────────────────────────────
   - package-ecosystem: "github-actions"
     directory: "/"
-    target-branch: "deps"
+    target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
@@ -90,7 +90,7 @@ updates:
   # ── Docker images ─────────────────────────────────────────────────────────────
   - package-ecosystem: "docker"
     directories: ["/backend", "/public-hubble", "/public-meteor", "/admin"]
-    target-branch: "deps"
+    target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
