@@ -65,9 +65,6 @@ function CategoryBlock({ category }: { category: MenuCategoryWithItems }) {
         {category.items.map((item, i) => (
           <MenuItemRow key={item.id} item={item} index={i} />
         ))}
-        {category.items.length === 0 && (
-          <p className="py-2 text-sm text-meteor-700/50">No items yet.</p>
-        )}
       </div>
     </div>
   )
@@ -130,9 +127,6 @@ export function MenuPage() {
               {activeTab.categories.map((cat) => (
                 <CategoryBlock key={cat.id} category={cat} />
               ))}
-              {activeTab.categories.length === 0 && (
-                <p className="text-sm text-meteor-700/60">No items in this section yet.</p>
-              )}
             </div>
           )}
         </>
