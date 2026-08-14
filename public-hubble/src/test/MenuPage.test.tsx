@@ -76,3 +76,23 @@ describe('Hubble MenuPage loading', () => {
     expect(screen.queryByTestId('menu-skeleton')).not.toBeInTheDocument()
   })
 })
+
+describe('Hubble MenuPage visibility', () => {
+  beforeEach(() => {
+    mockGetMenu.mockReset()
+  })
+
+  it('never shows an empty-section placeholder, since hidden sections are omitted', async () => {
+    mockGetMenu.mockResolvedValue(MENU)
+    renderMenu()
+    await screen.findByText('Pils')
+    expect(screen.queryByText(/no items yet/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/no items in this section/i)).not.toBeInTheDocument()
+  })
+
+  it('falls back to a friendly message when everything is hidden', async () => {
+    mockGetMenu.mockResolvedValue([])
+    renderMenu()
+    expect(await screen.findByText(/menu is being updated/i)).toBeInTheDocument()
+  })
+})

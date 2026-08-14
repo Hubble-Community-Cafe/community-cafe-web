@@ -17,7 +17,8 @@ test.describe('Admin menu CRUD', () => {
     await admin.addButton('Add tab').click()
     await page.getByLabel('Name', { exact: true }).fill('E2E Snacks')
     await page.getByRole('button', { name: 'Save' }).click()
-    const tab = page.getByRole('button', { name: /E2E Snacks/ })
+    // Anchored: the row also carries a "Hide E2E Snacks from the site" visibility toggle.
+    const tab = page.getByRole('button', { name: /^E2E Snacks/ })
     await expect(tab).toBeVisible()
 
     // Sub-category inside the tab.
@@ -25,7 +26,7 @@ test.describe('Admin menu CRUD', () => {
     await admin.addButton('Add sub-category').click()
     await page.getByLabel('Name', { exact: true }).fill('E2E Bowls')
     await page.getByRole('button', { name: 'Save' }).click()
-    const sub = page.getByRole('button', { name: /E2E Bowls/ })
+    const sub = page.getByRole('button', { name: /^E2E Bowls/ })
     await expect(sub).toBeVisible()
 
     // Item with TU/e dual pricing inside the sub-category.

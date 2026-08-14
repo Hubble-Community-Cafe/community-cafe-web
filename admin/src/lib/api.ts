@@ -169,6 +169,8 @@ export interface MenuCategory {
   bar: BarLocation | null
   /** null when this category is a top-level tab; set when it is a sub-heading within a tab. */
   parentId: number | null
+  /** When false the category and everything under it is hidden from the public site. */
+  active: boolean
 }
 
 export interface MenuItem {
@@ -202,6 +204,8 @@ export interface MenuCategoryRequest {
   sortOrder: number
   bar: BarLocation | null
   parentId: number | null
+  /** Omit to keep the category visible; the backend treats a missing flag as active. */
+  active?: boolean
 }
 
 export interface MenuItemRequest {
@@ -244,6 +248,16 @@ export const updateMenuCategory = (id: number, req: MenuCategoryRequest) =>
 export const deleteMenuCategory = (id: number) =>
   fetchWithAuth(`/api/admin/menu/categories/${id}`, { method: 'DELETE' })
 
+/**
+ * Show or hide a category (and everything under it) on the public site. Separate from
+ * updateMenuCategory so a quick toggle cannot overwrite fields edited elsewhere.
+ */
+export const setMenuCategoryActive = (id: number, active: boolean) =>
+  getJson<MenuCategory>(`/api/admin/menu/categories/${id}/active`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
+
 export const fetchMenuItems = (categoryId: number) =>
   getJson<MenuItem[]>(`/api/admin/menu/categories/${categoryId}/items`)
 
@@ -261,6 +275,13 @@ export const updateMenuItem = (id: number, req: MenuItemRequest) =>
 
 export const deleteMenuItem = (id: number) =>
   fetchWithAuth(`/api/admin/menu/items/${id}`, { method: 'DELETE' })
+
+/** Show or hide a single item on the public site. */
+export const setMenuItemActive = (id: number, active: boolean) =>
+  getJson<MenuItem>(`/api/admin/menu/items/${id}/active`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
 
 export const fetchDailyDishes = () =>
   getJson<DailyDish[]>('/api/admin/daily-dish')

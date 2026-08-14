@@ -26,6 +26,7 @@ class MenuServiceTest {
     @Autowired MenuCategoryRepository categoryRepo;
     @Autowired MenuItemRepository itemRepo;
     @Autowired DailyDishRepository dishRepo;
+    @Autowired AuditLogRepository auditLogRepository;
 
     private MenuCategoryRequest hubbleBeerCategory() {
         return new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null);
@@ -111,13 +112,127 @@ class MenuServiceTest {
 
     @Test
     void getMenuPage_sharedTabAppearsOnBothBars() {
-        menuService.createCategory(new MenuCategoryRequest(
+        // The tab needs a visible item: tabs with nothing to show are left out of the
+        // public menu so hiding never leaves an empty heading behind.
+        MenuCategoryDto tab = menuService.createCategory(new MenuCategoryRequest(
                 "Shared Menu", MenuKind.FOOD, null, 1, null, null));
+        MenuCategoryDto cat = menuService.createCategory(new MenuCategoryRequest(
+                "Snacks", MenuKind.FOOD, null, 1, null, tab.id()));
+        menuService.createItem(cat.id(), basicItem(true));
 
         assertThat(menuService.getMenuPage(BarLocation.HUBBLE))
                 .extracting(MenuTabDto::name).contains("Shared Menu");
         assertThat(menuService.getMenuPage(BarLocation.METEOR))
                 .extracting(MenuTabDto::name).contains("Shared Menu");
+    }
+
+    // ===== Visibility toggles =====
+
+    /** Builds tab > sub-heading > one visible item and returns [tab, subHeading]. */
+    private MenuCategoryDto[] tabWithItem() {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto cat = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
+        menuService.createItem(cat.id(), basicItem(true));
+        return new MenuCategoryDto[]{tab, cat};
+    }
+
+    @Test
+    void hiddenTab_isExcludedFromPublicMenu() {
+        MenuCategoryDto tab = tabWithItem()[0];
+        menuService.setCategoryActive(tab.id(), false);
+
+        assertThat(menuService.getMenuPage(BarLocation.HUBBLE)).isEmpty();
+    }
+
+    @Test
+    void hiddenSubHeading_isExcludedFromPublicMenu() {
+        MenuCategoryDto cat = tabWithItem()[1];
+        menuService.setCategoryActive(cat.id(), false);
+
+        // The tab has nothing left to show, so it disappears too rather than leaving a heading.
+        assertThat(menuService.getMenuPage(BarLocation.HUBBLE)).isEmpty();
+    }
+
+    @Test
+    void activeItemUnderHiddenCategory_staysHidden() {
+        MenuCategoryDto[] built = tabWithItem();
+        menuService.setCategoryActive(built[1].id(), false);
+
+        // The item's own flag is untouched and still true; the category decides.
+        assertThat(menuService.getItemsForCategory(built[1].id()))
+                .allMatch(MenuItemDto::active);
+        assertThat(menuService.getMenuPage(BarLocation.HUBBLE)).isEmpty();
+    }
+
+    @Test
+    void reEnablingCategory_restoresPreviousPerItemVisibility() {
+        MenuCategoryDto[] built = tabWithItem();
+        MenuCategoryDto cat = built[1];
+        MenuItemDto hidden = menuService.createItem(cat.id(), new MenuItemRequest(
+                "Sold out", null, new BigDecimal("4.00"),
+                null, List.of(), List.of(), List.of(), null, 2, false));
+
+        menuService.setCategoryActive(cat.id(), false);
+        menuService.setCategoryActive(cat.id(), true);
+
+        // Exactly what was visible before is visible again: the hidden item stays hidden.
+        List<MenuItemDto> visible = menuService.getMenuPage(BarLocation.HUBBLE)
+                .get(0).categories().get(0).items();
+        assertThat(visible).extracting(MenuItemDto::name).containsExactly("Heineken");
+        assertThat(menuService.getItemsForCategory(cat.id()))
+                .filteredOn(i -> i.id().equals(hidden.id()))
+                .allMatch(i -> !i.active());
+    }
+
+    @Test
+    void categoryWithAllItemsHidden_leavesNoEmptyHeading() {
+        MenuCategoryDto cat = tabWithItem()[1];
+        MenuItemDto only = menuService.getItemsForCategory(cat.id()).get(0);
+        menuService.setItemActive(only.id(), false);
+
+        assertThat(menuService.getMenuPage(BarLocation.HUBBLE)).isEmpty();
+    }
+
+    @Test
+    void hiddenCategoriesAndItems_remainVisibleInAdminLists() {
+        MenuCategoryDto[] built = tabWithItem();
+        MenuItemDto item = menuService.getItemsForCategory(built[1].id()).get(0);
+        menuService.setCategoryActive(built[1].id(), false);
+        menuService.setItemActive(item.id(), false);
+
+        assertThat(menuService.getAllCategories())
+                .extracting(MenuCategoryDto::name).contains("Beers");
+        assertThat(menuService.getItemsForCategory(built[1].id())).hasSize(1);
+    }
+
+    @Test
+    void togglingCategory_isAuditedAsToggle() {
+        MenuCategoryDto tab = tabWithItem()[0];
+        menuService.setCategoryActive(tab.id(), false);
+
+        assertThat(auditLogRepository.findAll())
+                .anyMatch(a -> a.getAction() == AuditAction.TOGGLE
+                        && a.getEntityType() == AuditEntityType.MENU_CATEGORY
+                        && a.getSummary().contains("Hid category: Drinks"));
+    }
+
+    @Test
+    void togglingItem_isAuditedAsToggle() {
+        MenuCategoryDto cat = tabWithItem()[1];
+        MenuItemDto item = menuService.getItemsForCategory(cat.id()).get(0);
+        menuService.setItemActive(item.id(), false);
+
+        assertThat(auditLogRepository.findAll())
+                .anyMatch(a -> a.getAction() == AuditAction.TOGGLE
+                        && a.getEntityType() == AuditEntityType.MENU_ITEM
+                        && a.getSummary().contains("Hid item: Heineken"));
+    }
+
+    @Test
+    void newCategoryWithoutFlag_isVisible() {
+        assertThat(menuService.createCategory(hubbleBeerCategory()).active()).isTrue();
     }
 
     @Test
