@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card, PageHeader } from '../components/PageHeader'
+import { VisibilityToggle } from '../components/VisibilityToggle'
 import { CategoryForm } from './menu/CategoryForm'
 import { ItemForm } from './menu/ItemForm'
 import { usePermissions } from '../lib/usePermissions'
@@ -9,10 +10,12 @@ import {
   createMenuCategory,
   updateMenuCategory,
   deleteMenuCategory,
+  setMenuCategoryActive,
   fetchMenuItems,
   createMenuItem,
   updateMenuItem,
   deleteMenuItem,
+  setMenuItemActive,
   type BarLocation,
   type MenuCategory,
   type MenuCategoryRequest,
@@ -117,6 +120,36 @@ export function MenuPage() {
     const cat = await updateMenuCategory(editingCategory.id, req)
     setAllCategories((prev) => prev.map((c) => (c.id === cat.id ? cat : c)))
     setEditingCategory(null)
+  }
+
+  /**
+   * Show/hide a tab or sub-heading. Applied optimistically and rolled back on failure so the
+   * switch feels instant; naming avoids the existing toggleTab/toggleCat, which are expand state.
+   */
+  const handleSetCategoryActive = async (id: number, active: boolean) => {
+    setAllCategories((prev) => prev.map((c) => (c.id === id ? { ...c, active } : c)))
+    try {
+      const saved = await setMenuCategoryActive(id, active)
+      setAllCategories((prev) => prev.map((c) => (c.id === id ? saved : c)))
+    } catch {
+      setAllCategories((prev) => prev.map((c) => (c.id === id ? { ...c, active: !active } : c)))
+      setError('Could not change visibility. Please try again.')
+    }
+  }
+
+  const handleSetItemActive = async (categoryId: number, id: number, active: boolean) => {
+    const patch = (value: boolean) =>
+      setItemsByCategory((prev) => ({
+        ...prev,
+        [categoryId]: (prev[categoryId] ?? []).map((i) => (i.id === id ? { ...i, active: value } : i)),
+      }))
+    patch(active)
+    try {
+      await setMenuItemActive(id, active)
+    } catch {
+      patch(!active)
+      setError('Could not change visibility. Please try again.')
+    }
   }
 
   const handleDeleteCategory = async (id: number) => {
@@ -246,9 +279,19 @@ export function MenuPage() {
                         {tab.bar === null && (
                           <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">both bars</span>
                         )}
+                        {!tab.active && (
+                          <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                            hidden
+                          </span>
+                        )}
                       </button>
                       {canEditContent && (
                         <div className="flex shrink-0 gap-1">
+                          <VisibilityToggle
+                            active={tab.active}
+                            label={tab.name}
+                            onToggle={(next) => handleSetCategoryActive(tab.id, next)}
+                          />
                           <button
                             onClick={() => { setEditingCategory(tab); setShowNewTab(false) }}
                             className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
@@ -330,9 +373,19 @@ export function MenuPage() {
                                     {cat.availabilityNote && (
                                       <span className="text-xs text-slate-400">{cat.availabilityNote}</span>
                                     )}
+                                    {!cat.active && (
+                                      <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
+                                        hidden
+                                      </span>
+                                    )}
                                   </button>
                                   {canEditContent && (
                                     <div className="flex shrink-0 gap-1">
+                                      <VisibilityToggle
+                                        active={cat.active}
+                                        label={cat.name}
+                                        onToggle={(next) => handleSetCategoryActive(cat.id, next)}
+                                      />
                                       <button
                                         onClick={() => { setEditingCategory(cat); setNewSubForTab(null) }}
                                         className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
@@ -397,7 +450,7 @@ export function MenuPage() {
                                               <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
                                                 <div className="flex items-center gap-3">
                                                   {!item.active && (
-                                                    <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs text-slate-400">hidden</span>
+                                                    <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">hidden</span>
                                                   )}
                                                   <span className="text-sm text-slate-800">{item.name}</span>
                                                   <span className="text-sm text-slate-500">
@@ -410,6 +463,11 @@ export function MenuPage() {
                                                 </div>
                                                 {canEditContent && (
                                                   <div className="flex gap-1">
+                                                    <VisibilityToggle
+                                                      active={item.active}
+                                                      label={item.name}
+                                                      onToggle={(next) => handleSetItemActive(cat.id, item.id, next)}
+                                                    />
                                                     <button
                                                       onClick={() => { setEditingItem(item); setNewItemForCategory(null) }}
                                                       className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"

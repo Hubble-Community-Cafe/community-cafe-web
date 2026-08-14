@@ -16,7 +16,7 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
   const [kind, setKind] = useState<MenuKind>(initial?.kind ?? 'DRINK')
   const [note, setNote] = useState(initial?.availabilityNote ?? '')
   const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? defaultSortOrder)
-  const [bar, setBar] = useState<BarLocation | 'SHARED'>(initial?.bar ?? defaultBar)
+  const [bar, setBar] = useState<BarLocation>(initial?.bar ?? defaultBar)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()
@@ -31,8 +31,11 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
         kind,
         availabilityNote: note.trim() || null,
         sortOrder,
-        bar: fixedParentId !== undefined ? (initial?.bar ?? null) : bar === 'SHARED' ? null : bar,
+        bar: fixedParentId !== undefined ? (initial?.bar ?? null) : bar,
         parentId: fixedParentId ?? initial?.parentId ?? null,
+        // Carry the current visibility through: editing a hidden category must not
+        // quietly put it back on the site. Visibility is changed with the toggle.
+        active: initial?.active ?? true,
       })
     } catch {
       setError('Could not save category.')
@@ -95,12 +98,11 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
               <label className="mb-1 block text-xs font-medium text-slate-600">Visible on</label>
               <select
                 value={bar}
-                onChange={(e) => setBar(e.target.value as BarLocation | 'SHARED')}
+                onChange={(e) => setBar(e.target.value as BarLocation)}
                 className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
               >
                 <option value="HUBBLE">Hubble</option>
                 <option value="METEOR">Meteor</option>
-                <option value="SHARED">Both</option>
               </select>
             </div>
           )}
