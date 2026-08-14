@@ -69,7 +69,7 @@ class FormServiceAnalyticsTest {
         service.submitComplaint(
                 new ComplaintRequest("Alice", "a@x.com", null, null, "TIP", "hi", null, "ok"));
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=complaint bar=none");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=complaint bar=NONE");
     }
 
     @Test
@@ -77,7 +77,7 @@ class FormServiceAnalyticsTest {
         service.submitTip(
                 new TipRequest("Bob", "b@x.com", null, null, "TIP", "hi", false, null, "ok"));
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=tips bar=none");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=tips bar=NONE");
     }
 
     @Test
@@ -85,7 +85,7 @@ class FormServiceAnalyticsTest {
         service.submitInformation(
                 new InformationRequest("Cara", "c@x.com", null, "hi", null, "ok"));
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=information bar=none");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=information bar=NONE");
     }
 
     @Test
@@ -93,7 +93,7 @@ class FormServiceAnalyticsTest {
         service.submitLoan(new LoanRequest("Dee", "Doppio", "d@x.com",
                 "2026-07-01", "10:00", "2026-07-02", "10:00", "hi", null, "ok"));
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=loan bar=none");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=loan bar=NONE");
     }
 
     @Test
@@ -115,6 +115,29 @@ class FormServiceAnalyticsTest {
                 .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=HUBBLE");
     }
 
+    /**
+     * The screen form is the only place BOTH can reach the bar dimension (a poster shown on both
+     * screens). It is a real value in the shared vocabulary, so it is asserted rather than
+     * normalised away.
+     */
+    @Test
+    void screen_forBothCafes_emitsBothAsTheBar() {
+        ScreenRequest req = new ScreenRequest();
+        req.setName("Eve");
+        req.setAssociation("Doppio");
+        req.setEmail("e@x.com");
+        req.setCafe("BOTH");
+        req.setPermanent(true);
+        req.setMessage("hi");
+        req.setFile(new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3}));
+        req.setAltcha("ok");
+
+        service.submitScreen(req);
+
+        assertThat(analyticsLines())
+                .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=BOTH");
+    }
+
     @Test
     void declaration_emitsOneLine() {
         DeclarationRequest req = new DeclarationRequest();
@@ -131,7 +154,7 @@ class FormServiceAnalyticsTest {
         service.submitDeclaration(req);
 
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=declaration bar=none");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=declaration bar=NONE");
     }
 
     @Test

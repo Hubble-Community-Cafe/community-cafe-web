@@ -15,6 +15,12 @@
 services:
   backend:
     image: ghcr.io/hubble-community-cafe/community-cafe-web-backend:__VERSION__
+    # Opts this container into the analytics pipeline: Promtail (in the observability stack)
+    # discovers containers by these labels over the Docker API and ships their APP_ANALYTICS
+    # lines to Loki as job="app-analytics". Only the backend emits them; the frontends do not.
+    labels:
+      analytics.scrape: "true"
+      analytics.app: "community-cafe"
     deploy:
       restart_policy:
         condition: on-failure

@@ -13,7 +13,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-/** Verifies the PII-free page-view line format and the site derivation from Origin/Referer/bar. */
+/** Verifies the PII-free page-view line format and the bar derivation from Origin/Referer/path. */
 class AnalyticsServiceTest {
 
     private final AnalyticsService service = new AnalyticsService();
@@ -49,48 +49,48 @@ class AnalyticsServiceTest {
     @Test
     void emitsExactPageViewLine_hubbleFromOrigin() {
         service.logPageView("board", req("https://hubble.cafe", null));
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=board site=hubble");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=board bar=HUBBLE");
     }
 
     @Test
     void meteorFromOrigin() {
         service.logPageView("menu", req("https://meteor.cafe", null));
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu site=meteor");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu bar=METEOR");
     }
 
     @Test
     void subdomainOriginMatches() {
         service.logPageView("events", req("https://test.hubble.cafe", null), BarLocation.METEOR);
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=events site=hubble");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=events bar=HUBBLE");
     }
 
     @Test
     void originWinsOverBarFallback() {
         service.logPageView("menu", req("https://meteor.cafe", null), BarLocation.HUBBLE);
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu site=meteor");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu bar=METEOR");
     }
 
     @Test
     void fallsBackToRefererHostWhenNoOrigin() {
         service.logPageView("menu", req(null, "https://meteor.cafe/menu"), null);
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu site=meteor");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=menu bar=METEOR");
     }
 
     @Test
     void usesBarFallbackWhenNoHeaders() {
         service.logPageView("vacancies", req(null, null), BarLocation.HUBBLE);
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=vacancies site=hubble");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=vacancies bar=HUBBLE");
     }
 
     @Test
     void usesBarFallbackWhenOriginIsThirdParty() {
         service.logPageView("associations", req("https://example.com", null), BarLocation.METEOR);
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=associations site=meteor");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=associations bar=METEOR");
     }
 
     @Test
     void unknownWhenNoHeadersAndNoBar() {
         service.logPageView("board", req(null, null));
-        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=board site=unknown");
+        assertThat(line()).isEqualTo("APP_ANALYTICS event=page_view page=board bar=UNKNOWN");
     }
 }

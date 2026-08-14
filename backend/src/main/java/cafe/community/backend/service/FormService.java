@@ -348,8 +348,10 @@ public class FormService {
      * matching the privacy statement's disclosed "minimal, non-identifying note".
      */
     private void logSubmission(String form, String bar) {
+        // NONE (not "none"): the bar vocabulary is uppercase across every analytics event so a
+        // single Grafana query can group page views, form submissions and reservations by bar.
         analytics.info("APP_ANALYTICS event=form_submitted form={} bar={}",
-                form, bar == null || bar.isBlank() ? "none" : bar);
+                form, bar == null || bar.isBlank() ? "NONE" : bar);
     }
 
     private FormEmail.Attachment requireFile(MultipartFile file, Set<String> allowedTypes, String what) {

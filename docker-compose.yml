@@ -41,6 +41,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    # Same labels as the production stack, so the analytics pipeline can be exercised
+    # locally by pointing a Promtail at this host's Docker socket.
+    labels:
+      analytics.scrape: "true"
+      analytics.app: "community-cafe"
     ports:
       - "8080:8080"
     depends_on:
