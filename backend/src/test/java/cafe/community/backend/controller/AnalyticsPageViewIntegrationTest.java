@@ -20,7 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Verifies the public content controllers actually emit the page-view analytics line. Site
+ * Verifies the public content controllers actually emit the page-view analytics line. Bar
  * derivation is driven here via the Referer header (the CORS filter would reject a cross-site
  * Origin before the controller runs); the full Origin/Referer/bar matrix is in AnalyticsServiceTest.
  */
@@ -52,23 +52,23 @@ class AnalyticsPageViewIntegrationTest {
     }
 
     @Test
-    void barScopedEndpoint_derivesSiteFromReferer() throws Exception {
+    void barScopedEndpoint_derivesBarFromReferer() throws Exception {
         mockMvc.perform(get("/api/menu/HUBBLE").header("Referer", "https://meteor.cafe/menu"))
                 .andExpect(status().isOk());
-        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=menu site=meteor");
+        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=menu bar=METEOR");
     }
 
     @Test
     void barScopedEndpoint_fallsBackToBarWhenNoHeaders() throws Exception {
         mockMvc.perform(get("/api/menu/HUBBLE")).andExpect(status().isOk());
-        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=menu site=hubble");
+        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=menu bar=HUBBLE");
     }
 
     @Test
-    void sharedBoardEndpoint_derivesSiteFromReferer() throws Exception {
+    void sharedBoardEndpoint_derivesBarFromReferer() throws Exception {
         mockMvc.perform(get("/api/board").header("Referer", "https://hubble.cafe/community/board"))
                 .andExpect(status().isOk());
-        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=board site=hubble");
+        assertThat(lines()).containsExactly("APP_ANALYTICS event=page_view page=board bar=HUBBLE");
     }
 
     @Test
