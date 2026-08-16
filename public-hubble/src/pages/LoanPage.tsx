@@ -192,9 +192,12 @@ export function LoanPage() {
         <div
           role="dialog" aria-modal="true" aria-label={preview.alt}
           onClick={() => setPreview(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="animate-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
         >
-          <figure className="relative max-h-[90vh] max-w-3xl" onClick={(e) => e.stopPropagation()}>
+          <figure
+            className="animate-modal relative max-h-[90vh] max-w-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               type="button" onClick={() => setPreview(null)} aria-label="Close"
               className="absolute right-2 top-2 rounded-full bg-white/90 px-3 py-0.5 text-xl font-bold leading-none text-hubble-900 shadow hover:bg-white"
