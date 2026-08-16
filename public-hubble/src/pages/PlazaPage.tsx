@@ -73,7 +73,9 @@ export function PlazaPage() {
         {HEROES.map((h, i) => (
           <div
             key={h.img}
-            className="absolute inset-0 transition-opacity duration-1000 ease-in-out"
+            // Curve pinned explicitly: the shared theme overrides Tailwind's --ease-in-out
+            // with a punchy UI curve, which would make this slow kiosk dissolve lurch.
+            className="absolute inset-0 transition-opacity duration-1000 ease-[cubic-bezier(0.4,0,0.2,1)]"
             style={{ opacity: i === active ? 1 : 0 }}
             aria-hidden={i !== active}
           >

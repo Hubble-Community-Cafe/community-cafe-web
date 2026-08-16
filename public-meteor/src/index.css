@@ -24,29 +24,11 @@ h1, h2, h3, h4 {
 }
 
 /*
- * Loading motion: a shimmering skeleton while data is in flight and a staggered
- * fade-up as real rows arrive. CSS-only; disabled under prefers-reduced-motion.
+ * Meteor's green-tinted skeleton gradient. The keyframes, timing and the
+ * reduced-motion guard are shared, in @cafe/shared-web/theme.css; only the
+ * brand tint lives here. background-image, not background, so the shared
+ * background-size is not reset by the shorthand.
  */
-@keyframes shimmer {
-  0%   { background-position: -160% 0; }
-  100% { background-position:  160% 0; }
-}
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: none; }
-}
-
 .shimmer {
-  background: linear-gradient(90deg, #eef3f1 25%, #dde7e2 37%, #eef3f1 63%);
-  background-size: 240% 100%;
-  animation: shimmer 1.3s linear infinite;
-}
-.animate-fade-up {
-  animation: fadeUp 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .shimmer, .animate-fade-up {
-    animation: none !important;
-  }
+  background-image: linear-gradient(90deg, #eef3f1 25%, #dde7e2 37%, #eef3f1 63%);
 }

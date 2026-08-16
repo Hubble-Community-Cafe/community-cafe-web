@@ -122,4 +122,65 @@
   --font-body: 'Lato', system-ui, sans-serif;
   --font-display: 'AXIS', 'Lato', system-ui, sans-serif;
   --font-title: 'AXIS', 'Lato', system-ui, sans-serif;
+
+  /* Motion. Custom curves: the CSS built-ins are too weak to feel intentional.
+     ease-out for anything entering or responding to input; ease-in-out for
+     something moving between two on-screen positions. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+}
+
+/* ── Motion primitives (shared by all three frontends) ──────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -160% 0; }
+  100% { background-position:  160% 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pulsering {
+  0%   { transform: scale(0.85); opacity: 0.65; }
+  70%  { transform: scale(2.3);  opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* The shimmer gradient itself stays per-app: each brand tints it differently. */
+.shimmer {
+  background-size: 240% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.animate-fade-up {
+  animation: fadeUp var(--duration-base) var(--ease-out) both;
+}
+.animate-pulsering {
+  animation: pulsering 1.8s ease-out infinite;
+}
+
+/* ── Accessibility guards ───────────────────────────────────────────────────── */
+
+/* Global, not per-class: any animation added later is covered by default. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Translucent surfaces become solid rather than frosted. */
+@media (prefers-reduced-transparency: reduce) {
+  .backdrop-blur-sm, .backdrop-blur, .backdrop-blur-md {
+    backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .backdrop-blur-sm, .backdrop-blur, .backdrop-blur-md {
+    backdrop-filter: none !important;
+  }
 }
