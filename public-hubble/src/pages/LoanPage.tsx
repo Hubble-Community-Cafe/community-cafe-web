@@ -6,7 +6,7 @@ import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus:border-hubble-500 focus:ring-2 focus:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
 const label = 'block text-sm font-semibold text-hubble-800'
 const mail = 'font-semibold text-hubble-700 hover:underline'
 // A reference looks like an inline link but opens the image in a modal instead of a new tab.
@@ -192,9 +192,12 @@ export function LoanPage() {
         <div
           role="dialog" aria-modal="true" aria-label={preview.alt}
           onClick={() => setPreview(null)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
+          className="animate-overlay fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
         >
-          <figure className="relative max-h-[90vh] max-w-3xl" onClick={(e) => e.stopPropagation()}>
+          <figure
+            className="animate-modal relative max-h-[90vh] max-w-3xl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <button
               type="button" onClick={() => setPreview(null)} aria-label="Close"
               className="absolute right-2 top-2 rounded-full bg-white/90 px-3 py-0.5 text-xl font-bold leading-none text-hubble-900 shadow hover:bg-white"

@@ -6,7 +6,7 @@ import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus:border-hubble-500 focus:ring-2 focus:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function InformationPage() {

@@ -122,4 +122,115 @@
   --font-body: 'Lato', system-ui, sans-serif;
   --font-display: 'AXIS', 'Lato', system-ui, sans-serif;
   --font-title: 'AXIS', 'Lato', system-ui, sans-serif;
+
+  /* Motion. Custom curves: the CSS built-ins are too weak to feel intentional.
+     ease-out for anything entering or responding to input; ease-in-out for
+     something moving between two on-screen positions. */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+}
+
+/* ── Motion primitives (shared by all three frontends) ──────────────────────── */
+
+@keyframes shimmer {
+  0%   { background-position: -160% 0; }
+  100% { background-position:  160% 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes pulsering {
+  0%   { transform: scale(0.85); opacity: 0.65; }
+  70%  { transform: scale(2.3);  opacity: 0; }
+  100% { opacity: 0; }
+}
+
+/* The shimmer gradient itself stays per-app: each brand tints it differently. */
+.shimmer {
+  background-size: 240% 100%;
+  animation: shimmer 1.3s linear infinite;
+}
+.animate-fade-up {
+  animation: fadeUp var(--duration-base) var(--ease-out) both;
+}
+.animate-pulsering {
+  animation: pulsering 1.8s ease-out infinite;
+}
+
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.96); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* The scrim finishes first, so the dialog lands on an established backdrop
+   rather than the two racing each other. */
+.animate-overlay {
+  animation: overlayIn var(--duration-fast) var(--ease-out) forwards;
+}
+.animate-modal {
+  animation: modalIn var(--duration-base) var(--ease-out) forwards;
+  /* Correct for a modal specifically: it is centred in the viewport, not
+     anchored to a trigger. A popover would be origin-aware instead. */
+  transform-origin: center;
+}
+
+/* ── Accessibility guards ───────────────────────────────────────────────────── */
+
+/* Global, not per-class: any animation added later is covered by default. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Translucent surfaces become solid rather than frosted. */
+@media (prefers-reduced-transparency: reduce) {
+  .backdrop-blur-sm, .backdrop-blur, .backdrop-blur-md {
+    backdrop-filter: none !important;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .backdrop-blur-sm, .backdrop-blur, .backdrop-blur-md {
+    backdrop-filter: none !important;
+  }
+}
+
+/* ── Press feedback ─────────────────────────────────────────────────────────── */
+
+html {
+  /* The grey overlay mobile browsers paint on tap fights the scale below. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * Applied globally rather than per button: these apps style buttons with inline
+ * utility classes, so there is no component class to hook into and a new button
+ * would otherwise be born without press feedback. Opt out with class="no-press".
+ * The property list is explicit because `all` would also animate the disabled
+ * opacity flip.
+ */
+button:not(.no-press),
+[role="button"]:not(.no-press),
+summary:not(.no-press) {
+  transition: transform var(--duration-fast) var(--ease-out),
+              background-color var(--duration-base) ease,
+              border-color var(--duration-base) ease,
+              box-shadow var(--duration-base) ease;
+}
+
+button:not(.no-press):active:not(:disabled),
+[role="button"]:not(.no-press):active:not(:disabled),
+summary:not(.no-press):active {
+  transform: scale(0.97);
 }

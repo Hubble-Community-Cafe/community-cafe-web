@@ -49,7 +49,7 @@ function DesktopGroup({ group }: { group: NavGroup }) {
         {group.label}
         <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
       </button>
-      <div className="invisible absolute left-0 top-full z-30 w-60 origin-top rounded-xl border border-hubble-100 bg-white py-2 opacity-0 shadow-lg shadow-hubble-900/10 transition-all group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+      <div className="invisible absolute left-0 top-full z-30 w-60 origin-top rounded-xl border border-hubble-100 bg-white py-2 opacity-0 shadow-lg shadow-hubble-900/10 transition-[opacity,visibility] duration-150 ease-out group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
         {group.children.map((leaf) => (
           <DesktopLeaf key={leaf.label + (leaf.to ?? leaf.href)} leaf={leaf} />
         ))}

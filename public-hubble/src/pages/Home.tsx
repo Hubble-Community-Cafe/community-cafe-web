@@ -60,7 +60,7 @@ export function Home() {
         />
         <div className="absolute inset-0 bg-hubble-950/55" />
         <div className="relative px-6 py-16 text-center text-white md:px-12 md:py-24">
-          <h1 className="mx-auto max-w-3xl font-title text-3xl font-bold leading-tight drop-shadow md:text-5xl">
+          <h1 className="mx-auto max-w-3xl font-title text-3xl font-bold leading-tight tracking-tight drop-shadow md:text-5xl">
             Enjoy our floating gold in the sunshine
           </h1>
           <div className="mx-auto mt-8 grid max-w-3xl gap-3 sm:grid-cols-3">
@@ -91,7 +91,7 @@ export function Home() {
 
       {/* Opening Times */}
       <section className="rounded-2xl bg-white px-6 py-10 text-hubble-900 shadow-lg shadow-hubble-950/20 md:px-12">
-        <h2 className="text-center font-title text-2xl font-bold text-hubble-700 md:text-3xl">
+        <h2 className="text-center font-title text-2xl font-bold tracking-tight text-hubble-700 md:text-3xl">
           Opening Times
         </h2>
         {!hoursLoaded && (
@@ -176,7 +176,7 @@ export function Home() {
         />
         <div className="absolute inset-0 bg-hubble-950/75" />
         <div className="relative grid gap-8 p-6 text-white md:grid-cols-2 md:p-10">
-          <h2 className="font-title text-2xl font-bold leading-tight md:text-3xl">
+          <h2 className="font-title text-2xl font-bold leading-tight tracking-tight md:text-3xl">
             Run by students, welcoming everyone on the TU/e Campus
           </h2>
           <div className="space-y-3 text-sm text-hubble-50/90">
