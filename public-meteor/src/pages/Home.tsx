@@ -59,7 +59,7 @@ export function Home() {
       {/* Hero */}
       <section className="bg-meteor-50">
         <div className="mx-auto max-w-6xl px-4 py-14 md:py-20">
-          <h1 className="max-w-3xl font-title text-4xl font-bold uppercase leading-tight text-meteor-500 md:text-6xl">
+          <h1 className="max-w-3xl font-title text-4xl font-bold uppercase leading-tight tracking-tight text-meteor-500 md:text-6xl">
             Welcome to Meteor
           </h1>
           <p className="mt-5 max-w-2xl text-lg text-meteor-900/80">
@@ -104,7 +104,7 @@ export function Home() {
       <div className="mx-auto max-w-6xl space-y-16 px-4 py-16">
         {/* Opening hours */}
         <section>
-          <h2 className="font-title text-2xl font-bold uppercase text-meteor-500 md:text-3xl">
+          <h2 className="font-title text-2xl font-bold uppercase tracking-tight text-meteor-500 md:text-3xl">
             Opening hours
           </h2>
           {!hoursLoaded && (
@@ -159,7 +159,7 @@ export function Home() {
         {/* About us, with the day interior photo. */}
         <section className="grid items-center gap-8 md:grid-cols-2">
           <div>
-            <h2 className="font-title text-2xl font-bold uppercase text-meteor-500 md:text-3xl">
+            <h2 className="font-title text-2xl font-bold uppercase tracking-tight text-meteor-500 md:text-3xl">
               About us
             </h2>
             <p className="mt-4 text-meteor-900/80">

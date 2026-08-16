@@ -7,7 +7,7 @@ export function PrivacyPage() {
   )
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="font-title text-3xl font-bold uppercase text-meteor-900 md:text-4xl">
+      <h1 className="font-title text-3xl font-bold uppercase tracking-tight text-meteor-900 md:text-4xl">
         Privacy statement
       </h1>
 

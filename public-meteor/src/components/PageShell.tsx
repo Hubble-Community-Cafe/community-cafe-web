@@ -17,7 +17,7 @@ export function PageShell({
 }) {
   return (
     <section className="mx-auto max-w-6xl px-4 py-12">
-      <h1 className="font-title text-3xl font-bold uppercase text-meteor-900 md:text-4xl">{title}</h1>
+      <h1 className="font-title text-3xl font-bold uppercase tracking-tight text-meteor-900 md:text-4xl">{title}</h1>
       {intro && <p className="mt-3 max-w-2xl text-meteor-800/80">{intro}</p>}
       {placeholder && (
         <p className="mt-8 rounded-xl border border-dashed border-meteor-200 bg-meteor-50 px-4 py-6 text-sm text-meteor-700">

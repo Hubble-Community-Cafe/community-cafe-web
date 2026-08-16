@@ -4,7 +4,7 @@ export function DiscountPolicyPage() {
   usePageSeo('Discount policy', 'How Meteor’s pricing works: discounts for TU/e students, campus residents and affiliated associations.')
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <h1 className="font-title text-3xl font-bold uppercase text-meteor-900 md:text-4xl">
+      <h1 className="font-title text-3xl font-bold uppercase tracking-tight text-meteor-900 md:text-4xl">
         Discount policy
       </h1>
 

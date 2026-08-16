@@ -65,7 +65,7 @@ export function VacanciesPage() {
           style={{ backgroundImage: 'url(/images/vacancies-hero.jpg)' }}>
           <div className="absolute inset-0 bg-hubble-900/55" />
           <div className="relative z-10 px-6 py-10 text-center">
-            <h1 className="font-title text-4xl font-bold text-white drop-shadow md:text-5xl">
+            <h1 className="font-title text-4xl font-bold tracking-tight text-white drop-shadow md:text-5xl">
               Vacancies
             </h1>
             <p className="mt-2 text-base text-white/80">
