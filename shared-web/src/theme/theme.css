@@ -184,3 +184,32 @@
     backdrop-filter: none !important;
   }
 }
+
+/* ── Press feedback ─────────────────────────────────────────────────────────── */
+
+html {
+  /* The grey overlay mobile browsers paint on tap fights the scale below. */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * Applied globally rather than per button: these apps style buttons with inline
+ * utility classes, so there is no component class to hook into and a new button
+ * would otherwise be born without press feedback. Opt out with class="no-press".
+ * The property list is explicit because `all` would also animate the disabled
+ * opacity flip.
+ */
+button:not(.no-press),
+[role="button"]:not(.no-press),
+summary:not(.no-press) {
+  transition: transform var(--duration-fast) var(--ease-out),
+              background-color var(--duration-base) ease,
+              border-color var(--duration-base) ease,
+              box-shadow var(--duration-base) ease;
+}
+
+button:not(.no-press):active:not(:disabled),
+[role="button"]:not(.no-press):active:not(:disabled),
+summary:not(.no-press):active {
+  transform: scale(0.97);
+}

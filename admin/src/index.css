@@ -22,3 +22,9 @@ body {
 h1, h2, h3, h4 {
   font-family: var(--font-title);
 }
+
+/* The admin is brand-neutral, so it uses the shared teal as its single accent. */
+::selection {
+  background-color: var(--color-hubble-100);
+  color: var(--color-hubble-900);
+}

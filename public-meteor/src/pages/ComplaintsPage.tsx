@@ -11,7 +11,7 @@ const TYPES: { value: ComplaintType; label: string }[] = [
 
 const fieldClass =
   'mt-1 w-full rounded-lg border border-meteor-200 bg-white px-3 py-2.5 text-sm text-meteor-900 ' +
-  'shadow-sm outline-none transition focus:border-meteor-accent focus:ring-2 focus:ring-meteor-accent/40'
+  'shadow-sm outline-none transition focus-visible:border-meteor-accent focus-visible:ring-2 focus-visible:ring-meteor-accent/40'
 const labelClass = 'block text-sm font-semibold text-meteor-900'
 
 export function ComplaintsPage() {

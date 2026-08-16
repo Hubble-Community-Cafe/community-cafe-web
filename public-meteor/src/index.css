@@ -32,3 +32,8 @@ h1, h2, h3, h4 {
 .shimmer {
   background-image: linear-gradient(90deg, #eef3f1 25%, #dde7e2 37%, #eef3f1 63%);
 }
+
+::selection {
+  background-color: var(--color-meteor-200);
+  color: var(--color-meteor-900);
+}
