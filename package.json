@@ -15,6 +15,9 @@
     "test:run": "npm run test:run --workspaces --if-present",
     "build": "npm run build --workspaces --if-present"
   },
+  "devDependencies": {
+    "vitest": "^4.1.11"
+  },
   "engines": {
     "node": ">=26"
   }
