@@ -5,12 +5,12 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>4.1.0</version>
+		<version>4.1.1</version>
 		<relativePath/>
 	</parent>
 	<groupId>cafe.community</groupId>
 	<artifactId>community-cafe-backend</artifactId>
-	<version>0.0.42</version>
+	<version>0.0.43</version>
 	<name>community-cafe-backend</name>
 	<description>Backend for the Hubble and Meteor community cafes: shared staff/board CMS.</description>
 
