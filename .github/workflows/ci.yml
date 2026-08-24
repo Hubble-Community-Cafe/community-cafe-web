@@ -102,13 +102,32 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  # ==================== PUBLISH GATE (main only) ====================
+  # Nothing reaches GHCR until a maintainer approves it, so a merge alone cannot
+  # publish an image. Enforced by the `production` environment's required
+  # reviewers (repo Settings > Environments), not by anything in this file.
+  #
+  # This exists as its own job purely so ONE approval releases all four image
+  # builds: putting `environment:` on the matrix job below would queue a separate
+  # pending deployment per service.
+  approve-publish:
+    name: Await publish approval
+    needs: [backend, frontend, e2e]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - run: echo "Publishing ${{ github.sha }} approved."
+
   # ==================== BUILD & PUSH IMAGES (main only) ====================
-  # On every push to main, after tests pass, build and push one image per service
-  # to GHCR. The version comes from the root package.json (no manual git tag):
-  # images are tagged :latest, :v<version>, and :main-<sha>.
+  # On every push to main, after tests pass and publishing is approved, build and
+  # push one image per service to GHCR. The version comes from the root
+  # package.json (no manual git tag): images are tagged :latest, :v<version>,
+  # and :main-<sha>.
   images:
     name: Build & push (${{ matrix.service }})
-    needs: [backend, frontend, e2e]
+    # approve-publish already depends on the three test jobs, so ordering holds.
+    needs: [approve-publish]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
