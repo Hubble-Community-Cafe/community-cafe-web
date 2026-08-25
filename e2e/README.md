@@ -16,6 +16,8 @@ The stack is `docker-compose.e2e.yml`: MariaDB + backend (`e2e` Spring profile, 
 
 Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin` (Desktop Chrome), and `mobile-hubble`, `mobile-meteor` (Pixel 5). Page objects live in `pages/`, fixtures in `fixtures/` (`backend.ts` = reset/seed helpers, `mailpit.ts` = form-email assertions via the Mailpit API on :8025, `evidence.ts` = report attachments).
 
+`identity-refresh.spec.ts` is a concurrency regression and needs real MariaDB, so it lives here rather than in the backend suite: MariaDB 11.6+ enables `innodb_snapshot_isolation` by default, which H2 cannot imitate. It fires each burst from independent `APIRequestContext`s, since a single context pools connections and would serialise them.
+
 The screen scene panel talks to Aurora, which does not exist in the e2e stack. Under the `e2e` profile the backend swaps in `FakeAuroraClient`, an in-memory stand-in with three screens named after the live ones. `/test/reset` puts every screen back on the carousel and re-seeds the poster mapping, so specs cannot leak scene state into each other. The real HTTP contract with Aurora is covered separately by `AuroraClientTest` against `MockRestServiceServer`.
 
 ## Troubleshooting
@@ -48,6 +50,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Vacancies | ✅ | n/a | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
+| Identity refresh under concurrency (regression) | n/a | n/a | ✅ | n/a |
 | Aurora screen scenes (open / last call / closed) | n/a | n/a | ✅ | ⬜ |
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
