@@ -6,5 +6,6 @@ public enum AuditAction {
     UPDATE,
     DELETE,
     ROLE_CHANGED,
-    TOGGLE
+    TOGGLE,
+    SCENE_CHANGED
 }
