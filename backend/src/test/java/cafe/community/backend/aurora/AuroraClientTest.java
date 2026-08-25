@@ -81,7 +81,7 @@ class AuroraClientTest {
                         ]
                         """, MediaType.APPLICATION_JSON));
 
-        List<AuroraScreenHandler> handlers = client.getScreenHandlers();
+        List<Aurora.ScreenHandler> handlers = client.getScreenHandlers();
 
         assertThat(handlers).hasSize(2);
         assertThat(handlers.get(0).name()).isEqualTo("CarouselPosterHandler");
@@ -108,7 +108,7 @@ class AuroraClientTest {
                         """, MediaType.APPLICATION_JSON));
 
         assertThat(client.getScreens())
-                .extracting(AuroraScreen::id)
+                .extracting(Aurora.Screen::id)
                 .containsExactly(1L, 2L, 3L);
         server.verify();
     }
@@ -161,9 +161,9 @@ class AuroraClientTest {
                         ]
                         """, MediaType.APPLICATION_JSON));
 
-        List<AuroraPoster> posters = client.getStaticPosters();
+        List<Aurora.Poster> posters = client.getStaticPosters();
 
-        assertThat(posters).extracting(AuroraPoster::label)
+        assertThat(posters).extracting(Aurora.Poster::label)
                 .containsExactly("closed.png", "https://example.test/last-call", "Poster 5");
         server.verify();
     }
@@ -175,7 +175,7 @@ class AuroraClientTest {
                         {"activePoster":null,"clockVisible":true}
                         """, MediaType.APPLICATION_JSON));
 
-        AuroraStaticPosterState state = client.getStaticPosterState();
+        Aurora.StaticPosterState state = client.getStaticPosterState();
 
         assertThat(state.activePoster()).isNull();
         assertThat(state.clockVisible()).isTrue();
@@ -215,7 +215,7 @@ class AuroraClientTest {
                           "entities":[{"id":1,"name":"Bar","socketIds":{"/":"abc"},"scaleFactor":1.5}]}]
                         """, MediaType.APPLICATION_JSON));
 
-        assertThat(client.getScreens()).extracting(AuroraScreen::name).containsExactly("Bar");
+        assertThat(client.getScreens()).extracting(Aurora.Screen::name).containsExactly("Bar");
         server.verify();
     }
 }

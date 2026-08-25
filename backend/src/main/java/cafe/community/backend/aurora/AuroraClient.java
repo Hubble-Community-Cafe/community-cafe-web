@@ -34,10 +34,10 @@ public class AuroraClient {
 
     private static final Logger log = LoggerFactory.getLogger(AuroraClient.class);
 
-    private static final ParameterizedTypeReference<List<AuroraScreenHandler>> SCREEN_HANDLER_LIST =
+    private static final ParameterizedTypeReference<List<Aurora.ScreenHandler>> SCREEN_HANDLER_LIST =
             new ParameterizedTypeReference<>() {
             };
-    private static final ParameterizedTypeReference<List<AuroraPoster>> POSTER_LIST =
+    private static final ParameterizedTypeReference<List<Aurora.Poster>> POSTER_LIST =
             new ParameterizedTypeReference<>() {
             };
 
@@ -75,8 +75,8 @@ public class AuroraClient {
     }
 
     /** All screen handlers and the screens currently attached to each. */
-    public List<AuroraScreenHandler> getScreenHandlers() {
-        List<AuroraScreenHandler> handlers = call("GET /handler/screen", () -> restClient.get()
+    public List<Aurora.ScreenHandler> getScreenHandlers() {
+        List<Aurora.ScreenHandler> handlers = call("GET /handler/screen", () -> restClient.get()
                 .uri("/handler/screen")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::fail)
@@ -89,14 +89,14 @@ public class AuroraClient {
      * Aurora exposes no plain screen list to an integration user, so this is the way to enumerate
      * them.
      */
-    public List<AuroraScreen> getScreens() {
-        List<AuroraScreenHandler> handlers = getScreenHandlers();
-        Map<Long, AuroraScreen> byId = new LinkedHashMap<>();
-        for (AuroraScreenHandler handler : handlers) {
+    public List<Aurora.Screen> getScreens() {
+        List<Aurora.ScreenHandler> handlers = getScreenHandlers();
+        Map<Long, Aurora.Screen> byId = new LinkedHashMap<>();
+        for (Aurora.ScreenHandler handler : handlers) {
             if (handler.entities() == null) {
                 continue;
             }
-            for (AuroraScreen screen : handler.entities()) {
+            for (Aurora.Screen screen : handler.entities()) {
                 byId.putIfAbsent(screen.id(), screen);
             }
         }
@@ -118,8 +118,8 @@ public class AuroraClient {
     }
 
     /** All static posters available to show. */
-    public List<AuroraPoster> getStaticPosters() {
-        List<AuroraPoster> posters = call("GET /handler/screen/poster/static/items", () -> restClient.get()
+    public List<Aurora.Poster> getStaticPosters() {
+        List<Aurora.Poster> posters = call("GET /handler/screen/poster/static/items", () -> restClient.get()
                 .uri("/handler/screen/poster/static/items")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::fail)
@@ -128,12 +128,12 @@ public class AuroraClient {
     }
 
     /** Which poster the static handler is currently showing, if any. */
-    public AuroraStaticPosterState getStaticPosterState() {
-        AuroraStaticPosterState state = call("GET /handler/screen/poster/static", () -> restClient.get()
+    public Aurora.StaticPosterState getStaticPosterState() {
+        Aurora.StaticPosterState state = call("GET /handler/screen/poster/static", () -> restClient.get()
                 .uri("/handler/screen/poster/static")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::fail)
-                .body(AuroraStaticPosterState.class));
+                .body(Aurora.StaticPosterState.class));
         if (state == null) {
             throw new AuroraException("Aurora returned an empty static poster state.");
         }
