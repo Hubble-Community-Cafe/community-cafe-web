@@ -83,6 +83,12 @@ services:
       # ALTCHA bot protection (off by default locally; set APP_ALTCHA_ENABLED=true to test).
       - APP_ALTCHA_ENABLED=${APP_ALTCHA_ENABLED:-false}
       - APP_ALTCHA_HMAC_KEY=${APP_ALTCHA_HMAC_KEY:-local-dev-altcha-secret}
+      # Aurora narrowcasting (screen scene panel). Off locally: without a base URL and an
+      # integration key the panel shows a "not configured" state instead of failing calls.
+      - AURORA_ENABLED=${AURORA_ENABLED:-false}
+      - AURORA_BASE_URL=${AURORA_BASE_URL:-}
+      - AURORA_POSTER_BASE_URL=${AURORA_POSTER_BASE_URL:-}
+      - AURORA_API_KEY=${AURORA_API_KEY:-}
     volumes:
       - cafeweb_media:/data/media
 

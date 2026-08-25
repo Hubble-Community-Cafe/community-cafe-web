@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>cafe.community</groupId>
 	<artifactId>community-cafe-backend</artifactId>
-	<version>1.0.0</version>
+	<version>1.1.0</version>
 	<name>community-cafe-backend</name>
 	<description>Backend for the Hubble and Meteor community cafes: shared staff/board CMS.</description>
 

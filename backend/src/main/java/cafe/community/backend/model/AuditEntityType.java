@@ -16,5 +16,6 @@ public enum AuditEntityType {
     BOARD_TERM,
     BOARD_MEMBER,
     VACANCY,
-    ASSOCIATION
+    ASSOCIATION,
+    SCREEN_SCENE
 }
