@@ -20,6 +20,14 @@ Self-maintained rebuild of **[hubble.cafe](https://hubble.cafe)** and **[meteor.
 
 Menu (incl. TU/e dual pricing), daily dinner dish, opening hours (plus the Meteor closed-banner), events (both bars), board (current shared, previous per-bar, supervisory), vacancies, and associations. All other page copy (forms, static pages, the plaza screen) is part of each site's code.
 
+### Screens (Aurora)
+
+The admin also has a **Screens** panel that switches every Aurora narrowcasting screen between three scenes: **Open** (the poster carousel), **Last call** and **Closed** (a static slide). Any signed-in staff member can switch the scene, since that is a bar-shift action; editors additionally choose which Aurora poster each scene shows.
+
+Aurora is called server to server from the backend, never from the browser: Aurora's CORS hardcodes `allowedHeaders: ['Cookie', 'Cookies']` and sets no `Allow-Credentials`, so a browser preflight carrying `content-type` or `x-api-key` is refused no matter what its `CORS_ORIGINS` says. Configure with `AURORA_ENABLED`, `AURORA_BASE_URL`, `AURORA_POSTER_BASE_URL` (the Aurora *client* host, which serves the poster images) and `AURORA_API_KEY`. The key belongs to an Aurora integration user scoped to `getScreenHandlers`, `setScreenHandler` and `showStaticPoster`. Left unset, the panel shows a "not configured" state rather than failing.
+
+Note that [star-wind](https://github.com/Hubble-Community-Cafe/star-wind) drives the same screens from Starcommunity webhooks. Both write the same state and neither knows about the other, so the panel always reads the live state back from Aurora and reports `Mixed` when the screens disagree.
+
 ## Tech stack
 
 React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.

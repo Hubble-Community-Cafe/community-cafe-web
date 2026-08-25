@@ -4,6 +4,7 @@ import {
   Image,
   LayoutDashboard,
   Link,
+  MonitorPlay,
   ScrollText,
   ShieldCheck,
   Soup,
@@ -58,6 +59,13 @@ export const NAV: NavSection[] = [
       { label: 'Vacancies', to: '/vacancies', icon: ScrollText, requires: 'viewer' },
       { label: 'Associations', to: '/associations', icon: Link, requires: 'viewer' },
       { label: 'Media', to: '/media', icon: Image, requires: 'viewer' },
+    ],
+  },
+  {
+    title: 'Bar',
+    items: [
+      // No `requires`: switching the screens is a bar-shift action, not content editing.
+      { label: 'Screens', to: '/screens', icon: MonitorPlay },
     ],
   },
   {

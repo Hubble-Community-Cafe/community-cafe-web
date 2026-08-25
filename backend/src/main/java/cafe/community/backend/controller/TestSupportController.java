@@ -1,7 +1,9 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.aurora.FakeAuroraClient;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
+import cafe.community.backend.model.ScreenSceneSettings;
 import cafe.community.backend.repository.*;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.context.annotation.Profile;
@@ -35,6 +37,8 @@ public class TestSupportController {
     private final AuditLogRepository auditLogs;
     private final AdminUserRepository adminUsers;
     private final FormSubmissionRepository formSubmissions;
+    private final ScreenSceneSettingsRepository screenSceneSettings;
+    private final FakeAuroraClient fakeAurora;
 
     public TestSupportController(
             MenuItemRepository menuItems, MenuCategoryRepository menuCategories,
@@ -43,7 +47,8 @@ public class TestSupportController {
             AssociationRepository associations, OpeningHoursRepository openingHours,
             HoursOverrideRepository hoursOverrides, MediaAssetRepository mediaAssets,
             AuditLogRepository auditLogs, AdminUserRepository adminUsers,
-            FormSubmissionRepository formSubmissions) {
+            FormSubmissionRepository formSubmissions,
+            ScreenSceneSettingsRepository screenSceneSettings, FakeAuroraClient fakeAurora) {
         this.menuItems = menuItems;
         this.menuCategories = menuCategories;
         this.dailyDishes = dailyDishes;
@@ -58,6 +63,8 @@ public class TestSupportController {
         this.auditLogs = auditLogs;
         this.adminUsers = adminUsers;
         this.formSubmissions = formSubmissions;
+        this.screenSceneSettings = screenSceneSettings;
+        this.fakeAurora = fakeAurora;
     }
 
     /** Wipe all mutable state to a clean baseline. FK-safe order: children, then media, then users. */
@@ -84,6 +91,16 @@ public class TestSupportController {
         // Audit trail and users last.
         auditLogs.deleteAllInBatch();
         adminUsers.deleteAllInBatch();
+
+        // Screen scenes: reset both sides, the poster mapping and the fake Aurora's own state,
+        // so specs cannot leak a handler assignment or a poster choice into each other.
+        // Seeded with the same ids the production migration uses.
+        screenSceneSettings.deleteAllInBatch();
+        ScreenSceneSettings settings = new ScreenSceneSettings();
+        settings.setClosedPosterId(3L);
+        settings.setLastCallPosterId(4L);
+        screenSceneSettings.save(settings);
+        fakeAurora.reset();
     }
 
     /** Create or update an admin user with a fixed role, for RBAC scenarios. */

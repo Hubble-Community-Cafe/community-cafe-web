@@ -17,6 +17,7 @@ import { MediaPage } from './pages/MediaPage'
 import { BoardPage } from './pages/BoardPage'
 import { VacanciesPage } from './pages/VacanciesPage'
 import { AssociationsPage } from './pages/AssociationsPage'
+import { ScreensPage } from './pages/ScreensPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
@@ -177,6 +178,8 @@ function App() {
                 </RequireRole>
               }
             />
+            {/* Switching the screens is a bar-shift action, open to any signed-in staff. */}
+            <Route path="screens" element={<ScreensPage />} />
             {CONTENT_MODULES.map((m) => (
               <Route
                 key={m.path}
