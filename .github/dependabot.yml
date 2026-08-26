@@ -1,4 +1,10 @@
 version: 2
+
+# `cooldown` holds a freshly published release back for a few days before
+# Dependabot will propose it, so a compromised publish has time to be spotted and
+# yanked before it lands here. Cooldown applies to *version* updates only:
+# Dependabot *security* updates bypass it, so genuine fixes are never delayed.
+
 updates:
   # ── Backend (Maven) ──────────────────────────────────────────────────────────
   - package-ecosystem: "maven"
@@ -9,6 +15,11 @@ updates:
       day: "monday"
       time: "09:00"
       timezone: "Europe/Amsterdam"
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 3
     reviewers:
       - "PimVanLeeuwen"
@@ -32,6 +43,11 @@ updates:
     directory: "/"
     target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "frontend"]
@@ -58,6 +74,11 @@ updates:
     directory: "/e2e"
     target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    cooldown:
+      default-days: 7
+      semver-major-days: 30
+      semver-minor-days: 7
+      semver-patch-days: 3
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "e2e"]
@@ -76,6 +97,10 @@ updates:
     directory: "/"
     target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    # github-actions supports only `default-days`; the per-SemVer-bump keys
+    # (semver-major/minor/patch-days) are not available for this ecosystem.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "ci"]
@@ -92,6 +117,10 @@ updates:
     directories: ["/backend", "/public-hubble", "/public-meteor", "/admin"]
     target-branch: "develop"
     schedule: { interval: "weekly", day: "monday", time: "09:00", timezone: "Europe/Amsterdam" }
+    # docker, like github-actions, supports only `default-days`; image tags are
+    # not required to be SemVer, so the per-bump keys do not apply.
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3
     reviewers: ["PimVanLeeuwen"]
     labels: ["dependencies", "docker"]
