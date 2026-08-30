@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { fetchWithRetry, getApiBaseUrl, getJson } from './client'
+import { ApiError, fetchWithRetry, getApiBaseUrl, getJson } from './client'
 
 const okResponse = (body: unknown) =>
   new Response(JSON.stringify(body), {
@@ -93,5 +93,39 @@ describe('getJson', () => {
   it('throws on a non-ok response', async () => {
     vi.mocked(fetch).mockResolvedValue(errorResponse(500))
     await expect(getJson('/api/thing')).rejects.toThrow(/failed/i)
+  })
+
+  it('classifies a non-ok response as an http failure carrying the status', async () => {
+    vi.mocked(fetch).mockResolvedValue(errorResponse(404))
+    const error = await getJson('/api/thing').catch((e: unknown) => e)
+    expect(error).toBeInstanceOf(ApiError)
+    expect(error).toMatchObject({ kind: 'http', status: 404, path: '/api/thing' })
+  })
+
+  it('classifies an unreachable API as a network failure', async () => {
+    const cause = new TypeError('Failed to fetch')
+    vi.mocked(fetch).mockRejectedValue(cause)
+    const error = await getJson('/api/thing').catch((e: unknown) => e)
+    expect(error).toMatchObject({ kind: 'network', status: null })
+    expect((error as ApiError).cause).toBe(cause)
+  })
+
+  it('classifies an unreadable body as a parse failure', async () => {
+    vi.mocked(fetch).mockResolvedValue(
+      new Response('<html>nope</html>', {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }),
+    )
+    const error = await getJson('/api/thing').catch((e: unknown) => e)
+    expect(error).toMatchObject({ kind: 'parse', status: 200 })
+  })
+
+  it('classifies a missing base URL as a config failure', async () => {
+    delete window.__RUNTIME_CONFIG__
+    vi.stubEnv('VITE_PUBLIC_API_URL', '')
+    const error = await getJson('/api/thing').catch((e: unknown) => e)
+    expect(error).toMatchObject({ kind: 'config' })
+    vi.unstubAllEnvs()
   })
 })

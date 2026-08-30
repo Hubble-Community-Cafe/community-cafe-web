@@ -67,6 +67,27 @@ cd backend && ./mvnw spring-boot:run
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.
 
+## When a page cannot load its content
+
+A visitor whose content fetch fails only sees "could not load", so the public sites report the
+failure to Sentry themselves (`reportApiFailure` in `shared-web/src/api/errorReporting.ts`).
+Before reporting, they probe `GET /` on the backend, which returns its uptime, and use the
+result to tell an expected blip from a real problem:
+
+| Probe result | Meaning | Reported as |
+| --- | --- | --- |
+| Backend up, uptime above 3 minutes | The backend is fine, so the failure is client-side: a blocking extension, a DNS filter, a proxy, a rejected origin | `error` |
+| Backend just restarted, or its proxy answers 5xx | A deploy or restart window | not reported, breadcrumb only |
+| Readable probe fails, opaque one succeeds | The request arrives and CORS refuses the read, so an origin is missing from `CORS_ALLOWED_ORIGINS` | `error` |
+| Neither probe gets through | Unreachable: network, blocker, or a deploy still in progress | `warning` |
+
+Failures while the visitor is offline or the tab is hidden are never reported: browsers cancel
+in-flight requests in both cases, so those events say nothing. Events carry no personal data,
+only the feature, the failure kind, the HTTP status and the coarse connection type.
+
+Triage in Sentry by the `api.backend` tag: `up` and `cors_rejected` are actionable, `unreachable`
+is usually the visitor's network.
+
 ## Status
 
 Feature-complete and running at `test.hubble.cafe` and `test.meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place. Remaining before the apex DNS cutover is the production configuration (point the stack at the live domains) and a final content-parity check against the current sites.
