@@ -23,6 +23,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@sentry/browser": "^10.70.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.6.0"
   },

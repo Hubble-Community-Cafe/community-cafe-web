@@ -1,5 +1,11 @@
 import { useEffect, useState } from 'react'
-import { getMenu, type MenuTab, type MenuCategoryWithItems, type MenuItem } from '@cafe/shared-web'
+import {
+  getMenu,
+  reportApiFailure,
+  type MenuTab,
+  type MenuCategoryWithItems,
+  type MenuItem,
+} from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -83,7 +89,10 @@ export function MenuPage() {
         setTabs(data)
         if (data.length > 0) setActiveTabId(data[0].id)
       })
-      .catch(() => setError(true))
+      .catch((err: unknown) => {
+        void reportApiFailure('menu', err)
+        setError(true)
+      })
       .finally(() => setIsLoading(false))
   }, [])
 

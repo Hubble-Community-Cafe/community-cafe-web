@@ -42,6 +42,35 @@ export function getApiBaseUrl(): string {
   return envUrl
 }
 
+/**
+ * Why an API call failed. The four cases are indistinguishable on screen (every one of them
+ * ends as "could not load"), but they point at completely different culprits: `network` at a
+ * blocked, filtered or unreachable request, `http` at the backend or its proxy, `parse` at a
+ * truncated or intercepted response, `config` at a broken deploy.
+ */
+export type ApiFailureKind = 'network' | 'http' | 'parse' | 'config'
+
+/** An API call that failed, carrying enough context to triage it in Sentry. */
+export class ApiError extends Error {
+  readonly kind: ApiFailureKind
+  readonly path: string
+  readonly status: number | null
+
+  constructor(
+    kind: ApiFailureKind,
+    path: string,
+    status: number | null,
+    message: string,
+    options?: { cause?: unknown },
+  ) {
+    super(message, options)
+    this.name = 'ApiError'
+    this.kind = kind
+    this.path = path
+    this.status = status
+  }
+}
+
 const RETRYABLE_STATUS_CODES = new Set([408, 429, 500, 502, 503, 504])
 
 /**
@@ -72,12 +101,38 @@ export async function fetchWithRetry(
   throw new Error(`Failed to fetch ${input} after ${maxAttempts} attempts`)
 }
 
-/** GET a path under the API base and parse the JSON body. */
+/**
+ * GET a path under the API base and parse the JSON body. Every failure surfaces as an
+ * {@link ApiError} so callers can report *why* a page could not load, not just that it did not.
+ */
 export async function getJson<T>(path: string): Promise<T> {
-  const url = `${getApiBaseUrl()}${path}`
-  const response = await fetchWithRetry(url)
-  if (!response.ok) {
-    throw new Error(`Request failed (${response.status}) for ${path}`)
+  let url: string
+  try {
+    url = `${getApiBaseUrl()}${path}`
+  } catch (error) {
+    throw new ApiError('config', path, null, `API base URL is not configured for ${path}`, {
+      cause: error,
+    })
   }
-  return response.json() as Promise<T>
+
+  let response: Response
+  try {
+    response = await fetchWithRetry(url)
+  } catch (error) {
+    throw new ApiError('network', path, null, `Request failed to reach the API for ${path}`, {
+      cause: error,
+    })
+  }
+
+  if (!response.ok) {
+    throw new ApiError('http', path, response.status, `Request failed (${response.status}) for ${path}`)
+  }
+
+  try {
+    return (await response.json()) as T
+  } catch (error) {
+    throw new ApiError('parse', path, response.status, `Response was not valid JSON for ${path}`, {
+      cause: error,
+    })
+  }
 }

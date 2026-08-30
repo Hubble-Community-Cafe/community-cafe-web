@@ -1,6 +1,7 @@
 // Public surface of @cafe/shared-web.
 export * from './types'
-export { getApiBaseUrl, fetchWithRetry, getJson } from './api/client'
+export { getApiBaseUrl, fetchWithRetry, getJson, ApiError, type ApiFailureKind } from './api/client'
+export { reportApiFailure, type BackendOutcome } from './api/errorReporting'
 export type { MenuTab } from './types/menu'
 export { getMenu, getTodaysDishes } from './api/menu'
 export { getWeeklyHours, getBarStatus, getUpcomingOverrides } from './api/hours'
