@@ -38,6 +38,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
+| Canonical host (alias domains 301, legacy permalinks stay https) | ✅ | ✅ | n/a | n/a |
 | SEO meta (title/OG/canonical/404 noindex) | 🟡 | ⬜ | n/a | n/a |
 | Plaza kiosk screen (`/plaza-page`) | 🟡 | n/a | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
