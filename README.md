@@ -67,6 +67,19 @@ cd backend && ./mvnw spring-boot:run
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.
 
+## Domains and certificates
+
+Each site has one **canonical host**, `hubble.cafe` and `meteor.cafe`. Everything else is an alias that resolves to the same container:
+
+| Site | Canonical | Aliases |
+| --- | --- | --- |
+| Hubble | `hubble.cafe` | `hubblecafe.nl`, `hubblecommunity.cafe`, `hubbel.cafe`, `ducksandbears.cafe`, `ducksandbears.nl`, `ducksandbearscafe.nl`, `barpotential.nl`, `tappersgil.de`, `wijbeunenvoorbier.nl` |
+| Meteor | `meteor.cafe` | `meteorcommunity.cafe`, `meteorcommunity.nl`, `meteorcommunitycafe.nl` |
+
+Aliases **301 to the canonical host** (the `map $host $canonical_redirect` block in each site's `nginx.conf`). This is not cosmetic: the backend allowlists the canonical origins only, so a visitor served on an alias got a site whose menu, opening hours and status banner all failed with a CORS 403 while looking perfectly healthy. Keep `CORS_ALLOWED_ORIGINS` limited to the canonical origins and let the redirect do the work.
+
+When a domain is added, point its DNS at the same host, add it to the vhost certificate, and it is redirected automatically (the map redirects every host it does not recognise). Only `localhost`, `127.0.0.1` and the `test.*` hosts are exempt, for local dev, the container health check and the Playwright stack.
+
 ## When a page cannot load its content
 
 A visitor whose content fetch fails only sees "could not load", so the public sites report the
@@ -90,7 +103,7 @@ is usually the visitor's network.
 
 ## Status
 
-Feature-complete and running at `test.hubble.cafe` and `test.meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place. Remaining before the apex DNS cutover is the production configuration (point the stack at the live domains) and a final content-parity check against the current sites.
+Feature-complete and running at `hubble.cafe` and `meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place.
 
 ## Contributing
 
