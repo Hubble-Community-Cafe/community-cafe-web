@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [main]
+    branches: [main, develop]
   pull_request:
-    branches: [main, deps]   # deps: Dependabot PRs target this branch (dependabot.yml target-branch)
+    branches: [main, develop]   # develop: integration branch, also Dependabot's target-branch
 
 # Cancel superseded runs for the same ref.
 concurrency:
