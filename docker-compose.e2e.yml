@@ -64,7 +64,9 @@ services:
       - SPRING_MAIL_HOST=mailpit
       - SPRING_MAIL_PORT=1025
     tmpfs:
-      - /data/media
+      # The tmpfs shadows the image's own /data/media, which the Dockerfile chowns to appuser,
+      # and would otherwise mount root-owned 0755, so uploads fail with AccessDeniedException.
+      - /data/media:mode=1777
 
   mailpit:
     image: axllent/mailpit:latest

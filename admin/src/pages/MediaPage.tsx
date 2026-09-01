@@ -2,16 +2,10 @@ import { useEffect, useRef, useState } from 'react'
 import { Trash2, Upload, Copy, Check } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import { fetchAllMedia, uploadMedia, deleteMedia, type MediaAsset, type BarLocation } from '../lib/api'
+import { formatBytes, validateUploadFile, MAX_UPLOAD_LABEL } from '../lib/upload'
 
 const BARS: (BarLocation | '')[] = ['', 'HUBBLE', 'METEOR']
 const BAR_LABELS: Record<string, string> = { '': 'Shared', HUBBLE: 'Hubble', METEOR: 'Meteor' }
-
-function formatBytes(n: number | null): string {
-  if (!n) return ''
-  if (n < 1024) return `${n} B`
-  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`
-  return `${(n / (1024 * 1024)).toFixed(1)} MB`
-}
 
 function AssetCard({
   asset,
@@ -118,6 +112,13 @@ export function MediaPage() {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
+
+    const problem = validateUploadFile(file)
+    if (problem) {
+      setUploadError(problem)
+      return
+    }
+
     setUploading(true)
     setUploadError(null)
     try {
@@ -137,7 +138,7 @@ export function MediaPage() {
         <h1 className="text-2xl font-bold text-slate-900">Media library</h1>
         <p className="mt-1 text-sm text-slate-500">
           Upload images for events, board members, and menu items.
-          JPEG, PNG, WebP and GIF, max 10 MB each.
+          JPEG, PNG, WebP and GIF, max {MAX_UPLOAD_LABEL} each.
         </p>
       </div>
 
@@ -185,7 +186,11 @@ export function MediaPage() {
             </button>
           </div>
         </div>
-        {uploadError && <p className="mt-2 text-xs text-red-600">{uploadError}</p>}
+        {uploadError && (
+          <p role="alert" className="mt-3 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+            {uploadError}
+          </p>
+        )}
       </section>
       )}
 

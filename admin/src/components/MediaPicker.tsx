@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { ImagePlus, X, Upload, Check } from 'lucide-react'
 import { fetchAllMedia, uploadMedia, type MediaAsset, type BarLocation } from '../lib/api'
+import { validateUploadFile, MAX_UPLOAD_LABEL } from '../lib/upload'
 
 interface MediaPickerProps {
   value: MediaAsset | null
@@ -31,6 +32,13 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
+
+    const problem = validateUploadFile(file)
+    if (problem) {
+      setUploadError(problem)
+      return
+    }
+
     setUploading(true)
     setUploadError(null)
     try {
@@ -126,8 +134,13 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
                 <Upload className="h-4 w-4" />
                 {uploading ? 'Uploading…' : 'Upload new image'}
               </button>
+              <p className="mt-1.5 text-xs text-slate-400">
+                JPEG, PNG, WebP and GIF, max {MAX_UPLOAD_LABEL}.
+              </p>
               {uploadError && (
-                <p className="mt-1.5 text-xs text-red-600">{uploadError}</p>
+                <p role="alert" className="mt-1.5 rounded border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs text-red-700">
+                  {uploadError}
+                </p>
               )}
             </div>
 

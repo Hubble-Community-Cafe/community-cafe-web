@@ -1,5 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { getE2eAuth } from './e2eAuth'
+import { MAX_UPLOAD_LABEL } from './upload'
 // Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts.
 
 const getApiUrl = (): string => {
@@ -600,7 +601,16 @@ export const uploadMedia = async (file: File, alt?: string, bar?: BarLocation | 
   const response = await fetchWithAuth('/api/admin/media', { method: 'POST', body: form })
   if (!response.ok) {
     const err = await response.json().catch(() => ({})) as { message?: string }
-    throw new Error(err.message ?? `Upload failed (${response.status})`)
+    if (err.message) throw new Error(err.message)
+    // A proxy in front of the backend can reject an oversize body before Spring sees it, in
+    // which case there is no JSON message to show. Say something human anyway.
+    if (response.status === 413) {
+      throw new Error(
+        `That image is too large to upload. The maximum is ${MAX_UPLOAD_LABEL}. `
+        + 'Please resize or compress it and try again.',
+      )
+    }
+    throw new Error(`Upload failed (${response.status}). Please try again.`)
   }
   return response.json() as Promise<MediaAsset>
 }
