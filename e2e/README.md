@@ -50,6 +50,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
 | Vacancies | ✅ | n/a | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
+| Media library (upload, size limit) | n/a | n/a | 🟡 | ⬜ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
 | Identity refresh under concurrency (regression) | n/a | n/a | ✅ | n/a |
 | Aurora screen scenes (open / last call / closed) | n/a | n/a | ✅ | ⬜ |
@@ -65,8 +66,11 @@ Form specs assert both the staff notification (to the per-form team list, with a
 ## Next specs
 
 The backfill is essentially complete: every shipped module is green on its sites, in admin CRUD, and
-on mobile (via the `mobile-admin` project for admin-on-a-phone). The one remaining `⬜` is the Hubble
+on mobile (via the `mobile-admin` project for admin-on-a-phone). The remaining `⬜`s are the Hubble
 file-upload forms (screens/declarations) on mobile, the desktop specs already cover the upload path,
-so this is a low-priority responsive-layout check. The rate-limit filter is disabled under the `e2e`
+so this is a low-priority responsive-layout check, and the media library on mobile. The media spec
+checks that an oversize image is refused client-side with a readable message rather than reaching the
+backend and coming back as a bare 413; the limit itself is `spring.servlet.multipart.max-file-size`,
+mirrored in `admin/src/lib/upload.ts`. The rate-limit filter is disabled under the `e2e`
 profile (its per-IP counter would otherwise leak across form specs) and is covered directly by
 `RateLimitFilterTest` in the backend.
