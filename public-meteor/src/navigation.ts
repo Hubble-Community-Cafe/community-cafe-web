@@ -39,6 +39,7 @@ export const NAV: NavGroup[] = [
       { label: 'Menu', to: '/menu' },
       { label: 'Discount Policy', to: '/menu/discount-policy' },
       { label: 'Complaints & Tips', to: '/complaints' },
+      { label: 'Online Declarations', to: '/declarations' },
     ],
   },
   { label: 'Reservation', href: EXTERNAL.reservations },

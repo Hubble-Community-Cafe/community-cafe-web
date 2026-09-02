@@ -4,7 +4,7 @@ Vite + React SPA for **meteor.cafe**, Meteor's own design and identity, distinct
 
 ## Status
 
-Complete. The open/closed status banner driven by live `BarStatus`, sticky header with Meteor's navigation (desktop dropdowns + mobile menu), home with live opening hours, and every page: menu, agenda (events), board (current / previous), the discount-policy page, and the complaints/tips form (honeypot + rate-limit + self-hosted ALTCHA). Per-route SEO/OpenGraph meta, a real 404, robots/sitemap, and 301 redirects from the old WordPress permalinks are in place; cookieless with self-hosted fonts and assets. Reservations and the food tracker link out (`harry.hubble.cafe`, `food.meteor.cafe`). Sentry wired.
+Complete. The open/closed status banner driven by live `BarStatus`, sticky header with Meteor's navigation (desktop dropdowns + mobile menu), home with live opening hours, and every page: menu, agenda (events), board (current / previous), the discount-policy page, and the complaints/tips and online-declaration forms (honeypot + rate-limit + self-hosted ALTCHA). Per-route SEO/OpenGraph meta, a real 404, robots/sitemap, and 301 redirects from the old WordPress permalinks are in place; cookieless with self-hosted fonts and assets. Reservations and the food tracker link out (`harry.hubble.cafe`, `food.meteor.cafe`). Sentry wired.
 
 ## Develop
 
