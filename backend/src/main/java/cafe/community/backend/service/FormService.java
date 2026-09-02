@@ -9,6 +9,7 @@ import cafe.community.backend.dto.ScreenRequest;
 import cafe.community.backend.dto.TipRequest;
 import cafe.community.backend.mail.FormEmail;
 import cafe.community.backend.mail.FormMailService;
+import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.model.FormSubmission;
 import cafe.community.backend.model.FormType;
 import cafe.community.backend.repository.FormSubmissionRepository;
@@ -48,6 +49,8 @@ public class FormService {
     private final String screensTo;
     private final String declarationsTo;
     private final String declarationsCc;
+    private final String declarationsMeteorTo;
+    private final String declarationsMeteorCc;
     private final String informationTo;
     private final String loanTo;
     private final String hubbleFrom;
@@ -61,6 +64,8 @@ public class FormService {
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
             @Value("${app.mail.forms.declarations:finance@hubble.cafe}") String declarationsTo,
             @Value("${app.mail.forms.declarations-cc:}") String declarationsCc,
+            @Value("${app.mail.forms.declarations-meteor:finance@meteor.cafe}") String declarationsMeteorTo,
+            @Value("${app.mail.forms.declarations-meteor-cc:}") String declarationsMeteorCc,
             @Value("${app.mail.forms.information:info@hubble.cafe}") String informationTo,
             @Value("${app.mail.forms.loan:loan@hubble.cafe}") String loanTo,
             @Value("${app.mail.from.hubble:noreply@hubble.cafe}") String hubbleFrom,
@@ -72,6 +77,8 @@ public class FormService {
         this.screensTo = screensTo;
         this.declarationsTo = declarationsTo;
         this.declarationsCc = declarationsCc;
+        this.declarationsMeteorTo = declarationsMeteorTo;
+        this.declarationsMeteorCc = declarationsMeteorCc;
         this.informationTo = informationTo;
         this.loanTo = loanTo;
         this.hubbleFrom = hubbleFrom;
@@ -165,17 +172,28 @@ public class FormService {
                 "We received your poster screen request", confirmation);
     }
 
-    // ── E-declaration (Hubble) ───────────────────────────────────────────────────
+    // ── E-declaration (Hubble and Meteor) ────────────────────────────────────────
 
+    /**
+     * The two cafes are separate companies, so a declaration reaches its own treasurer: the
+     * sender address, recipient and signature all follow the site the form was sent from.
+     */
     public void submitDeclaration(DeclarationRequest req) {
         if (isBot(req.getHoneypot())) return;
         requireCaptcha(req.getAltcha());
+
+        // Absent bar means Hubble: that form predates the Meteor one and posts no bar field.
+        BarLocation bar = req.getBar() != null ? req.getBar() : BarLocation.HUBBLE;
+        boolean meteor = bar == BarLocation.METEOR;
+        String from = meteor ? meteorFrom : hubbleFrom;
+        String to = meteor ? declarationsMeteorTo : declarationsTo;
+        String cc = meteor ? declarationsMeteorCc : declarationsCc;
 
         BigDecimal amount = parseAmount(req.getAmount());
         FormEmail.Attachment receipt = requireFile(req.getFile(), RECEIPT_TYPES,
                 "a PDF or image receipt");
 
-        String body = "New E-Declaration from the website\n\n"
+        String body = "New E-Declaration from the " + (meteor ? "Meteor" : "Hubble") + " website\n\n"
                 + "Full name: " + req.getFullName() + "\n"
                 + "Email address: " + req.getEmail() + "\n"
                 + "Phone Number: " + orDash(req.getPhone()) + "\n"
@@ -186,11 +204,10 @@ public class FormService {
                 + "Description: " + orDash(req.getDescription()) + "\n";
 
         record(FormType.DECLARATION, true);
-        mail.send(new FormEmail(hubbleFrom, declarationsTo,
-                declarationsCc != null && !declarationsCc.isBlank() ? declarationsCc : null,
+        mail.send(new FormEmail(from, to, cc != null && !cc.isBlank() ? cc : null,
                 req.getEmail(), "New E-Declaration from " + req.getFullName(),
                 body, List.of(receipt)));
-        logSubmission("declaration", null);
+        logSubmission("declaration", bar.name());
 
         String confirmation = "Hi " + req.getFullName() + ",\n\n"
                 + "Thanks! We have received your declaration and the treasurer will process it.\n\n"
@@ -199,8 +216,8 @@ public class FormService {
                 + "Category: " + req.getCategory() + "\n"
                 + "Date of purchase: " + req.getDateOfPurchase() + "\n\n"
                 + "If anything is unclear we will contact you. \n\n"
-                + "Kind regards,\nHubble Community Cafe\n";
-        sendConfirmation(hubbleFrom, req.getEmail(),
+                + "Kind regards,\n" + bar.getDisplayName() + "\n";
+        sendConfirmation(from, req.getEmail(),
                 "We received your declaration", confirmation);
     }
 

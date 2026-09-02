@@ -17,6 +17,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -189,8 +190,53 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.subject()).isEqualTo("We received your declaration");
-        assertThat(ack.body()).contains("Hi Sven Rooijakkers").contains("Amount in euros: 150.04");
+        assertThat(ack.body()).contains("Hi Sven Rooijakkers").contains("Amount in euros: 150.04")
+                .contains("Hubble Community Cafe");
         assertThat(ack.attachments()).isEmpty();
+    }
+
+    /**
+     * The two cafes are separate companies: a Meteor declaration must reach Meteor's own
+     * treasurer, from Meteor's sender, signed as Meteor. Nothing may leak to the Hubble list.
+     */
+    @Test
+    void declaration_fromMeteor_sendsToTheMeteorTreasurer() throws Exception {
+        mockMvc.perform(multipart("/api/forms/declaration").file(pdf())
+                        .param("bar", "METEOR")
+                        .param("fullName", "Nora Vermeer").param("email", "nora@x.com")
+                        .param("iban", "NL70 TRIO 0338 5890 15").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "40,00").param("category", "Bar Costs"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+        assertThat(sent.getAllValues()).noneMatch(e -> e.to().equals("finance@hubble.cafe"));
+
+        FormEmail email = to(sent, "finance@meteor.cafe");
+        assertThat(email.from()).isEqualTo("noreply@meteor.cafe");
+        assertThat(email.subject()).isEqualTo("New E-Declaration from Nora Vermeer");
+        assertThat(email.body()).contains("New E-Declaration from the Meteor website")
+                .contains("Amount in Euros: 40.00");
+        assertThat(email.attachments()).hasSize(1);
+
+        FormEmail ack = to(sent, "nora@x.com");
+        assertThat(ack.from()).isEqualTo("noreply@meteor.cafe");
+        assertThat(ack.subject()).isEqualTo("We received your declaration");
+        assertThat(ack.body()).contains("Meteor Community Cafe");
+        assertThat(ack.attachments()).isEmpty();
+    }
+
+    /** An unknown bar must be refused outright, never quietly reimbursed by the wrong company. */
+    @Test
+    void declaration_unknownBar_isRejected() throws Exception {
+        mockMvc.perform(multipart("/api/forms/declaration").file(pdf())
+                        .param("bar", "ATLANTIS")
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isBadRequest());
+
+        verify(mail, never()).send(any());
     }
 
     @Test

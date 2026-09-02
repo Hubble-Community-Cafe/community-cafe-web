@@ -78,6 +78,7 @@ services:
       - APP_MAIL_FORMS_COMPLAINTS=${APP_MAIL_FORMS_COMPLAINTS:-nuisance@hubble.cafe}
       - APP_MAIL_FORMS_SCREENS=${APP_MAIL_FORMS_SCREENS:-screens@hubble.cafe}
       - APP_MAIL_FORMS_DECLARATIONS=${APP_MAIL_FORMS_DECLARATIONS:-finance@hubble.cafe}
+      - APP_MAIL_FORMS_DECLARATIONS_METEOR=${APP_MAIL_FORMS_DECLARATIONS_METEOR:-finance@meteor.cafe}
       - APP_MAIL_FORMS_INFORMATION=${APP_MAIL_FORMS_INFORMATION:-info@hubble.cafe}
       - APP_MAIL_FORMS_LOAN=${APP_MAIL_FORMS_LOAN:-loan@hubble.cafe}
       # ALTCHA bot protection (off by default locally; set APP_ALTCHA_ENABLED=true to test).

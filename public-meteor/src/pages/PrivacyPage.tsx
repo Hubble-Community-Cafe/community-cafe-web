@@ -34,7 +34,7 @@ export function PrivacyPage() {
             What we collect, and why
           </h2>
           <p className="mt-2">
-            <strong>When you send us a message through a form.</strong> Our complaints and tips form asks for the details you choose to enter, typically your name, your email address, and your message. We use these only to read and answer you: the form is sent straight to the relevant volunteers as an email through Microsoft 365. We do not store your message or your details on this website, the only copy is that email in our mailbox. (We keep a minimal, non-identifying note that a submission happened, for spam and volume monitoring; it contains no name, email or message.) The form is protected against spam by a proof-of-work check and a hidden honeypot field; neither tracks you nor sets a cookie.
+            <strong>When you send us a message through a form.</strong> Our complaints and tips form and our declaration form ask for the details you choose to enter, typically your name, your email address, and your message. The declaration form also asks for the bank account number and the receipt we need in order to pay you back. We use these only to read and answer you: the form is sent straight to the relevant volunteers as an email through Microsoft 365. We do not store your message or your details on this website, the only copy is that email in our mailbox. (We keep a minimal, non-identifying note that a submission of a given type happened, for spam and volume monitoring; it contains no name, email or message.) Any file you attach is emailed only and never stored on the server. The forms are protected against spam by a proof-of-work check and a hidden honeypot field; neither tracks you nor sets a cookie.
           </p>
           <p className="mt-2">
             <strong>When you visit the site.</strong> Our web server keeps standard access logs of each request, which include your IP address, the page requested, the date and time, the response status, and your browser and operating system. We use these logs, in aggregate, to see which pages are visited, to keep the site secure, and to fix problems, and we derive an approximate country and network operator from the IP address for statistics. We do not try to identify individual visitors. IP addresses in our analytics are kept for about 90 days and then dropped. There is no cookie, no tracking pixel and no third-party analytics service involved.
@@ -68,7 +68,7 @@ export function PrivacyPage() {
           </h2>
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
-              Messages you send through the form: not stored on this website. The notification email in our staff mailbox is kept for up to two years, then deleted.
+              Messages you send through a form: not stored on this website. The notification email in our staff mailbox is kept for up to two years, then deleted.
             </li>
             <li>Server access logs and analytics: about 90 days.</li>
             <li>Error logs: according to our provider&rsquo;s retention settings.</li>

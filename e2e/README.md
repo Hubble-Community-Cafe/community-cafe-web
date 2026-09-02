@@ -56,12 +56,13 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Aurora screen scenes (open / last call / closed) | n/a | n/a | ✅ | ⬜ |
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
+| Forms: Meteor declarations | n/a | ✅ | n/a | ✅ |
 | Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
 | Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ✅ |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
-Form specs assert both the staff notification (to the per-form team list, with any upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints`. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
+Form specs assert both the staff notification (to the per-form team list, with any upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
 
 ## Next specs
 
