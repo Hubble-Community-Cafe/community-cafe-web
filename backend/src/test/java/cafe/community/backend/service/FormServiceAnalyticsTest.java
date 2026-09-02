@@ -8,6 +8,7 @@ import cafe.community.backend.dto.LoanRequest;
 import cafe.community.backend.dto.ScreenRequest;
 import cafe.community.backend.dto.TipRequest;
 import cafe.community.backend.mail.FormMailService;
+import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.repository.FormSubmissionRepository;
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -28,7 +29,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Each successful form submission must emit exactly one privacy-safe analytics line on the dedicated
- * APP_ANALYTICS logger, carrying only the form type and (screen only) the bar, never submitter data.
+ * APP_ANALYTICS logger, carrying only the form type and (screen and declaration only) the bar,
+ * never submitter data.
  */
 class FormServiceAnalyticsTest {
 
@@ -45,7 +47,7 @@ class FormServiceAnalyticsTest {
 
         service = new FormService(mail, altcha, repo,
                 "complaints@hubble.cafe", "screens@hubble.cafe", "finance@hubble.cafe", "",
-                "info@hubble.cafe", "loan@hubble.cafe",
+                "finance@meteor.cafe", "", "info@hubble.cafe", "loan@hubble.cafe",
                 "noreply@hubble.cafe", "noreply@meteor.cafe");
 
         analyticsLogger = (Logger) LoggerFactory.getLogger("APP_ANALYTICS");
@@ -138,8 +140,7 @@ class FormServiceAnalyticsTest {
                 .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=BOTH");
     }
 
-    @Test
-    void declaration_emitsOneLine() {
+    private DeclarationRequest declaration() {
         DeclarationRequest req = new DeclarationRequest();
         req.setFullName("Finn");
         req.setEmail("f@x.com");
@@ -150,11 +151,30 @@ class FormServiceAnalyticsTest {
         req.setDescription("Cups");
         req.setFile(new MockMultipartFile("file", "receipt.pdf", "application/pdf", new byte[]{1, 2, 3}));
         req.setAltcha("ok");
+        return req;
+    }
+
+    /**
+     * Declarations carry the bar because each cafe has its own treasurer, so the volume per
+     * company is what staff want to see. An absent bar is the Hubble form, which posts none.
+     */
+    @Test
+    void declaration_withoutABar_emitsHubble() {
+        service.submitDeclaration(declaration());
+
+        assertThat(analyticsLines())
+                .containsExactly("APP_ANALYTICS event=form_submitted form=declaration bar=HUBBLE");
+    }
+
+    @Test
+    void declaration_fromMeteor_emitsMeteor() {
+        DeclarationRequest req = declaration();
+        req.setBar(BarLocation.METEOR);
 
         service.submitDeclaration(req);
 
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=declaration bar=NONE");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=declaration bar=METEOR");
     }
 
     @Test

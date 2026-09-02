@@ -1,5 +1,6 @@
 package cafe.community.backend.dto;
 
+import cafe.community.backend.model.BarLocation;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -8,11 +9,18 @@ import lombok.Data;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Hubble "Online Declarations" (e-declaration) request. Multipart (the receipt is required).
- * Amount and IBAN are normalised/validated in the service; here we cover the field shape.
+ * "Online Declarations" (e-declaration) request, sent from either site. Multipart (the receipt
+ * is required). Amount and IBAN are normalised/validated in the service; here we cover the
+ * field shape.
  */
 @Data
 public class DeclarationRequest {
+
+    /**
+     * The site the declaration was sent from, which decides the treasurer it reaches. Absent
+     * means {@link BarLocation#HUBBLE}: the Hubble form predates this field.
+     */
+    private BarLocation bar;
 
     @NotBlank
     @Size(max = 200)

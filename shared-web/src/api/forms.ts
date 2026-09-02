@@ -67,7 +67,10 @@ export function submitScreenForm(data: FormData): Promise<void> {
   return postForm('/api/forms/screen', data)
 }
 
-/** Submit the Hubble e-declaration (multipart: fields + the receipt file). */
+/**
+ * Submit an e-declaration (multipart: fields + the receipt file). Both sites use this; the
+ * `bar` field decides which treasurer it reaches. Omitting it routes to Hubble.
+ */
 export function submitDeclarationForm(data: FormData): Promise<void> {
   return postForm('/api/forms/declaration', data)
 }
