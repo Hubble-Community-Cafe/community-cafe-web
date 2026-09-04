@@ -8,10 +8,13 @@ import cafe.community.backend.model.*;
 import cafe.community.backend.repository.BoardMemberRepository;
 import cafe.community.backend.repository.BoardTermRepository;
 import cafe.community.backend.repository.MediaAssetRepository;
+import cafe.community.backend.util.SortOrders;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -39,6 +42,9 @@ public class BoardService {
     public BoardTermDto createTerm(BoardTermRequest req) {
         BoardTerm term = new BoardTerm();
         applyTerm(term, req);
+        if (req.sortOrder() == null) {
+            term.setSortOrder(nextTermSortOrder());
+        }
         BoardTerm saved = termRepo.save(term);
         auditService.recordCreate(AuditEntityType.BOARD_TERM, saved.getId(), saved.getLabel(),
                 List.of(), "Created board term: " + saved.getLabel() + " (" + saved.getType().name() + ")");
@@ -56,6 +62,18 @@ public class BoardService {
         return BoardTermDto.from(saved);
     }
 
+    /**
+     * Re-number the terms from a dragged order. Kept out of {@link #updateTerm} so a drag only ever
+     * writes sort orders and cannot clobber another editor's changes.
+     */
+    public void reorderTerms(List<Long> orderedIds) {
+        List<BoardTerm> terms = termRepo.findAll(Sort.by("sortOrder", "label"));
+        SortOrders.apply(terms, orderedIds, BoardTerm::getId, BoardTerm::setSortOrder);
+        termRepo.saveAll(terms);
+        auditService.recordAction(AuditEntityType.BOARD_TERM, null, "Board terms",
+                AuditAction.REORDER, List.of(), "Reordered " + terms.size() + " board terms");
+    }
+
     public void deleteTerm(Long id) {
         BoardTerm term = termRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + id));
@@ -71,6 +89,9 @@ public class BoardService {
         BoardMember member = new BoardMember();
         member.setTerm(term);
         applyMember(member, req);
+        if (req.sortOrder() == null) {
+            member.setSortOrder(nextMemberSortOrder(term));
+        }
         BoardMember saved = memberRepo.save(member);
         term.getMembers().add(saved);
         auditService.recordCreate(AuditEntityType.BOARD_MEMBER, saved.getId(), saved.getName(),
@@ -89,6 +110,21 @@ public class BoardService {
         return BoardMemberDto.from(saved);
     }
 
+    /** Re-number the members of one term from a dragged order. See {@link #reorderTerms}. */
+    public void reorderMembers(Long termId, List<Long> orderedIds) {
+        BoardTerm term = termRepo.findById(termId)
+                .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + termId));
+        List<BoardMember> members = term.getMembers();
+        SortOrders.apply(members, orderedIds, BoardMember::getId, BoardMember::setSortOrder);
+        memberRepo.saveAll(members);
+        // The collection's @OrderBy is applied when it is loaded, so re-sort it here as well;
+        // otherwise anything reading the term again in this transaction sees the old order.
+        members.sort(Comparator.comparingInt(BoardMember::getSortOrder));
+        auditService.recordAction(AuditEntityType.BOARD_MEMBER, term.getId(), term.getLabel(),
+                AuditAction.REORDER, List.of(),
+                "Reordered " + members.size() + " members of \"" + term.getLabel() + "\"");
+    }
+
     public void deleteMember(Long id) {
         BoardMember member = memberRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board member not found: " + id));
@@ -98,12 +134,27 @@ public class BoardService {
                 "Removed board member: " + name);
     }
 
+    /** Where a new term lands: after the last one. */
+    private int nextTermSortOrder() {
+        List<BoardTerm> terms = termRepo.findAll(Sort.by("sortOrder", "label"));
+        return terms.isEmpty() ? 0 : terms.getLast().getSortOrder() + 1;
+    }
+
+    /** Where a new member lands: after the last member of their term. */
+    private int nextMemberSortOrder(BoardTerm term) {
+        return term.getMembers().stream()
+                .mapToInt(BoardMember::getSortOrder).max().orElse(-1) + 1;
+    }
+
     private void applyTerm(BoardTerm term, BoardTermRequest req) {
         term.setLabel(req.label());
         term.setType(BoardType.valueOf(req.type()));
         term.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
         term.setCurrent(req.current());
-        term.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createTerm appends instead.
+        if (req.sortOrder() != null) {
+            term.setSortOrder(req.sortOrder());
+        }
         term.setPhotoCredit(req.photoCredit());
         MediaAsset groupPhoto = req.groupPhotoId() != null
                 ? mediaRepo.findById(req.groupPhotoId()).orElse(null) : null;
@@ -113,7 +164,10 @@ public class BoardService {
     private void applyMember(BoardMember member, BoardMemberRequest req) {
         member.setName(req.name());
         member.setRole(req.role());
-        member.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createMember appends instead.
+        if (req.sortOrder() != null) {
+            member.setSortOrder(req.sortOrder());
+        }
         MediaAsset photo = req.photoId() != null
                 ? mediaRepo.findById(req.photoId()).orElse(null) : null;
         member.setPhoto(photo);

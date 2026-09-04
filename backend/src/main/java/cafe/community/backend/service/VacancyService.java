@@ -5,6 +5,7 @@ import cafe.community.backend.dto.VacancyRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.repository.VacancyRepository;
+import cafe.community.backend.util.SortOrders;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +39,9 @@ public class VacancyService {
     public VacancyDto create(VacancyRequest req) {
         Vacancy v = new Vacancy();
         apply(v, req);
+        if (req.sortOrder() == null) {
+            v.setSortOrder(nextSortOrder());
+        }
         Vacancy saved = repo.save(v);
         auditService.recordCreate(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
                 List.of(), "Created vacancy: " + saved.getTitle());
@@ -54,12 +58,30 @@ public class VacancyService {
         return VacancyDto.from(saved);
     }
 
+    /**
+     * Re-number the vacancies from a dragged order. Kept out of {@link #update} so a drag only ever
+     * writes sort orders and cannot clobber another editor's changes.
+     */
+    public void reorder(List<Long> orderedIds) {
+        List<Vacancy> vacancies = repo.findAllByOrderBySortOrderAscTitleAsc();
+        SortOrders.apply(vacancies, orderedIds, Vacancy::getId, Vacancy::setSortOrder);
+        repo.saveAll(vacancies);
+        auditService.recordAction(AuditEntityType.VACANCY, null, "Vacancies",
+                AuditAction.REORDER, List.of(), "Reordered " + vacancies.size() + " vacancies");
+    }
+
     public void delete(Long id) {
         Vacancy v = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Vacancy not found: " + id));
         String title = v.getTitle();
         repo.deleteById(id);
         auditService.recordDelete(AuditEntityType.VACANCY, id, title, "Deleted vacancy: " + title);
+    }
+
+    /** Where a new vacancy lands: after the last one. */
+    private int nextSortOrder() {
+        List<Vacancy> all = repo.findAllByOrderBySortOrderAscTitleAsc();
+        return all.isEmpty() ? 0 : all.getLast().getSortOrder() + 1;
     }
 
     private void apply(Vacancy v, VacancyRequest req) {
@@ -71,7 +93,10 @@ public class VacancyService {
         v.setApplyLink(req.applyLink());
         v.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
         v.setActive(req.active());
-        v.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; create appends instead.
+        if (req.sortOrder() != null) {
+            v.setSortOrder(req.sortOrder());
+        }
         MediaAsset image = req.imageId() != null
                 ? mediaRepo.findById(req.imageId()).orElse(null) : null;
         v.setImage(image);

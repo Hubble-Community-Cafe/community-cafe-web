@@ -43,6 +43,8 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Plaza kiosk screen (`/plaza-page`) | 🟡 | n/a | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
 | Menu visibility toggles (hide item / section / tab) | ✅ | n/a | ✅ | ⬜ |
+| Menu reorder by dragging (mouse, keyboard, touch) | ✅ | n/a | ✅ | ✅ |
+| Menu bulk edit (one price across a section, move items) | ✅ | n/a | ✅ | ⬜ |
 | Daily dinner dish | ✅ | n/a | ✅ | ✅ |
 | Opening hours (+ CMS footer) | ✅ | ✅ | ✅ | ✅ |
 | Status banner (Meteor) | n/a | ✅ | n/a | ✅ |
@@ -62,6 +64,14 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
 
+Drag-to-reorder needs three separate paths driven three different ways, all in `AdminApp`. The mouse
+path cannot use `dragTo`: dnd-kit only starts tracking once the pointer has passed its activation
+distance, so the gesture needs a nudge and then stepped movement. The keyboard path (space, arrows,
+space) needs a pause after each press, because a pickup and each move settle over an animation frame
+and presses sent in the same tick are dropped. Touch is dispatched over CDP, since Playwright's mouse
+API does not become touch under device emulation and its touchscreen can only tap; that path is worth
+the detour, because touch is exactly what native HTML5 drag and drop cannot do at all.
+
 Form specs assert both the staff notification (to the per-form team list, with any upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
 
 ## Next specs
@@ -69,7 +79,10 @@ Form specs assert both the staff notification (to the per-form team list, with a
 The backfill is essentially complete: every shipped module is green on its sites, in admin CRUD, and
 on mobile (via the `mobile-admin` project for admin-on-a-phone). The remaining `⬜`s are the Hubble
 file-upload forms (screens/declarations) on mobile, the desktop specs already cover the upload path,
-so this is a low-priority responsive-layout check, and the media library on mobile. The media spec
+so this is a low-priority responsive-layout check, the media library on mobile, and bulk menu editing
+on mobile. Bulk editing is a checkbox and a form rather than a gesture, so the phone case is a
+layout check rather than a new interaction, which is why it ranks below the reorder specs that are
+already there. The media spec
 checks that an oversize image is refused client-side with a readable message rather than reaching the
 backend and coming back as a bare 413; the limit itself is `spring.servlet.multipart.max-file-size`,
 mirrored in `admin/src/lib/upload.ts`. The rate-limit filter is disabled under the `e2e`

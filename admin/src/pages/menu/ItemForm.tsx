@@ -3,7 +3,6 @@ import type { MenuItem, MenuItemRequest } from '../../lib/api'
 
 interface Props {
   initial?: MenuItem
-  defaultSortOrder: number
   onSave: (req: MenuItemRequest) => Promise<void>
   onCancel: () => void
 }
@@ -19,7 +18,7 @@ function listToCsv(list: string[]): string {
   return list.join(', ')
 }
 
-export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props) {
+export function ItemForm({ initial, onSave, onCancel }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [regularPrice, setRegularPrice] = useState(
@@ -31,7 +30,6 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
   const [sizeOptions, setSizeOptions] = useState(listToCsv(initial?.sizeOptions ?? []))
   const [dietaryTags, setDietaryTags] = useState(listToCsv(initial?.dietaryTags ?? []))
   const [allergens, setAllergens] = useState(listToCsv(initial?.allergens ?? []))
-  const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? defaultSortOrder)
   const [active, setActive] = useState(initial?.active ?? true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -59,7 +57,8 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
         dietaryTags: csvToList(dietaryTags),
         allergens: csvToList(allergens),
         imageId: null,
-        sortOrder,
+        // Position is set by dragging: omitting it appends a new item and leaves an
+        // existing one where it is.
         active,
       })
     } catch {
@@ -158,27 +157,16 @@ export function ItemForm({ initial, defaultSortOrder, onSave, onCancel }: Props)
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Sort order</label>
+        <div className="flex items-end pb-2">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
             <input
-              type="number"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(Number(e.target.value))}
-              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
+              type="checkbox"
+              checked={active}
+              onChange={(e) => setActive(e.target.checked)}
+              className="h-4 w-4 rounded border-slate-300"
             />
-          </div>
-          <div className="flex items-end pb-2">
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
-              <input
-                type="checkbox"
-                checked={active}
-                onChange={(e) => setActive(e.target.checked)}
-                className="h-4 w-4 rounded border-slate-300"
-              />
-              Active
-            </label>
-          </div>
+            Active
+          </label>
         </div>
       </div>
       <div className="flex justify-end gap-2 pt-1">

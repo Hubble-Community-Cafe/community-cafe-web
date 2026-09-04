@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.dto.ReorderRequest;
 import cafe.community.backend.dto.VacancyDto;
 import cafe.community.backend.dto.VacancyRequest;
 import cafe.community.backend.service.VacancyService;
@@ -37,6 +38,14 @@ public class AdminVacancyController {
     @PreAuthorize("hasRole('EDITOR')")
     public VacancyDto update(@PathVariable Long id, @RequestBody @Valid VacancyRequest req) {
         return service.update(id, req);
+    }
+
+    /** Apply a dragged order to the vacancies. */
+    @PatchMapping("/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
+    public void reorder(@RequestBody @Valid ReorderRequest req) {
+        service.reorder(req.orderedIds());
     }
 
     @DeleteMapping("/{id}")

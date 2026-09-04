@@ -56,6 +56,26 @@ docker compose up --build
 
 Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `INITIAL_ADMIN_OID`, and `VITE_ALLOWED_GROUP_ID` are set in `.env`. The admin is served on `http://localhost:5173`, which is registered as an Entra redirect URI; your first sign-in is provisioned as ADMIN (via `INITIAL_ADMIN_OID`). For Portainer/test deployment, copy [`docker-compose.portainer.template.yml`](docker-compose.portainer.template.yml) and fill it in.
 
+> **`INITIAL_ADMIN_OID` only applies when your user row is first created.** If you have already
+> signed in once and were provisioned as VIEWER, setting it afterwards changes nothing. Promote
+> the account directly instead, which `npm run dev:doctor` prints the exact command for.
+
+### Checking the local stack
+
+Three commands, all aimed at the dev stack above (not the Playwright stack in `e2e/`):
+
+```bash
+npm run dev:doctor   # what is broken and the exact command to fix it
+npm run dev:seed     # load demo content so there is something to edit
+npm run dev:smoke    # assert the running stack actually works
+```
+
+`dev:doctor` checks that every container is up rather than crash-looping, that the database is healthy **and attached to the compose network** (detached, it stays healthy while the backend fails with `UnknownHostException: db`, which is otherwise only visible deep in the backend log), that each service answers, that content is seeded, and that some account can edit. Every failure prints its own fix.
+
+`dev:seed` loads [`docs/seed-menu.sql`](docs/seed-menu.sql), the real menu copied from the live sites, plus [`docs/seed-board-vacancies.sql`](docs/seed-board-vacancies.sql), invented board and vacancy rows for local use. The dev stack authenticates against real Entra, so unlike the e2e fixtures this writes straight to MariaDB. Both files truncate their own tables first, so it is safe to re-run; it leaves `admin_user`, media, audit, and opening hours alone.
+
+`dev:smoke` asserts the services answer, the seeded content reaches the public API, the two bars stay distinct, inactive rows stay off the public site, and the public API honours `sort_order` (it swaps two positions in the database, checks the public menu follows, then restores them). Set `ADMIN_TOKEN` to an Entra bearer token to also exercise the admin write path, including that a reorder persists and that an incomplete one is rejected; without it that section is skipped, since the reorder service logic is covered by the backend tests and the admin UI by the Playwright suite.
+
 ### Single app (hot reload)
 
 ```bash

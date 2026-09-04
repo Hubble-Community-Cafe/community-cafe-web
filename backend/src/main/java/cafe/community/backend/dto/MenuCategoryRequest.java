@@ -10,7 +10,8 @@ public record MenuCategoryRequest(
         @NotBlank @Size(max = 100) String name,
         @NotNull MenuKind kind,
         @Size(max = 255) String availabilityNote,
-        int sortOrder,
+        /** Null on create means "put it last"; null on update leaves the position alone. */
+        Integer sortOrder,
         BarLocation bar,
         Long parentId,
         /** Null means "visible": callers that omit the flag get an active category. */
@@ -18,7 +19,7 @@ public record MenuCategoryRequest(
 ) {
     /** Convenience for callers that do not set visibility; the category stays visible. */
     public MenuCategoryRequest(String name, MenuKind kind, String availabilityNote,
-                               int sortOrder, BarLocation bar, Long parentId) {
+                               Integer sortOrder, BarLocation bar, Long parentId) {
         this(name, kind, availabilityNote, sortOrder, bar, parentId, null);
     }
 }

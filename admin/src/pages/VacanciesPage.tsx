@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
+import { SortableList } from '../components/SortableList'
 import { usePermissions } from '../lib/usePermissions'
 import {
-  fetchVacancies, createVacancy, updateVacancy, deleteVacancy,
+  fetchVacancies, createVacancy, updateVacancy, deleteVacancy, reorderVacancies,
   type Vacancy, type VacancyRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
 
@@ -26,7 +27,6 @@ function VacancyForm({
   const [applyLink, setApplyLink] = useState(initial?.applyLink ?? '')
   const [bar, setBar] = useState<BarLocation | ''>(initial?.bar ?? '')
   const [active, setActive] = useState(initial?.active ?? true)
-  const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0)
   const [image, setImage] = useState<MediaAsset | null>(
     initial?.imageId != null
       ? { id: initial.imageId, url: initial.imageUrl ?? '', alt: initial.imageAlt ?? null,
@@ -52,7 +52,8 @@ function VacancyForm({
         imageId: image?.id ?? null,
         bar: bar || null,
         active,
-        sortOrder,
+        // Position is set by dragging: omitting it appends a new vacancy and leaves an
+        // existing one where it is.
       })
     } catch {
       setError('Failed to save vacancy')
@@ -77,11 +78,6 @@ function VacancyForm({
             <option value="HUBBLE">Hubble</option>
             <option value="METEOR">Meteor</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600">Sort order</label>
-          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
-            className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600">Hours</label>
@@ -143,15 +139,23 @@ function VacancyForm({
 }
 
 function VacancyRow({
-  vacancy, canEdit, onUpdated, onDeleted,
+  vacancy, canEdit, handle, onEditingChange, onUpdated, onDeleted,
 }: {
   vacancy: Vacancy
   canEdit: boolean
+  /** Drag handle from the surrounding SortableList; null for a viewer or while editing. */
+  handle: ReactNode
+  onEditingChange: (editing: boolean) => void
   onUpdated: (v: Vacancy) => void
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
+
+  const setEditingState = (value: boolean) => {
+    setEditing(value)
+    onEditingChange(value)
+  }
 
   const handleDelete = async () => {
     if (!confirm(`Delete vacancy "${vacancy.title}"?`)) return
@@ -166,22 +170,23 @@ function VacancyRow({
 
   if (editing && canEdit) {
     return (
-      <li className="py-3">
+      <div className="py-3">
         <VacancyForm
           initial={vacancy}
           onSave={async (req) => {
             const updated = await updateVacancy(vacancy.id, req)
             onUpdated(updated)
-            setEditing(false)
+            setEditingState(false)
           }}
-          onCancel={() => setEditing(false)}
+          onCancel={() => setEditingState(false)}
         />
-      </li>
+      </div>
     )
   }
 
   return (
-    <li className="flex items-center gap-4 border-t border-slate-100 py-3">
+    <div className="flex items-center gap-4 border-t border-slate-100 py-3">
+      {handle}
       {vacancy.imageUrl ? (
         <img src={vacancy.imageUrl} alt={vacancy.imageAlt ?? vacancy.title}
           className="h-12 w-12 shrink-0 rounded object-cover" />
@@ -210,7 +215,7 @@ function VacancyRow({
       </div>
       {canEdit && (
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditing(true)}
+          <button onClick={() => setEditingState(true)}
             className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
             <Pencil className="h-4 w-4" />
           </button>
@@ -220,7 +225,7 @@ function VacancyRow({
           </button>
         </div>
       )}
-    </li>
+    </div>
   )
 }
 
@@ -230,6 +235,7 @@ export function VacanciesPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
+  const [editingId, setEditingId] = useState<number | null>(null)
 
   useEffect(() => {
     fetchVacancies()
@@ -237,6 +243,19 @@ export function VacanciesPage() {
       .catch(() => setError('Failed to load vacancies'))
       .finally(() => setLoading(false))
   }, [])
+
+  /** Optimistic, rolled back on failure, like the menu lists. */
+  const handleReorder = async (next: Vacancy[]) => {
+    const previous = vacancies
+    setVacancies(next.map((v, i) => ({ ...v, sortOrder: i })))
+    setError(null)
+    try {
+      await reorderVacancies(next.map((v) => v.id))
+    } catch {
+      setVacancies(previous)
+      setError('Could not save the new order. Please try again.')
+    }
+  }
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
@@ -277,17 +296,25 @@ export function VacanciesPage() {
           {vacancies.length === 0 && !creating && (
             <p className="text-sm text-slate-400">No vacancies yet.</p>
           )}
-          <ul>
-            {vacancies.map((v) => (
+          <SortableList
+            items={vacancies}
+            getId={(v) => v.id}
+            labelFor={(v) => v.title}
+            disabled={!canEditContent}
+            draggable={(v) => editingId !== v.id}
+            onReorder={handleReorder}
+          >
+            {(v, handle) => (
               <VacancyRow
-                key={v.id}
                 vacancy={v}
                 canEdit={canEditContent}
+                handle={handle}
+                onEditingChange={(editing) => setEditingId(editing ? v.id : null)}
                 onUpdated={(updated) => setVacancies((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
                 onDeleted={() => setVacancies((prev) => prev.filter((x) => x.id !== v.id))}
               />
-            ))}
-          </ul>
+            )}
+          </SortableList>
         </section>
       )}
     </div>

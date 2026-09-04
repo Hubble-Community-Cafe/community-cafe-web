@@ -103,6 +103,17 @@ async function getJson<T>(url: string, options: RequestInit = {}): Promise<T> {
   return response.json() as Promise<T>
 }
 
+/**
+ * A write that answers 204 with no body, so there is nothing to parse. Still throws on failure,
+ * which is what lets an optimistic caller put the old state back.
+ */
+async function sendNoContent(url: string, options: RequestInit): Promise<void> {
+  const response = await fetchWithAuth(url, options)
+  if (!response.ok) {
+    throw new Error(`Request failed (${response.status}) for ${url}`)
+  }
+}
+
 // ── Types (mirror the backend DTOs) ────────────────────────────────────────────
 export type AdminRole = 'VIEWER' | 'DDD_POSTER' | 'EDITOR' | 'ADMIN'
 
@@ -202,7 +213,8 @@ export interface MenuCategoryRequest {
   name: string
   kind: MenuKind
   availabilityNote: string | null
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
   bar: BarLocation | null
   parentId: number | null
   /** Omit to keep the category visible; the backend treats a missing flag as active. */
@@ -218,7 +230,8 @@ export interface MenuItemRequest {
   dietaryTags: string[]
   allergens: string[]
   imageId: number | null
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
   active: boolean
 }
 
@@ -282,6 +295,49 @@ export const setMenuItemActive = (id: number, active: boolean) =>
   getJson<MenuItem>(`/api/admin/menu/items/${id}/active`, {
     method: 'PATCH',
     body: JSON.stringify({ active }),
+  })
+
+export interface BulkPriceRequest {
+  ids: number[]
+  /** Omit or null to leave this price as it is on each item. */
+  regularPrice?: number | null
+  studentPrice?: number | null
+  /** A null studentPrice means "unchanged", so removing one needs its own flag. */
+  clearStudentPrice?: boolean
+}
+
+/** Set the same price on several items. Returns the items as saved. */
+export const bulkSetMenuItemPrice = (req: BulkPriceRequest) =>
+  getJson<MenuItem[]>('/api/admin/menu/items/bulk-price', {
+    method: 'PATCH',
+    body: JSON.stringify(req),
+  })
+
+/** Move several items into another sub-heading, appending them after what is already there. */
+export const bulkMoveMenuItems = (ids: number[], categoryId: number) =>
+  getJson<MenuItem[]>('/api/admin/menu/items/bulk-move', {
+    method: 'PATCH',
+    body: JSON.stringify({ ids, categoryId }),
+  })
+
+/**
+ * Apply a dragged order. Like the visibility toggles these are separate from the update calls,
+ * so a drag only ever writes positions and cannot overwrite fields edited elsewhere. The backend
+ * rejects an order that is not exactly the list it belongs to, which catches a stale tab.
+ */
+export const reorderMenuCategories = (
+  scope: { parentId: number | null; bar: BarLocation | null },
+  orderedIds: number[],
+) =>
+  sendNoContent('/api/admin/menu/categories/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ ...scope, orderedIds }),
+  })
+
+export const reorderMenuItems = (categoryId: number, orderedIds: number[]) =>
+  sendNoContent(`/api/admin/menu/categories/${categoryId}/items/reorder`, {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
   })
 
 export const fetchDailyDishes = () =>
@@ -445,7 +501,8 @@ export interface BoardTermRequest {
   type: BoardType
   bar: BarLocation | null
   current: boolean
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
   groupPhotoId: number | null
   photoCredit: string | null
 }
@@ -454,7 +511,8 @@ export interface BoardMemberRequest {
   name: string
   role: string | null
   photoId: number | null
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
 }
 
 // ── Board endpoints ────────────────────────────────────────────────────────────
@@ -491,6 +549,19 @@ export const updateBoardMember = (id: number, req: BoardMemberRequest) =>
 export const deleteBoardMember = (id: number) =>
   fetchWithAuth(`/api/admin/board/members/${id}`, { method: 'DELETE' })
 
+/** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
+export const reorderBoardTerms = (orderedIds: number[]) =>
+  sendNoContent('/api/admin/board/terms/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+
+export const reorderBoardMembers = (termId: number, orderedIds: number[]) =>
+  sendNoContent(`/api/admin/board/terms/${termId}/members/reorder`, {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+
 // ── Vacancy types ──────────────────────────────────────────────────────────────
 export interface Vacancy {
   id: number
@@ -518,7 +589,8 @@ export interface VacancyRequest {
   imageId: number | null
   bar: BarLocation | null
   active: boolean
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
 }
 
 // ── Vacancy endpoints ──────────────────────────────────────────────────────────
@@ -539,6 +611,13 @@ export const updateVacancy = (id: number, req: VacancyRequest) =>
 
 export const deleteVacancy = (id: number) =>
   fetchWithAuth(`/api/admin/vacancies/${id}`, { method: 'DELETE' })
+
+/** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
+export const reorderVacancies = (orderedIds: number[]) =>
+  sendNoContent('/api/admin/vacancies/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
 
 // ── Association types ──────────────────────────────────────────────────────────
 export interface Association {

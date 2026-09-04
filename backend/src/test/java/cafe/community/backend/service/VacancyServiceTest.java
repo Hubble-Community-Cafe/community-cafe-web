@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -81,6 +83,48 @@ class VacancyServiceTest {
         assertThat(updated.description()).isEqualTo("Updated role");
         assertThat(updated.hours()).isEqualTo("15 hrs/week");
         assertThat(updated.sortOrder()).isEqualTo(1);
+    }
+
+    @Test
+    void reorder_appliesTheGivenOrderAndClosesTheGaps() {
+        VacancyDto manager = service.create(new VacancyRequest("Manager", null, null, null, null, null, null, "HUBBLE", true, 5));
+        VacancyDto chef = service.create(new VacancyRequest("Chef", null, null, null, null, null, null, "HUBBLE", true, 9));
+
+        service.reorder(List.of(chef.id(), manager.id()));
+
+        assertThat(service.getAll()).extracting(VacancyDto::title, VacancyDto::sortOrder)
+                .containsExactly(tuple("Chef", 0), tuple("Manager", 1));
+    }
+
+    @Test
+    void reorder_rejectsAnOrderMissingAVacancy() {
+        VacancyDto manager = service.create(req("Manager", "HUBBLE", true));
+        service.create(req("Chef", "HUBBLE", true));
+
+        assertThatThrownBy(() -> service.reorder(List.of(manager.id())))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void create_withoutASortOrder_landsLast() {
+        service.create(new VacancyRequest("Manager", null, null, null, null, null, null, "HUBBLE", true, 3));
+
+        VacancyDto appended = service.create(
+                new VacancyRequest("Chef", null, null, null, null, null, null, "HUBBLE", true, null));
+
+        assertThat(appended.sortOrder()).isEqualTo(4);
+    }
+
+    /** Editing a vacancy must not drag it to the bottom of the list. */
+    @Test
+    void update_withoutASortOrder_staysPut() {
+        VacancyDto manager = service.create(new VacancyRequest("Manager", null, null, null, null, null, null, "HUBBLE", true, 0));
+        service.create(new VacancyRequest("Chef", null, null, null, null, null, null, "HUBBLE", true, 1));
+
+        VacancyDto updated = service.update(manager.id(),
+                new VacancyRequest("Bar Manager", null, null, null, null, null, null, "HUBBLE", true, null));
+
+        assertThat(updated.sortOrder()).isZero();
     }
 
     @Test
