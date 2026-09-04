@@ -8,8 +8,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -196,6 +200,108 @@ public class MenuService {
                 AuditAction.TOGGLE, List.of(),
                 (active ? "Showed" : "Hid") + " item: " + saved.getName());
         return MenuItemDto.from(saved);
+    }
+
+    /**
+     * Set the same price on several items at once. Null leaves a price untouched, so the regular
+     * price can be changed without disturbing the student price.
+     *
+     * <p>Audited one entry per item rather than one for the batch, so an item's own history still
+     * shows what its price was and when it changed.
+     */
+    public List<MenuItemDto> bulkSetPrice(BulkPriceRequest req) {
+        if (req.regularPrice() == null && req.studentPrice() == null && !req.shouldClearStudentPrice()) {
+            throw new IllegalArgumentException("Nothing to change: set a regular or student price.");
+        }
+        if (req.studentPrice() != null && req.shouldClearStudentPrice()) {
+            throw new IllegalArgumentException(
+                    "Choose either a student price or clearing it, not both.");
+        }
+        List<MenuItem> items = loadAllOrThrow(req.ids());
+
+        for (MenuItem item : items) {
+            List<FieldChange> changes = new ArrayList<>();
+            if (req.regularPrice() != null && item.getRegularPrice().compareTo(req.regularPrice()) != 0) {
+                changes.add(new FieldChange("Regular price",
+                        String.valueOf(item.getRegularPrice()), String.valueOf(req.regularPrice())));
+                item.setRegularPrice(req.regularPrice());
+            }
+            if (req.shouldClearStudentPrice()) {
+                if (item.getStudentPrice() != null) {
+                    changes.add(new FieldChange("TU/e student price",
+                            String.valueOf(item.getStudentPrice()), null));
+                    item.setStudentPrice(null);
+                }
+            } else if (req.studentPrice() != null
+                    && (item.getStudentPrice() == null
+                        || item.getStudentPrice().compareTo(req.studentPrice()) != 0)) {
+                changes.add(new FieldChange("TU/e student price",
+                        String.valueOf(item.getStudentPrice()), String.valueOf(req.studentPrice())));
+                item.setStudentPrice(req.studentPrice());
+            }
+            // An item already at the target price is left out of the audit entirely: recording a
+            // change that did not happen would make the history lie about what the batch touched.
+            if (!changes.isEmpty()) {
+                auditService.recordAction(AuditEntityType.MENU_ITEM, item.getId(), item.getName(),
+                        AuditAction.UPDATE, changes, "Bulk price update: " + item.getName());
+            }
+        }
+        return itemRepo.saveAll(items).stream().map(MenuItemDto::from).toList();
+    }
+
+    /**
+     * Move several items into another sub-heading, keeping their order among themselves and
+     * appending them after whatever is already there.
+     */
+    public List<MenuItemDto> bulkMove(BulkMoveRequest req) {
+        MenuCategory target = categoryRepo.findById(req.categoryId())
+                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + req.categoryId()));
+        if (target.getParent() == null) {
+            throw new IllegalArgumentException(
+                    "Items live under a sub-heading, not directly under the tab \"" + target.getName() + "\".");
+        }
+        List<MenuItem> moving = loadAllOrThrow(req.ids());
+
+        // Renumber what stays first, then append the arrivals. Doing it this way means moving items
+        // within their own category simply sends them to the end rather than colliding with it.
+        Set<Long> movingIds = moving.stream().map(MenuItem::getId).collect(Collectors.toSet());
+        List<MenuItem> staying = itemRepo.findByCategoryOrderBySortOrderAsc(target).stream()
+                .filter(existing -> !movingIds.contains(existing.getId()))
+                .toList();
+
+        int position = 0;
+        for (MenuItem item : staying) {
+            item.setSortOrder(position++);
+        }
+        for (MenuItem item : moving) {
+            MenuCategory from = item.getCategory();
+            // Compared by id, not name: sub-heading names repeat across tabs and bars, so "Snacks"
+            // to "Snacks" can be a real move between two different sections.
+            boolean movedCategory = !from.getId().equals(target.getId());
+            item.setCategory(target);
+            item.setSortOrder(position++);
+            if (movedCategory) {
+                auditService.recordAction(AuditEntityType.MENU_ITEM, item.getId(), item.getName(),
+                        AuditAction.UPDATE,
+                        List.of(new FieldChange("Category", from.getName(), target.getName())),
+                        "Moved item to " + target.getName() + ": " + item.getName());
+            }
+        }
+        itemRepo.saveAll(staying);
+        return itemRepo.saveAll(moving).stream().map(MenuItemDto::from).toList();
+    }
+
+    /**
+     * Load every requested item or fail. A partially applied batch is worse than a rejected one:
+     * the editor would have no way to tell which rows took the new price.
+     */
+    private List<MenuItem> loadAllOrThrow(List<Long> ids) {
+        List<MenuItem> found = itemRepo.findAllById(ids);
+        if (found.size() != new HashSet<>(ids).size()) {
+            throw new IllegalArgumentException(
+                    "Some of those items no longer exist. Reload the page and try again.");
+        }
+        return found;
     }
 
     /** Re-number the items of one sub-heading from a dragged order. See {@link #reorderCategories}. */

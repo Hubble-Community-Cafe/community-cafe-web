@@ -94,6 +94,22 @@ class AdminAuthorizationTest {
     }
 
     @Test
+    void viewer_cannotBulkEditMenuItems() throws Exception {
+        mockMvc.perform(patch("/api/admin/menu/items/bulk-price").with(as("viewer-7", AdminRole.VIEWER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"ids":[1],"regularPrice":7.50}
+                                """))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/admin/menu/items/bulk-move").with(as("viewer-8", AdminRole.VIEWER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"ids":[1],"categoryId":1}
+                                """))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     void viewer_cannotEditDailyDish() throws Exception {
         mockMvc.perform(post("/api/admin/daily-dish").with(as("viewer-3", AdminRole.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(DAILY_DISH_BODY))

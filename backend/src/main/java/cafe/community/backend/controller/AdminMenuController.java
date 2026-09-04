@@ -102,6 +102,23 @@ public class AdminMenuController {
         return menuService.setItemActive(id, req.active());
     }
 
+    /**
+     * Set the same price on several items at once. Returns the items as saved, so the admin can
+     * refresh the rows it just changed without refetching the whole category.
+     */
+    @PatchMapping("/items/bulk-price")
+    @PreAuthorize("hasRole('EDITOR')")
+    public List<MenuItemDto> bulkSetPrice(@Valid @RequestBody BulkPriceRequest req) {
+        return menuService.bulkSetPrice(req);
+    }
+
+    /** Move several items into another sub-heading, appending them after what is already there. */
+    @PatchMapping("/items/bulk-move")
+    @PreAuthorize("hasRole('EDITOR')")
+    public List<MenuItemDto> bulkMove(@Valid @RequestBody BulkMoveRequest req) {
+        return menuService.bulkMove(req);
+    }
+
     /** Apply a dragged order to the items of one sub-heading. */
     @PatchMapping("/categories/{categoryId}/items/reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
