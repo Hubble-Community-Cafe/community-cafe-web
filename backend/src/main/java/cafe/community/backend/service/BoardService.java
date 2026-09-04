@@ -8,10 +8,13 @@ import cafe.community.backend.model.*;
 import cafe.community.backend.repository.BoardMemberRepository;
 import cafe.community.backend.repository.BoardTermRepository;
 import cafe.community.backend.repository.MediaAssetRepository;
+import cafe.community.backend.util.SortOrders;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -56,6 +59,18 @@ public class BoardService {
         return BoardTermDto.from(saved);
     }
 
+    /**
+     * Re-number the terms from a dragged order. Kept out of {@link #updateTerm} so a drag only ever
+     * writes sort orders and cannot clobber another editor's changes.
+     */
+    public void reorderTerms(List<Long> orderedIds) {
+        List<BoardTerm> terms = termRepo.findAll(Sort.by("sortOrder", "label"));
+        SortOrders.apply(terms, orderedIds, BoardTerm::getId, BoardTerm::setSortOrder);
+        termRepo.saveAll(terms);
+        auditService.recordAction(AuditEntityType.BOARD_TERM, null, "Board terms",
+                AuditAction.REORDER, List.of(), "Reordered " + terms.size() + " board terms");
+    }
+
     public void deleteTerm(Long id) {
         BoardTerm term = termRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + id));
@@ -87,6 +102,21 @@ public class BoardService {
                 AuditAction.UPDATE, List.of(),
                 "Updated board member: " + saved.getName());
         return BoardMemberDto.from(saved);
+    }
+
+    /** Re-number the members of one term from a dragged order. See {@link #reorderTerms}. */
+    public void reorderMembers(Long termId, List<Long> orderedIds) {
+        BoardTerm term = termRepo.findById(termId)
+                .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + termId));
+        List<BoardMember> members = term.getMembers();
+        SortOrders.apply(members, orderedIds, BoardMember::getId, BoardMember::setSortOrder);
+        memberRepo.saveAll(members);
+        // The collection's @OrderBy is applied when it is loaded, so re-sort it here as well;
+        // otherwise anything reading the term again in this transaction sees the old order.
+        members.sort(Comparator.comparingInt(BoardMember::getSortOrder));
+        auditService.recordAction(AuditEntityType.BOARD_MEMBER, term.getId(), term.getLabel(),
+                AuditAction.REORDER, List.of(),
+                "Reordered " + members.size() + " members of \"" + term.getLabel() + "\"");
     }
 
     public void deleteMember(Long id) {

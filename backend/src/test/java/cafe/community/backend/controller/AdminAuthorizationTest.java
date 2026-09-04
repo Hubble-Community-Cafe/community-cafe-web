@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -40,6 +41,9 @@ class AdminAuthorizationTest {
             """;
     private static final String VACANCY_BODY = """
             {"title":"Manager","bar":"HUBBLE","active":true,"sortOrder":0}
+            """;
+    private static final String REORDER_BODY = """
+            {"orderedIds":[1]}
             """;
 
     @BeforeEach
@@ -70,6 +74,22 @@ class AdminAuthorizationTest {
     void viewer_cannotWriteContent() throws Exception {
         mockMvc.perform(post("/api/admin/vacancies").with(as("viewer-2", AdminRole.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(VACANCY_BODY))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void viewer_cannotReorderContent() throws Exception {
+        mockMvc.perform(patch("/api/admin/vacancies/reorder").with(as("viewer-4", AdminRole.VIEWER))
+                        .contentType(MediaType.APPLICATION_JSON).content(REORDER_BODY))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/admin/menu/categories/reorder").with(as("viewer-5", AdminRole.VIEWER))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"bar":"HUBBLE","orderedIds":[1]}
+                                """))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/admin/board/terms/reorder").with(as("viewer-6", AdminRole.VIEWER))
+                        .contentType(MediaType.APPLICATION_JSON).content(REORDER_BODY))
                 .andExpect(status().isForbidden());
     }
 

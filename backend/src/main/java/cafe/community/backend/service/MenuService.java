@@ -3,6 +3,7 @@ package cafe.community.backend.service;
 import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.*;
+import cafe.community.backend.util.SortOrders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -112,6 +113,35 @@ public class MenuService {
         return MenuCategoryDto.from(saved);
     }
 
+    /**
+     * Re-number one level of the menu tree from a dragged order. Like the visibility toggles this
+     * is deliberately not part of {@link #updateCategory}, so a drag only ever writes sort orders.
+     */
+    public void reorderCategories(MenuCategoryReorderRequest req) {
+        List<MenuCategory> siblings;
+        Long auditId;
+        String scope;
+        if (req.parentId() != null) {
+            MenuCategory parent = categoryRepo.findById(req.parentId())
+                    .orElseThrow(() -> new IllegalArgumentException("Parent category not found: " + req.parentId()));
+            siblings = categoryRepo.findByParentOrderBySortOrderAsc(parent);
+            auditId = parent.getId();
+            scope = "sub-categories of " + parent.getName();
+        } else {
+            if (req.bar() == null) {
+                throw new IllegalArgumentException("A bar is required when reordering tabs.");
+            }
+            siblings = categoryRepo.findTopLevelForBar(req.bar());
+            auditId = null;
+            scope = "tabs for " + req.bar().name();
+        }
+        SortOrders.apply(siblings, req.orderedIds(), MenuCategory::getId, MenuCategory::setSortOrder);
+        categoryRepo.saveAll(siblings);
+        auditService.recordAction(AuditEntityType.MENU_CATEGORY, auditId, scope,
+                AuditAction.REORDER, List.of(),
+                "Reordered " + siblings.size() + " " + scope);
+    }
+
     public void deleteCategory(Long id) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
@@ -160,6 +190,18 @@ public class MenuService {
                 AuditAction.TOGGLE, List.of(),
                 (active ? "Showed" : "Hid") + " item: " + saved.getName());
         return MenuItemDto.from(saved);
+    }
+
+    /** Re-number the items of one sub-heading from a dragged order. See {@link #reorderCategories}. */
+    public void reorderItems(Long categoryId, List<Long> orderedIds) {
+        MenuCategory cat = categoryRepo.findById(categoryId)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+        List<MenuItem> items = itemRepo.findByCategoryOrderBySortOrderAsc(cat);
+        SortOrders.apply(items, orderedIds, MenuItem::getId, MenuItem::setSortOrder);
+        itemRepo.saveAll(items);
+        auditService.recordAction(AuditEntityType.MENU_CATEGORY, cat.getId(), cat.getName(),
+                AuditAction.REORDER, List.of(),
+                "Reordered " + items.size() + " items in " + cat.getName());
     }
 
     public void deleteItem(Long id) {

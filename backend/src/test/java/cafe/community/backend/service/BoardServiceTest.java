@@ -13,7 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -91,6 +94,38 @@ class BoardServiceTest {
         var all = service.getAll();
         assertThat(all.get(0).label()).isEqualTo("A");
         assertThat(all.get(1).label()).isEqualTo("B");
+    }
+
+    @Test
+    void reorderTerms_appliesTheGivenOrder() {
+        BoardTermDto first = service.createTerm(execReq("2023-2024", false));
+        BoardTermDto second = service.createTerm(execReq("2024-2025", true));
+
+        service.reorderTerms(List.of(second.id(), first.id()));
+
+        assertThat(service.getAll()).extracting(BoardTermDto::label)
+                .containsExactly("2024-2025", "2023-2024");
+    }
+
+    @Test
+    void reorderTerms_rejectsAnOrderMissingATerm() {
+        BoardTermDto first = service.createTerm(execReq("2023-2024", false));
+        service.createTerm(execReq("2024-2025", true));
+
+        assertThatThrownBy(() -> service.reorderTerms(List.of(first.id())))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void reorderMembers_appliesTheGivenOrderWithinTheTerm() {
+        BoardTermDto term = service.createTerm(execReq("2024-2025", true));
+        BoardMemberDto chair = service.createMember(term.id(), new BoardMemberRequest("Ada", "Chair", null, 0));
+        BoardMemberDto treasurer = service.createMember(term.id(), new BoardMemberRequest("Bo", "Treasurer", null, 1));
+
+        service.reorderMembers(term.id(), List.of(treasurer.id(), chair.id()));
+
+        assertThat(service.getAll().get(0).members()).extracting(BoardMemberDto::name)
+                .containsExactly("Bo", "Ada");
     }
 
     @Test

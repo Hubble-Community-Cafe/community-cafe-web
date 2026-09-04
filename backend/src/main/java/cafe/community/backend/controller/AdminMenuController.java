@@ -54,6 +54,17 @@ public class AdminMenuController {
         return menuService.setCategoryActive(id, req.active());
     }
 
+    /**
+     * Apply a dragged order to one level of the tree: a tab's sub-headings when the body carries a
+     * parent, otherwise the top-level tabs of the given bar.
+     */
+    @PatchMapping("/categories/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
+    public void reorderCategories(@Valid @RequestBody MenuCategoryReorderRequest req) {
+        menuService.reorderCategories(req);
+    }
+
     @DeleteMapping("/categories/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('EDITOR')")
@@ -89,6 +100,15 @@ public class AdminMenuController {
     public MenuItemDto setItemActive(@PathVariable Long id,
                                      @Valid @RequestBody ActiveRequest req) {
         return menuService.setItemActive(id, req.active());
+    }
+
+    /** Apply a dragged order to the items of one sub-heading. */
+    @PatchMapping("/categories/{categoryId}/items/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
+    public void reorderItems(@PathVariable Long categoryId,
+                             @Valid @RequestBody ReorderRequest req) {
+        menuService.reorderItems(categoryId, req.orderedIds());
     }
 
     @DeleteMapping("/items/{id}")

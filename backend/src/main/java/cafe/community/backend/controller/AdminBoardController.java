@@ -4,6 +4,7 @@ import cafe.community.backend.dto.BoardMemberDto;
 import cafe.community.backend.dto.BoardMemberRequest;
 import cafe.community.backend.dto.BoardTermDto;
 import cafe.community.backend.dto.BoardTermRequest;
+import cafe.community.backend.dto.ReorderRequest;
 import cafe.community.backend.service.BoardService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,14 @@ public class AdminBoardController {
         return service.updateTerm(id, req);
     }
 
+    /** Apply a dragged order to the board terms. */
+    @PatchMapping("/terms/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
+    public void reorderTerms(@Valid @RequestBody ReorderRequest req) {
+        service.reorderTerms(req.orderedIds());
+    }
+
     @DeleteMapping("/terms/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @PreAuthorize("hasRole('EDITOR')")
@@ -59,6 +68,14 @@ public class AdminBoardController {
     @PreAuthorize("hasRole('EDITOR')")
     public BoardMemberDto updateMember(@PathVariable Long id, @Valid @RequestBody BoardMemberRequest req) {
         return service.updateMember(id, req);
+    }
+
+    /** Apply a dragged order to the members of one term. */
+    @PatchMapping("/terms/{termId}/members/reorder")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('EDITOR')")
+    public void reorderMembers(@PathVariable Long termId, @Valid @RequestBody ReorderRequest req) {
+        service.reorderMembers(termId, req.orderedIds());
     }
 
     @DeleteMapping("/members/{id}")

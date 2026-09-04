@@ -5,6 +5,7 @@ import cafe.community.backend.dto.VacancyRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.repository.VacancyRepository;
+import cafe.community.backend.util.SortOrders;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,6 +53,18 @@ public class VacancyService {
         auditService.recordAction(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
                 AuditAction.UPDATE, List.of(), "Updated vacancy: " + saved.getTitle());
         return VacancyDto.from(saved);
+    }
+
+    /**
+     * Re-number the vacancies from a dragged order. Kept out of {@link #update} so a drag only ever
+     * writes sort orders and cannot clobber another editor's changes.
+     */
+    public void reorder(List<Long> orderedIds) {
+        List<Vacancy> vacancies = repo.findAllByOrderBySortOrderAscTitleAsc();
+        SortOrders.apply(vacancies, orderedIds, Vacancy::getId, Vacancy::setSortOrder);
+        repo.saveAll(vacancies);
+        auditService.recordAction(AuditEntityType.VACANCY, null, "Vacancies",
+                AuditAction.REORDER, List.of(), "Reordered " + vacancies.size() + " vacancies");
     }
 
     public void delete(Long id) {
