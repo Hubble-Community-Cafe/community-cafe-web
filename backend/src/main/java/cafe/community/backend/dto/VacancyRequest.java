@@ -12,5 +12,6 @@ public record VacancyRequest(
         Long imageId,
         String bar,
         boolean active,
-        int sortOrder
+        /** Null on create means "put it last"; null on update leaves the position alone. */
+        Integer sortOrder
 ) {}

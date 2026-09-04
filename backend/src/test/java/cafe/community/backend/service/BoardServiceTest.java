@@ -129,6 +129,42 @@ class BoardServiceTest {
     }
 
     @Test
+    void createTerm_withoutASortOrder_landsLast() {
+        service.createTerm(new BoardTermRequest("2023-2024", "EXECUTIVE", null, false, 2, null, null));
+
+        BoardTermDto appended = service.createTerm(
+                new BoardTermRequest("2024-2025", "EXECUTIVE", null, true, null, null, null));
+
+        assertThat(appended.sortOrder()).isEqualTo(3);
+    }
+
+    @Test
+    void createMember_withoutASortOrder_landsLastInTheTerm() {
+        BoardTermDto term = service.createTerm(execReq("2024-2025", true));
+        service.createMember(term.id(), new BoardMemberRequest("Ada", "Chair", null, 0));
+
+        BoardMemberDto appended = service.createMember(term.id(),
+                new BoardMemberRequest("Bo", "Treasurer", null, null));
+
+        assertThat(appended.sortOrder()).isEqualTo(1);
+        assertThat(service.getAll().get(0).members()).extracting(BoardMemberDto::name)
+                .containsExactly("Ada", "Bo");
+    }
+
+    /** Editing a member must not drag them to the bottom of the term. */
+    @Test
+    void updateMember_withoutASortOrder_staysPut() {
+        BoardTermDto term = service.createTerm(execReq("2024-2025", true));
+        BoardMemberDto ada = service.createMember(term.id(), new BoardMemberRequest("Ada", "Chair", null, 0));
+        service.createMember(term.id(), new BoardMemberRequest("Bo", "Treasurer", null, 1));
+
+        BoardMemberDto updated = service.updateMember(ada.id(),
+                new BoardMemberRequest("Ada Lovelace", "Chair", null, null));
+
+        assertThat(updated.sortOrder()).isZero();
+    }
+
+    @Test
     void supervisoryTermScoped() {
         BoardTermDto dto = service.createTerm(
                 new BoardTermRequest("Supervisory 2024", "SUPERVISORY", "HUBBLE", true, 0, null, null));

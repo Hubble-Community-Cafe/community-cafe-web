@@ -378,6 +378,74 @@ class MenuServiceTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    // ===== Position on create and update =====
+
+    @Test
+    void createItem_withoutASortOrder_landsLast() {
+        MenuCategoryDto cat = menuService.createCategory(hubbleBeerCategory());
+        menuService.createItem(cat.id(), itemNamed("Amstel", 4));
+
+        MenuItemDto appended = menuService.createItem(cat.id(),
+                new MenuItemRequest("Brand", null, new BigDecimal("3.50"), null,
+                        List.of(), List.of(), List.of(), null, null, true));
+
+        assertThat(appended.sortOrder()).isEqualTo(5);
+        assertThat(menuService.getItemsForCategory(cat.id()))
+                .extracting(MenuItemDto::name).containsExactly("Amstel", "Brand");
+    }
+
+    @Test
+    void createItem_withoutASortOrder_startsAtZeroInAnEmptyCategory() {
+        MenuCategoryDto cat = menuService.createCategory(hubbleBeerCategory());
+
+        MenuItemDto first = menuService.createItem(cat.id(),
+                new MenuItemRequest("Amstel", null, new BigDecimal("3.50"), null,
+                        List.of(), List.of(), List.of(), null, null, true));
+
+        assertThat(first.sortOrder()).isZero();
+    }
+
+    /** Editing an item must not drag it to the bottom of its category. */
+    @Test
+    void updateItem_withoutASortOrder_staysPut() {
+        MenuCategoryDto cat = menuService.createCategory(hubbleBeerCategory());
+        MenuItemDto amstel = menuService.createItem(cat.id(), itemNamed("Amstel", 0));
+        menuService.createItem(cat.id(), itemNamed("Brand", 1));
+
+        MenuItemDto renamed = menuService.updateItem(amstel.id(),
+                new MenuItemRequest("Amstel Radler", null, new BigDecimal("3.50"), null,
+                        List.of(), List.of(), List.of(), null, null, true));
+
+        assertThat(renamed.sortOrder()).isZero();
+        assertThat(menuService.getItemsForCategory(cat.id()))
+                .extracting(MenuItemDto::name).containsExactly("Amstel Radler", "Brand");
+    }
+
+    @Test
+    void createCategory_withoutASortOrder_landsLastInItsOwnLevel() {
+        menuService.createCategory(hubbleTab("Beers", 3));
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Wines", MenuKind.DRINK, null, null, BarLocation.HUBBLE, null));
+
+        MenuCategoryDto sub = menuService.createCategory(
+                new MenuCategoryRequest("Red", MenuKind.DRINK, null, null, BarLocation.HUBBLE, tab.id()));
+
+        assertThat(tab.sortOrder()).isEqualTo(4);
+        assertThat(sub.sortOrder()).as("a first sub-heading starts its own numbering").isZero();
+    }
+
+    /** A shared tab sits in both bars' lists, so a new tab has to clear every tab, not just its own bar's. */
+    @Test
+    void createCategory_withoutASortOrder_clearsTabsOfBothBars() {
+        menuService.createCategory(
+                new MenuCategoryRequest("Meteor only", MenuKind.DRINK, null, 7, BarLocation.METEOR, null));
+
+        MenuCategoryDto hubbleTab = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, null, BarLocation.HUBBLE, null));
+
+        assertThat(hubbleTab.sortOrder()).isEqualTo(8);
+    }
+
     @Test
     void reorderCategories_requiresABarWhenReorderingTabs() {
         MenuCategoryDto beers = menuService.createCategory(hubbleBeerCategory());

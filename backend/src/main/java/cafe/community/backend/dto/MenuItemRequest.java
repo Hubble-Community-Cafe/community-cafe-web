@@ -17,6 +17,7 @@ public record MenuItemRequest(
         List<String> dietaryTags,
         List<String> allergens,
         Long imageId,
-        int sortOrder,
+        /** Null on create means "put it last"; null on update leaves the position alone. */
+        Integer sortOrder,
         boolean active
 ) {}

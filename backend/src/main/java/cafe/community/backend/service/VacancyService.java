@@ -39,6 +39,9 @@ public class VacancyService {
     public VacancyDto create(VacancyRequest req) {
         Vacancy v = new Vacancy();
         apply(v, req);
+        if (req.sortOrder() == null) {
+            v.setSortOrder(nextSortOrder());
+        }
         Vacancy saved = repo.save(v);
         auditService.recordCreate(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
                 List.of(), "Created vacancy: " + saved.getTitle());
@@ -75,6 +78,12 @@ public class VacancyService {
         auditService.recordDelete(AuditEntityType.VACANCY, id, title, "Deleted vacancy: " + title);
     }
 
+    /** Where a new vacancy lands: after the last one. */
+    private int nextSortOrder() {
+        List<Vacancy> all = repo.findAllByOrderBySortOrderAscTitleAsc();
+        return all.isEmpty() ? 0 : all.getLast().getSortOrder() + 1;
+    }
+
     private void apply(Vacancy v, VacancyRequest req) {
         v.setTitle(req.title());
         v.setDescription(req.description());
@@ -84,7 +93,10 @@ public class VacancyService {
         v.setApplyLink(req.applyLink());
         v.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
         v.setActive(req.active());
-        v.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; create appends instead.
+        if (req.sortOrder() != null) {
+            v.setSortOrder(req.sortOrder());
+        }
         MediaAsset image = req.imageId() != null
                 ? mediaRepo.findById(req.imageId()).orElse(null) : null;
         v.setImage(image);

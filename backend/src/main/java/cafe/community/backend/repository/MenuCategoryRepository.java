@@ -30,6 +30,12 @@ public interface MenuCategoryRepository extends JpaRepository<MenuCategory, Long
     @Query("SELECT c FROM MenuCategory c WHERE (c.bar = :bar OR c.bar IS NULL) AND c.parent IS NULL AND c.active = true ORDER BY c.sortOrder ASC")
     List<MenuCategory> findActiveTopLevelForBar(@Param("bar") BarLocation bar);
 
+    /**
+     * Every tab, both bars', in sort order. A tab with no bar shows in both lists but has a single
+     * sort order, so appending a new tab has to look at all of them to land last in either list.
+     */
+    List<MenuCategory> findByParentIsNullOrderBySortOrderAsc();
+
     /** Sub-heading categories that belong to a given tab, in sort order. */
     List<MenuCategory> findByParentOrderBySortOrderAsc(MenuCategory parent);
 

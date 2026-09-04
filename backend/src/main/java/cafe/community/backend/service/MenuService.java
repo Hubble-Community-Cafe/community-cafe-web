@@ -81,6 +81,9 @@ public class MenuService {
     public MenuCategoryDto createCategory(MenuCategoryRequest req) {
         MenuCategory cat = new MenuCategory();
         applyCategory(cat, req);
+        if (req.sortOrder() == null) {
+            cat.setSortOrder(nextCategorySortOrder(cat.getParent()));
+        }
         MenuCategory saved = categoryRepo.save(cat);
         auditService.recordCreate(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
                 List.of(), "Created category: " + saved.getName());
@@ -164,6 +167,9 @@ public class MenuService {
         MenuItem item = new MenuItem();
         item.setCategory(cat);
         applyItem(item, req);
+        if (req.sortOrder() == null) {
+            item.setSortOrder(nextItemSortOrder(cat));
+        }
         MenuItem saved = itemRepo.save(item);
         auditService.recordCreate(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
                 List.of(), "Created item: " + saved.getName());
@@ -253,7 +259,10 @@ public class MenuService {
         cat.setName(req.name());
         cat.setKind(req.kind());
         cat.setAvailabilityNote(req.availabilityNote());
-        cat.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createCategory appends instead.
+        if (req.sortOrder() != null) {
+            cat.setSortOrder(req.sortOrder());
+        }
         cat.setBar(req.bar());
         // Omitting the flag means "visible", so older payloads keep creating visible categories.
         cat.setActive(req.active() == null || req.active());
@@ -273,7 +282,10 @@ public class MenuService {
         item.setSizeOptions(joinCsv(req.sizeOptions()));
         item.setDietaryTags(joinCsv(req.dietaryTags()));
         item.setAllergens(joinCsv(req.allergens()));
-        item.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createItem appends instead.
+        if (req.sortOrder() != null) {
+            item.setSortOrder(req.sortOrder());
+        }
         item.setActive(req.active());
         if (req.imageId() != null) {
             item.setImage(mediaRepo.findById(req.imageId()).orElse(null));
@@ -292,6 +304,20 @@ public class MenuService {
         } else {
             dish.setImage(null);
         }
+    }
+
+    /** Where a new tab or sub-heading lands: after the last of the list it joins. */
+    private int nextCategorySortOrder(MenuCategory parent) {
+        List<MenuCategory> siblings = parent != null
+                ? categoryRepo.findByParentOrderBySortOrderAsc(parent)
+                : categoryRepo.findByParentIsNullOrderBySortOrderAsc();
+        return siblings.isEmpty() ? 0 : siblings.getLast().getSortOrder() + 1;
+    }
+
+    /** Where a new item lands: after the last item of its sub-heading. */
+    private int nextItemSortOrder(MenuCategory cat) {
+        List<MenuItem> items = itemRepo.findByCategoryOrderBySortOrderAsc(cat);
+        return items.isEmpty() ? 0 : items.getLast().getSortOrder() + 1;
     }
 
     private static String joinCsv(List<String> values) {

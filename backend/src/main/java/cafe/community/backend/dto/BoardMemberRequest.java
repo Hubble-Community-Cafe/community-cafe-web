@@ -6,5 +6,6 @@ public record BoardMemberRequest(
         @NotBlank String name,
         String role,
         Long photoId,
-        int sortOrder
+        /** Null on create means "put it last"; null on update leaves the position alone. */
+        Integer sortOrder
 ) {}

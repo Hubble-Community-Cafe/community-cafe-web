@@ -106,6 +106,28 @@ class VacancyServiceTest {
     }
 
     @Test
+    void create_withoutASortOrder_landsLast() {
+        service.create(new VacancyRequest("Manager", null, null, null, null, null, null, "HUBBLE", true, 3));
+
+        VacancyDto appended = service.create(
+                new VacancyRequest("Chef", null, null, null, null, null, null, "HUBBLE", true, null));
+
+        assertThat(appended.sortOrder()).isEqualTo(4);
+    }
+
+    /** Editing a vacancy must not drag it to the bottom of the list. */
+    @Test
+    void update_withoutASortOrder_staysPut() {
+        VacancyDto manager = service.create(new VacancyRequest("Manager", null, null, null, null, null, null, "HUBBLE", true, 0));
+        service.create(new VacancyRequest("Chef", null, null, null, null, null, null, "HUBBLE", true, 1));
+
+        VacancyDto updated = service.update(manager.id(),
+                new VacancyRequest("Bar Manager", null, null, null, null, null, null, "HUBBLE", true, null));
+
+        assertThat(updated.sortOrder()).isZero();
+    }
+
+    @Test
     void delete_removesVacancy() {
         VacancyDto created = service.create(req("To Delete", "HUBBLE", true));
         service.delete(created.id());

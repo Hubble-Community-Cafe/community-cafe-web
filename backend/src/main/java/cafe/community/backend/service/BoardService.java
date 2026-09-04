@@ -42,6 +42,9 @@ public class BoardService {
     public BoardTermDto createTerm(BoardTermRequest req) {
         BoardTerm term = new BoardTerm();
         applyTerm(term, req);
+        if (req.sortOrder() == null) {
+            term.setSortOrder(nextTermSortOrder());
+        }
         BoardTerm saved = termRepo.save(term);
         auditService.recordCreate(AuditEntityType.BOARD_TERM, saved.getId(), saved.getLabel(),
                 List.of(), "Created board term: " + saved.getLabel() + " (" + saved.getType().name() + ")");
@@ -86,6 +89,9 @@ public class BoardService {
         BoardMember member = new BoardMember();
         member.setTerm(term);
         applyMember(member, req);
+        if (req.sortOrder() == null) {
+            member.setSortOrder(nextMemberSortOrder(term));
+        }
         BoardMember saved = memberRepo.save(member);
         term.getMembers().add(saved);
         auditService.recordCreate(AuditEntityType.BOARD_MEMBER, saved.getId(), saved.getName(),
@@ -128,12 +134,27 @@ public class BoardService {
                 "Removed board member: " + name);
     }
 
+    /** Where a new term lands: after the last one. */
+    private int nextTermSortOrder() {
+        List<BoardTerm> terms = termRepo.findAll(Sort.by("sortOrder", "label"));
+        return terms.isEmpty() ? 0 : terms.getLast().getSortOrder() + 1;
+    }
+
+    /** Where a new member lands: after the last member of their term. */
+    private int nextMemberSortOrder(BoardTerm term) {
+        return term.getMembers().stream()
+                .mapToInt(BoardMember::getSortOrder).max().orElse(-1) + 1;
+    }
+
     private void applyTerm(BoardTerm term, BoardTermRequest req) {
         term.setLabel(req.label());
         term.setType(BoardType.valueOf(req.type()));
         term.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
         term.setCurrent(req.current());
-        term.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createTerm appends instead.
+        if (req.sortOrder() != null) {
+            term.setSortOrder(req.sortOrder());
+        }
         term.setPhotoCredit(req.photoCredit());
         MediaAsset groupPhoto = req.groupPhotoId() != null
                 ? mediaRepo.findById(req.groupPhotoId()).orElse(null) : null;
@@ -143,7 +164,10 @@ public class BoardService {
     private void applyMember(BoardMember member, BoardMemberRequest req) {
         member.setName(req.name());
         member.setRole(req.role());
-        member.setSortOrder(req.sortOrder());
+        // Omitting the position leaves it where it is; createMember appends instead.
+        if (req.sortOrder() != null) {
+            member.setSortOrder(req.sortOrder());
+        }
         MediaAsset photo = req.photoId() != null
                 ? mediaRepo.findById(req.photoId()).orElse(null) : null;
         member.setPhoto(photo);

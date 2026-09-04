@@ -7,7 +7,8 @@ public record BoardTermRequest(
         @NotBlank String type,
         String bar,
         boolean current,
-        int sortOrder,
+        /** Null on create means "put it last"; null on update leaves the position alone. */
+        Integer sortOrder,
         Long groupPhotoId,
         String photoCredit
 ) {}
