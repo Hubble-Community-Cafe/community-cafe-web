@@ -111,8 +111,10 @@ export function seedMenuCategory(
   request: APIRequestContext,
   cat: { name: string; kind?: 'DRINK' | 'FOOD'; bar?: Bar | null; sortOrder?: number; parentId?: number | null },
 ): Promise<{ id: number }> {
+  // sortOrder is deliberately omitted: the backend appends, so seeding in order gives 0, 1, 2
+  // rather than every row tying at zero and leaving the display order undefined.
   return adminPost(request, '/api/admin/menu/categories', {
-    kind: 'DRINK', availabilityNote: null, sortOrder: 0, bar: null, parentId: null, ...cat,
+    kind: 'DRINK', availabilityNote: null, bar: null, parentId: null, ...cat,
   })
 }
 
@@ -120,9 +122,10 @@ export function seedMenuItem(
   request: APIRequestContext, categoryId: number,
   item: { name: string; regularPrice: number; studentPrice?: number | null; description?: string | null },
 ): Promise<{ id: number }> {
+  // See seedMenuCategory: omitting sortOrder makes the seeded order the creation order.
   return adminPost(request, `/api/admin/menu/categories/${categoryId}/items`, {
     description: null, studentPrice: null, sizeOptions: [], dietaryTags: [], allergens: [],
-    imageId: null, sortOrder: 0, active: true, ...item,
+    imageId: null, active: true, ...item,
   })
 }
 
