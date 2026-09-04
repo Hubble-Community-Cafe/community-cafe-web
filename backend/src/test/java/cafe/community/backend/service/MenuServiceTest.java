@@ -499,7 +499,11 @@ class MenuServiceTest {
                 .hasSize(2)
                 .anySatisfy(e -> {
                     assertThat(e.getEntityLabel()).isEqualTo("Mojito");
-                    assertThat(e.getChanges()).contains("7.00").contains("7.50");
+                    // Both sides at two decimals: the stored value carries the column's scale
+                    // while the incoming one carries whatever the client sent.
+                    assertThat(e.getChanges())
+                            .contains("\"oldValue\":\"7.00\"")
+                            .contains("\"newValue\":\"7.50\"");
                 });
     }
 

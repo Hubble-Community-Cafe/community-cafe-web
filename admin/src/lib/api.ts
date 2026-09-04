@@ -297,6 +297,29 @@ export const setMenuItemActive = (id: number, active: boolean) =>
     body: JSON.stringify({ active }),
   })
 
+export interface BulkPriceRequest {
+  ids: number[]
+  /** Omit or null to leave this price as it is on each item. */
+  regularPrice?: number | null
+  studentPrice?: number | null
+  /** A null studentPrice means "unchanged", so removing one needs its own flag. */
+  clearStudentPrice?: boolean
+}
+
+/** Set the same price on several items. Returns the items as saved. */
+export const bulkSetMenuItemPrice = (req: BulkPriceRequest) =>
+  getJson<MenuItem[]>('/api/admin/menu/items/bulk-price', {
+    method: 'PATCH',
+    body: JSON.stringify(req),
+  })
+
+/** Move several items into another sub-heading, appending them after what is already there. */
+export const bulkMoveMenuItems = (ids: number[], categoryId: number) =>
+  getJson<MenuItem[]>('/api/admin/menu/items/bulk-move', {
+    method: 'PATCH',
+    body: JSON.stringify({ ids, categoryId }),
+  })
+
 /**
  * Apply a dragged order. Like the visibility toggles these are separate from the update calls,
  * so a drag only ever writes positions and cannot overwrite fields edited elsewhere. The backend

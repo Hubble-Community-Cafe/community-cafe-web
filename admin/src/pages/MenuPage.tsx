@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card, PageHeader } from '../components/PageHeader'
 import { SortableList } from '../components/SortableList'
+import { BulkActionBar } from './menu/BulkActionBar'
 import { VisibilityToggle } from '../components/VisibilityToggle'
 import { CategoryForm } from './menu/CategoryForm'
 import { ItemForm } from './menu/ItemForm'
@@ -19,6 +20,8 @@ import {
   setMenuItemActive,
   reorderMenuCategories,
   reorderMenuItems,
+  bulkSetMenuItemPrice,
+  bulkMoveMenuItems,
   type BarLocation,
   type MenuCategory,
   type MenuCategoryRequest,
@@ -59,6 +62,8 @@ export function MenuPage() {
   const [newSubForTab, setNewSubForTab] = useState<number | null>(null)
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null)
   const [newItemForCategory, setNewItemForCategory] = useState<number | null>(null)
+  // Only one sub-category is open at a time, so a single set is enough to scope the selection.
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(new Set())
 
   const load = useCallback(async () => {
     try {
@@ -95,15 +100,82 @@ export function MenuPage() {
   const toggleTab = (id: number) => {
     setExpandedTabId(expandedTabId === id ? null : id)
     setExpandedCatId(null)
+    setSelectedItemIds(new Set())
   }
 
   const toggleCat = (id: number) => {
+    setSelectedItemIds(new Set())
     if (expandedCatId === id) {
       setExpandedCatId(null)
     } else {
       setExpandedCatId(id)
       loadItems(id)
     }
+  }
+
+  const toggleItemSelected = (id: number) => {
+    setSelectedItemIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const allSelected = (categoryId: number) => {
+    const items = itemsByCategory[categoryId] ?? []
+    return items.length > 0 && items.every((i) => selectedItemIds.has(i.id))
+  }
+
+  const someSelected = (categoryId: number) =>
+    (itemsByCategory[categoryId] ?? []).some((i) => selectedItemIds.has(i.id))
+
+  const toggleSelectAll = (categoryId: number) => {
+    const items = itemsByCategory[categoryId] ?? []
+    setSelectedItemIds(allSelected(categoryId) ? new Set() : new Set(items.map((i) => i.id)))
+  }
+
+  /** Every other sub-category of this bar, grouped by its tab, as move destinations. */
+  const moveTargetsExcluding = (categoryId: number) =>
+    tabs
+      .map((tab) => ({
+        tabName: tab.name,
+        categories: subsForTab(tab.id).filter((c) => c.id !== categoryId),
+      }))
+      .filter((group) => group.categories.length > 0)
+
+  /**
+   * Bulk edits are not applied optimistically: unlike a drag or a toggle there is no obvious
+   * previous state to snap back to per row, and a wrong price shown as saved is worse than a
+   * short wait. The bar keeps its panel open and reports the failure if the call throws.
+   */
+  const handleBulkPrice = async (
+    categoryId: number,
+    req: { regularPrice: number | null; studentPrice: number | null; clearStudentPrice: boolean },
+  ) => {
+    const saved = await bulkSetMenuItemPrice({ ids: [...selectedItemIds], ...req })
+    const byId = new Map(saved.map((i) => [i.id, i]))
+    setItemsByCategory((prev) => ({
+      ...prev,
+      [categoryId]: (prev[categoryId] ?? []).map((i) => byId.get(i.id) ?? i),
+    }))
+    setSelectedItemIds(new Set())
+    setError(null)
+  }
+
+  const handleBulkMove = async (fromCategoryId: number, targetId: number) => {
+    const ids = [...selectedItemIds]
+    await bulkMoveMenuItems(ids, targetId)
+    setItemsByCategory((prev) => {
+      const next = { ...prev }
+      next[fromCategoryId] = (prev[fromCategoryId] ?? []).filter((i) => !ids.includes(i.id))
+      // The move renumbers the target's existing items too, so drop any cached copy of it
+      // rather than trying to reproduce the new positions here.
+      delete next[targetId]
+      return next
+    })
+    setSelectedItemIds(new Set())
+    setError(null)
   }
 
   const handleCreateTab = async (req: MenuCategoryRequest) => {
@@ -467,7 +539,28 @@ export function MenuPage() {
                                 {expandedCatId === cat.id && (
                                   <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-3">
                                     <div className="mb-2 flex items-center justify-between">
-                                      <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Items</span>
+                                      <div className="flex items-center gap-2">
+                                        {canEditContent && (itemsByCategory[cat.id]?.length ?? 0) > 0 && (
+                                          <label className="flex cursor-pointer items-center gap-2">
+                                            <input
+                                              type="checkbox"
+                                              checked={allSelected(cat.id)}
+                                              ref={(el) => {
+                                                // Some but not all: the box shows the in-between state
+                                                // rather than pretending the whole list is picked.
+                                                if (el) el.indeterminate = someSelected(cat.id) && !allSelected(cat.id)
+                                              }}
+                                              onChange={() => toggleSelectAll(cat.id)}
+                                              aria-label={`Select all items in ${cat.name}`}
+                                              className="h-4 w-4 rounded border-slate-300"
+                                            />
+                                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Items</span>
+                                          </label>
+                                        )}
+                                        {!(canEditContent && (itemsByCategory[cat.id]?.length ?? 0) > 0) && (
+                                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Items</span>
+                                        )}
+                                      </div>
                                       {canEditContent && (
                                         <button
                                           onClick={() => { setNewItemForCategory(cat.id); setEditingItem(null) }}
@@ -477,6 +570,16 @@ export function MenuPage() {
                                         </button>
                                       )}
                                     </div>
+
+                                    {canEditContent && selectedItemIds.size > 0 && (
+                                      <BulkActionBar
+                                        selected={(itemsByCategory[cat.id] ?? []).filter((i) => selectedItemIds.has(i.id))}
+                                        moveTargets={moveTargetsExcluding(cat.id)}
+                                        onSetPrice={(req) => handleBulkPrice(cat.id, req)}
+                                        onMove={(targetId) => handleBulkMove(cat.id, targetId)}
+                                        onClear={() => setSelectedItemIds(new Set())}
+                                      />
+                                    )}
 
                                     {newItemForCategory === cat.id && (
                                       <div className="mb-3 rounded-xl border border-hubble-100 bg-white p-4">
@@ -496,7 +599,10 @@ export function MenuPage() {
                                         items={itemsByCategory[cat.id]}
                                         getId={(i) => i.id}
                                         labelFor={(i) => i.name}
-                                        disabled={!canEditContent}
+                                        // Dragging is off while a selection is active: the two
+                                        // gestures compete for the same rows, and picking items is
+                                        // the one you are in the middle of.
+                                        disabled={!canEditContent || selectedItemIds.size > 0}
                                         draggable={(i) => editingItem?.id !== i.id}
                                         onReorder={(next) => handleReorderItems(cat.id, next)}
                                         className="space-y-1"
@@ -512,8 +618,21 @@ export function MenuPage() {
                                                 />
                                               </div>
                                             ) : (
-                                              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
+                                              <div className={`flex items-center justify-between rounded-lg border bg-white px-3 py-2 ${
+                                                selectedItemIds.has(item.id)
+                                                  ? 'border-hubble-300 ring-1 ring-hubble-200'
+                                                  : 'border-slate-200'
+                                              }`}>
                                                 <div className="flex items-center gap-3">
+                                                  {canEditContent && (
+                                                    <input
+                                                      type="checkbox"
+                                                      checked={selectedItemIds.has(item.id)}
+                                                      onChange={() => toggleItemSelected(item.id)}
+                                                      aria-label={`Select ${item.name}`}
+                                                      className="h-4 w-4 shrink-0 rounded border-slate-300"
+                                                    />
+                                                  )}
                                                   {itemHandle}
                                                   {!item.active && (
                                                     <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">hidden</span>

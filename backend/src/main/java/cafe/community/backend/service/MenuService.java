@@ -7,6 +7,8 @@ import cafe.community.backend.util.SortOrders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -223,20 +225,20 @@ public class MenuService {
             List<FieldChange> changes = new ArrayList<>();
             if (req.regularPrice() != null && item.getRegularPrice().compareTo(req.regularPrice()) != 0) {
                 changes.add(new FieldChange("Regular price",
-                        String.valueOf(item.getRegularPrice()), String.valueOf(req.regularPrice())));
+                        money(item.getRegularPrice()), money(req.regularPrice())));
                 item.setRegularPrice(req.regularPrice());
             }
             if (req.shouldClearStudentPrice()) {
                 if (item.getStudentPrice() != null) {
                     changes.add(new FieldChange("TU/e student price",
-                            String.valueOf(item.getStudentPrice()), null));
+                            money(item.getStudentPrice()), null));
                     item.setStudentPrice(null);
                 }
             } else if (req.studentPrice() != null
                     && (item.getStudentPrice() == null
                         || item.getStudentPrice().compareTo(req.studentPrice()) != 0)) {
                 changes.add(new FieldChange("TU/e student price",
-                        String.valueOf(item.getStudentPrice()), String.valueOf(req.studentPrice())));
+                        money(item.getStudentPrice()), money(req.studentPrice())));
                 item.setStudentPrice(req.studentPrice());
             }
             // An item already at the target price is left out of the audit entirely: recording a
@@ -424,6 +426,15 @@ public class MenuService {
     private int nextItemSortOrder(MenuCategory cat) {
         List<MenuItem> items = itemRepo.findByCategoryOrderBySortOrderAsc(cat);
         return items.isEmpty() ? 0 : items.getLast().getSortOrder() + 1;
+    }
+
+    /**
+     * Prices for the audit log, always at two decimals. The stored value carries the column's
+     * scale while an incoming one carries whatever the client sent, so without this an entry
+     * reads "7.00 to 7.5".
+     */
+    private static String money(BigDecimal value) {
+        return value == null ? null : value.setScale(2, RoundingMode.HALF_UP).toPlainString();
     }
 
     private static String joinCsv(List<String> values) {
