@@ -16,6 +16,13 @@
 
 	<properties>
 		<java.version>21</java.version>
+		<!--
+			Override the Tomcat version managed by spring-boot-starter-parent to pick up the
+			fixes for CVE-2026-65182, CVE-2026-65905 and CVE-2026-68525 (all critical, all
+			flagged by the Trivy image scan). Drop this once the Spring Boot parent manages
+			11.0.25 or later on its own.
+		-->
+		<tomcat.version>11.0.25</tomcat.version>
 	</properties>
 
 	<dependencies>
