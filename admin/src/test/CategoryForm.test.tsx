@@ -19,7 +19,6 @@ function renderForm(initial?: MenuCategory, onSave = vi.fn().mockResolvedValue(u
     <CategoryForm
       initial={initial}
       defaultBar="HUBBLE"
-      defaultSortOrder={1}
       onSave={onSave}
       onCancel={vi.fn()}
     />,
@@ -43,6 +42,15 @@ describe('CategoryForm', () => {
     await waitFor(() =>
       expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ active: true })),
     )
+  })
+
+  /** Position is dragged, not typed, and an edit must not move the category. */
+  it('leaves the position out of the payload', async () => {
+    const onSave = renderForm(hiddenTab)
+    expect(screen.queryByLabelText(/sort order/i)).not.toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() => expect(onSave).toHaveBeenCalled())
+    expect(onSave.mock.calls[0][0]).not.toHaveProperty('sortOrder')
   })
 
   it('offers only the two bars, not a shared option', () => {

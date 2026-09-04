@@ -4,18 +4,16 @@ import type { BarLocation, MenuCategory, MenuCategoryRequest, MenuKind } from '.
 interface Props {
   initial?: MenuCategory
   defaultBar: BarLocation
-  defaultSortOrder: number
   /** When set, this form creates/edits a sub-category; bar selector is hidden. */
   fixedParentId?: number
   onSave: (req: MenuCategoryRequest) => Promise<void>
   onCancel: () => void
 }
 
-export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParentId, onSave, onCancel }: Props) {
+export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCancel }: Props) {
   const [name, setName] = useState(initial?.name ?? '')
   const [kind, setKind] = useState<MenuKind>(initial?.kind ?? 'DRINK')
   const [note, setNote] = useState(initial?.availabilityNote ?? '')
-  const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? defaultSortOrder)
   const [bar, setBar] = useState<BarLocation>(initial?.bar ?? defaultBar)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -30,7 +28,8 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
         name: name.trim(),
         kind,
         availabilityNote: note.trim() || null,
-        sortOrder,
+        // Position is set by dragging: omitting it appends a new category and leaves an
+        // existing one where it is.
         bar: fixedParentId !== undefined ? (initial?.bar ?? null) : bar,
         parentId: fixedParentId ?? initial?.parentId ?? null,
         // Carry the current visibility through: editing a hidden category must not
@@ -83,30 +82,19 @@ export function CategoryForm({ initial, defaultBar, defaultSortOrder, fixedParen
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
         </div>
-        <div className="grid grid-cols-2 gap-3">
+        {fixedParentId === undefined && (
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Sort order</label>
-            <input
-              type="number"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(Number(e.target.value))}
+            <label className="mb-1 block text-xs font-medium text-slate-600">Visible on</label>
+            <select
+              value={bar}
+              onChange={(e) => setBar(e.target.value as BarLocation)}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-            />
+            >
+              <option value="HUBBLE">Hubble</option>
+              <option value="METEOR">Meteor</option>
+            </select>
           </div>
-          {fixedParentId === undefined && (
-            <div>
-              <label className="mb-1 block text-xs font-medium text-slate-600">Visible on</label>
-              <select
-                value={bar}
-                onChange={(e) => setBar(e.target.value as BarLocation)}
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
-              >
-                <option value="HUBBLE">Hubble</option>
-                <option value="METEOR">Meteor</option>
-              </select>
-            </div>
-          )}
-        </div>
+        )}
       </div>
       <div className="flex justify-end gap-2 pt-1">
         <button

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronDown, ChevronRight, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Card, PageHeader } from '../components/PageHeader'
+import { SortableList } from '../components/SortableList'
 import { VisibilityToggle } from '../components/VisibilityToggle'
 import { CategoryForm } from './menu/CategoryForm'
 import { ItemForm } from './menu/ItemForm'
@@ -16,6 +17,8 @@ import {
   updateMenuItem,
   deleteMenuItem,
   setMenuItemActive,
+  reorderMenuCategories,
+  reorderMenuItems,
   type BarLocation,
   type MenuCategory,
   type MenuCategoryRequest,
@@ -152,6 +155,44 @@ export function MenuPage() {
     }
   }
 
+  /**
+   * Save a dragged order. Applied optimistically and rolled back on failure, like the visibility
+   * toggles, so the list settles where it was dropped instead of waiting on the round trip. The
+   * positions are renumbered locally too, otherwise a later insert would sort against stale ones.
+   */
+  const handleReorderCategories = async (
+    scope: { parentId: number | null; bar: BarLocation | null },
+    next: MenuCategory[],
+  ) => {
+    const previous = allCategories
+    const positions = new Map(next.map((c, i) => [c.id, i]))
+    setAllCategories((prev) =>
+      prev.map((c) => (positions.has(c.id) ? { ...c, sortOrder: positions.get(c.id)! } : c)),
+    )
+    try {
+      await reorderMenuCategories(scope, next.map((c) => c.id))
+      setError(null)
+    } catch {
+      setAllCategories(previous)
+      setError('Could not save the new order. Please try again.')
+    }
+  }
+
+  const handleReorderItems = async (categoryId: number, next: MenuItem[]) => {
+    const previous = itemsByCategory[categoryId] ?? []
+    setItemsByCategory((prev) => ({
+      ...prev,
+      [categoryId]: next.map((item, i) => ({ ...item, sortOrder: i })),
+    }))
+    try {
+      await reorderMenuItems(categoryId, next.map((i) => i.id))
+      setError(null)
+    } catch {
+      setItemsByCategory((prev) => ({ ...prev, [categoryId]: previous }))
+      setError('Could not save the new order. Please try again.')
+    }
+  }
+
   const handleDeleteCategory = async (id: number) => {
     if (!confirm('Delete this category and all its items?')) return
     await deleteMenuCategory(id)
@@ -233,7 +274,6 @@ export function MenuPage() {
           <div className="mb-4 rounded-xl border border-hubble-100 bg-hubble-50 p-4">
             <CategoryForm
               defaultBar={selectedBar}
-              defaultSortOrder={tabs.length + 1}
               onSave={handleCreateTab}
               onCancel={() => setShowNewTab(false)}
             />
@@ -245,9 +285,19 @@ export function MenuPage() {
         ) : tabs.length === 0 && !showNewTab ? (
           <p className="text-sm text-slate-500">No tabs yet for this bar.</p>
         ) : (
-          <div className="space-y-2">
-            {tabs.map((tab) => (
-              <div key={tab.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <SortableList
+            items={tabs}
+            getId={(t) => t.id}
+            labelFor={(t) => t.name}
+            disabled={!canEditContent}
+            // An expanded tab is a whole panel tall, so collapse it to move it. Its siblings
+            // can still be dragged around it.
+            draggable={(t) => expandedTabId !== t.id}
+            onReorder={(next) => handleReorderCategories({ parentId: null, bar: selectedBar }, next)}
+            className="space-y-2"
+          >
+            {(tab, tabHandle) => (
+              <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
 
                 {/* Tab row */}
                 {editingCategory?.id === tab.id ? (
@@ -255,7 +305,6 @@ export function MenuPage() {
                     <CategoryForm
                       initial={tab}
                       defaultBar={selectedBar}
-                      defaultSortOrder={tab.sortOrder}
                       onSave={handleUpdateCategory}
                       onCancel={() => setEditingCategory(null)}
                     />
@@ -263,6 +312,7 @@ export function MenuPage() {
                 ) : (
                   <>
                     <div className="flex items-center gap-3 px-4 py-3">
+                      {tabHandle}
                       <button
                         onClick={() => toggleTab(tab.id)}
                         className="flex flex-1 items-center gap-3 text-left"
@@ -331,7 +381,6 @@ export function MenuPage() {
                           <div className="rounded-xl border border-hubble-100 bg-white p-4">
                             <CategoryForm
                               defaultBar={tab.bar ?? selectedBar}
-                              defaultSortOrder={subsForTab(tab.id).length + 1}
                               fixedParentId={tab.id}
                               onSave={handleCreateSub}
                               onCancel={() => setNewSubForTab(null)}
@@ -343,8 +392,18 @@ export function MenuPage() {
                           <p className="text-xs text-slate-400">No sub-categories yet.</p>
                         )}
 
-                        {subsForTab(tab.id).map((cat) => (
-                          <div key={cat.id} className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+                        <SortableList
+                          items={subsForTab(tab.id)}
+                          getId={(c) => c.id}
+                          labelFor={(c) => c.name}
+                          disabled={!canEditContent}
+                          draggable={(c) => expandedCatId !== c.id}
+                          onReorder={(next) =>
+                            handleReorderCategories({ parentId: tab.id, bar: null }, next)}
+                          className="space-y-2"
+                        >
+                        {(cat, catHandle) => (
+                          <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
 
                             {/* Sub-category row */}
                             {editingCategory?.id === cat.id ? (
@@ -352,7 +411,6 @@ export function MenuPage() {
                                 <CategoryForm
                                   initial={cat}
                                   defaultBar={selectedBar}
-                                  defaultSortOrder={cat.sortOrder}
                                   fixedParentId={cat.parentId ?? undefined}
                                   onSave={handleUpdateCategory}
                                   onCancel={() => setEditingCategory(null)}
@@ -361,6 +419,7 @@ export function MenuPage() {
                             ) : (
                               <>
                                 <div className="flex items-center gap-3 px-4 py-2.5">
+                                  {catHandle}
                                   <button
                                     onClick={() => toggleCat(cat.id)}
                                     className="flex flex-1 items-center gap-3 text-left"
@@ -422,7 +481,6 @@ export function MenuPage() {
                                     {newItemForCategory === cat.id && (
                                       <div className="mb-3 rounded-xl border border-hubble-100 bg-white p-4">
                                         <ItemForm
-                                          defaultSortOrder={(itemsByCategory[cat.id]?.length ?? 0) + 1}
                                           onSave={(req) => handleCreateItem(cat.id, req)}
                                           onCancel={() => setNewItemForCategory(null)}
                                         />
@@ -434,14 +492,21 @@ export function MenuPage() {
                                     ) : itemsByCategory[cat.id].length === 0 && newItemForCategory !== cat.id ? (
                                       <p className="text-xs text-slate-400">No items yet.</p>
                                     ) : (
-                                      <div className="space-y-1">
-                                        {itemsByCategory[cat.id].map((item) => (
-                                          <div key={item.id}>
+                                      <SortableList
+                                        items={itemsByCategory[cat.id]}
+                                        getId={(i) => i.id}
+                                        labelFor={(i) => i.name}
+                                        disabled={!canEditContent}
+                                        draggable={(i) => editingItem?.id !== i.id}
+                                        onReorder={(next) => handleReorderItems(cat.id, next)}
+                                        className="space-y-1"
+                                      >
+                                        {(item, itemHandle) => (
+                                          <div>
                                             {editingItem?.id === item.id ? (
                                               <div className="rounded-xl border border-hubble-100 bg-white p-4">
                                                 <ItemForm
                                                   initial={item}
-                                                  defaultSortOrder={item.sortOrder}
                                                   onSave={handleUpdateItem}
                                                   onCancel={() => setEditingItem(null)}
                                                 />
@@ -449,6 +514,7 @@ export function MenuPage() {
                                             ) : (
                                               <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-3 py-2">
                                                 <div className="flex items-center gap-3">
+                                                  {itemHandle}
                                                   {!item.active && (
                                                     <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">hidden</span>
                                                   )}
@@ -487,22 +553,23 @@ export function MenuPage() {
                                               </div>
                                             )}
                                           </div>
-                                        ))}
-                                      </div>
+                                        )}
+                                      </SortableList>
                                     )}
                                   </div>
                                 )}
                               </>
                             )}
                           </div>
-                        ))}
+                        )}
+                        </SortableList>
                       </div>
                     )}
                   </>
                 )}
               </div>
-            ))}
-          </div>
+            )}
+          </SortableList>
         )}
       </Card>
     </>

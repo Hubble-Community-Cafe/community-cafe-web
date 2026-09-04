@@ -31,6 +31,11 @@ interface SortableListProps<T> {
   onReorder: (items: T[]) => void
   /** Hides the handles, for read-only viewers or while another interaction owns the rows. */
   disabled?: boolean
+  /**
+   * Rows this returns false for show no handle and stay put, for a row that is a poor drag target
+   * at the moment, such as an expanded panel. Other rows can still be dragged around them.
+   */
+  draggable?: (item: T) => boolean
   className?: string
   /** Renders one row. The handle is null when dragging is disabled. */
   children: (item: T, handle: ReactNode) => ReactNode
@@ -47,6 +52,7 @@ export function SortableList<T>({
   labelFor,
   onReorder,
   disabled = false,
+  draggable,
   className,
   children,
 }: SortableListProps<T>) {
@@ -99,7 +105,12 @@ export function SortableList<T>({
       <SortableContext items={ids} strategy={verticalListSortingStrategy}>
         <div className={className}>
           {items.map((item) => (
-            <SortableRow key={getId(item)} id={getId(item)} label={labelFor(item)}>
+            <SortableRow
+              key={getId(item)}
+              id={getId(item)}
+              label={labelFor(item)}
+              draggable={draggable ? draggable(item) : true}
+            >
               {(handle) => children(item, handle)}
             </SortableRow>
           ))}
@@ -112,17 +123,19 @@ export function SortableList<T>({
 function SortableRow({
   id,
   label,
+  draggable,
   children,
 }: {
   id: number
   label: string
+  draggable: boolean
   children: (handle: ReactNode) => ReactNode
 }) {
   const {
     attributes, listeners, setNodeRef, setActivatorNodeRef, transform, transition, isDragging,
-  } = useSortable({ id })
+  } = useSortable({ id, disabled: !draggable })
 
-  const handle = (
+  const handle = !draggable ? null : (
     <button
       type="button"
       ref={setActivatorNodeRef}
@@ -130,8 +143,10 @@ function SortableRow({
       {...listeners}
       aria-label={`Reorder ${label}`}
       title={`Drag to reorder ${label}`}
-      // touch-none stops the browser scrolling the page instead of starting the drag.
-      className="shrink-0 cursor-grab touch-none rounded-lg p-1.5 text-slate-300 hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing"
+      // touch-none stops the browser scrolling the page instead of starting the drag. The handle
+      // is a full 44px target on a phone, where the drag has to be pressed and held precisely,
+      // and shrinks back to an icon-sized button once there is a pointer.
+      className="flex min-h-11 min-w-11 shrink-0 cursor-grab touch-none items-center justify-center rounded-lg text-slate-300 hover:bg-slate-100 hover:text-slate-600 active:cursor-grabbing sm:min-h-0 sm:min-w-0 sm:p-1.5"
     >
       <GripVertical className="h-4 w-4" />
     </button>
