@@ -13,104 +13,104 @@ SET FOREIGN_KEY_CHECKS = 1;
 -- IDs 1001-1008: HUBBLE    IDs 1009-1014: METEOR
 -- ============================================================
 
-INSERT INTO menu_category (id, name, kind, availability_note, sort_order, bar, parent_id) VALUES
-  (1001, 'Non-Alcoholic',      'DRINK', NULL,               1, 'HUBBLE', NULL),
-  (1002, 'Beer',               'DRINK', NULL,               2, 'HUBBLE', NULL),
-  (1003, 'Spirits & Wine',     'DRINK', NULL,               3, 'HUBBLE', NULL),
-  (1004, 'Breakfast & Lunch',  'FOOD',  NULL,               4, 'HUBBLE', NULL),
-  (1005, 'Snacks',             'FOOD',  NULL,               5, 'HUBBLE', NULL),
-  (1006, 'Dinner',             'FOOD',  'Weekdays, until 19:30', 6, 'HUBBLE', NULL),
-  (1007, 'Weekend Menu',       'FOOD',  'Weekends only',    7, 'HUBBLE', NULL),
-  (1008, 'Dessert',            'FOOD',  NULL,               8, 'HUBBLE', NULL),
+INSERT INTO menu_category (id, name, kind, availability_note, sort_order, bar, parent_id, active) VALUES
+  (1001, 'Non-Alcoholic',      'DRINK', NULL,               1, 'HUBBLE', NULL, 1),
+  (1002, 'Beer',               'DRINK', NULL,               2, 'HUBBLE', NULL, 1),
+  (1003, 'Spirits & Wine',     'DRINK', NULL,               3, 'HUBBLE', NULL, 1),
+  (1004, 'Breakfast & Lunch',  'FOOD',  NULL,               4, 'HUBBLE', NULL, 1),
+  (1005, 'Snacks',             'FOOD',  NULL,               5, 'HUBBLE', NULL, 1),
+  (1006, 'Dinner',             'FOOD',  'Weekdays, until 19:30', 6, 'HUBBLE', NULL, 1),
+  (1007, 'Weekend Menu',       'FOOD',  'Weekends only',    7, 'HUBBLE', NULL, 1),
+  (1008, 'Dessert',            'FOOD',  NULL,               8, 'HUBBLE', NULL, 1),
 
-  (1009, 'Alcohol Free',       'DRINK', NULL,               1, 'METEOR', NULL),
-  (1010, 'Cocktails & More',   'DRINK', NULL,               2, 'METEOR', NULL),
-  (1011, 'Beer & Wine',        'DRINK', NULL,               3, 'METEOR', NULL),
-  (1012, 'Hot Drinks',         'DRINK', NULL,               4, 'METEOR', NULL),
-  (1013, 'Snacks (All Day)',   'FOOD',  NULL,               5, 'METEOR', NULL),
-  (1014, 'Food (Until 19:30)', 'FOOD',  'Until 19:30',      6, 'METEOR', NULL);
+  (1009, 'Alcohol Free',       'DRINK', NULL,               1, 'METEOR', NULL, 1),
+  (1010, 'Cocktails & More',   'DRINK', NULL,               2, 'METEOR', NULL, 1),
+  (1011, 'Beer & Wine',        'DRINK', NULL,               3, 'METEOR', NULL, 1),
+  (1012, 'Hot Drinks',         'DRINK', NULL,               4, 'METEOR', NULL, 1),
+  (1013, 'Snacks (All Day)',   'FOOD',  NULL,               5, 'METEOR', NULL, 1),
+  (1014, 'Food (Until 19:30)', 'FOOD',  'Until 19:30',      6, 'METEOR', NULL, 1);
 
 -- ============================================================
 -- SUB-CATEGORIES (parent_id points to a tab)
 -- IDs 1-25: HUBBLE    IDs 26-48: METEOR
 -- ============================================================
 
-INSERT INTO menu_category (id, name, kind, availability_note, sort_order, bar, parent_id) VALUES
+INSERT INTO menu_category (id, name, kind, availability_note, sort_order, bar, parent_id, active) VALUES
   -- Hubble: Non-Alcoholic (1001)
-  (1,  'Coffee',               'DRINK', NULL,                        1, 'HUBBLE', 1001),
-  (2,  'Special Coffees',      'DRINK', NULL,                        2, 'HUBBLE', 1001),
-  (3,  'Coffee Extras',        'DRINK', NULL,                        3, 'HUBBLE', 1001),
-  (4,  'Hot Drinks',           'DRINK', NULL,                        4, 'HUBBLE', 1001),
-  (5,  'Cold Drinks',          'DRINK', NULL,                        5, 'HUBBLE', 1001),
-  (6,  'Mocktails',            'DRINK', NULL,                        6, 'HUBBLE', 1001),
-  (7,  'Alcohol-Free Beer',    'DRINK', NULL,                        7, 'HUBBLE', 1001),
+  (1,  'Coffee',               'DRINK', NULL,                        1, 'HUBBLE', 1001, 1),
+  (2,  'Special Coffees',      'DRINK', NULL,                        2, 'HUBBLE', 1001, 1),
+  (3,  'Coffee Extras',        'DRINK', NULL,                        3, 'HUBBLE', 1001, 1),
+  (4,  'Hot Drinks',           'DRINK', NULL,                        4, 'HUBBLE', 1001, 1),
+  (5,  'Cold Drinks',          'DRINK', NULL,                        5, 'HUBBLE', 1001, 1),
+  (6,  'Mocktails',            'DRINK', NULL,                        6, 'HUBBLE', 1001, 1),
+  (7,  'Alcohol-Free Beer',    'DRINK', NULL,                        7, 'HUBBLE', 1001, 1),
 
   -- Hubble: Beer (1002)
-  (8,  'Beers',                'DRINK', NULL,                        1, 'HUBBLE', 1002),
-  (9,  'Cider & Stelzer',      'DRINK', NULL,                        2, 'HUBBLE', 1002),
+  (8,  'Beers',                'DRINK', NULL,                        1, 'HUBBLE', 1002, 1),
+  (9,  'Cider & Stelzer',      'DRINK', NULL,                        2, 'HUBBLE', 1002, 1),
 
   -- Hubble: Spirits & Wine (1003)
-  (10, 'Shots',                'DRINK', NULL,                        1, 'HUBBLE', 1003),
-  (11, 'Wine',                 'DRINK', NULL,                        2, 'HUBBLE', 1003),
-  (12, 'Cocktails',            'DRINK', NULL,                        3, 'HUBBLE', 1003),
+  (10, 'Shots',                'DRINK', NULL,                        1, 'HUBBLE', 1003, 1),
+  (11, 'Wine',                 'DRINK', NULL,                        2, 'HUBBLE', 1003, 1),
+  (12, 'Cocktails',            'DRINK', NULL,                        3, 'HUBBLE', 1003, 1),
 
   -- Hubble: Breakfast & Lunch (1004)
-  (13, 'Yogurt & Breakfast',   'FOOD',  NULL,                        1, 'HUBBLE', 1004),
-  (14, 'Panini',               'FOOD',  'Weekdays only',             2, 'HUBBLE', 1004),
-  (15, 'Buns',                 'FOOD',  NULL,                        3, 'HUBBLE', 1004),
-  (16, 'Lunch Dishes',         'FOOD',  'Weekdays, 12:00 to 19:30', 4, 'HUBBLE', 1004),
-  (17, 'Salads',               'FOOD',  NULL,                        5, 'HUBBLE', 1004),
+  (13, 'Yogurt & Breakfast',   'FOOD',  NULL,                        1, 'HUBBLE', 1004, 1),
+  (14, 'Panini',               'FOOD',  'Weekdays only',             2, 'HUBBLE', 1004, 1),
+  (15, 'Buns',                 'FOOD',  NULL,                        3, 'HUBBLE', 1004, 1),
+  (16, 'Lunch Dishes',         'FOOD',  'Weekdays, 12:00 to 19:30', 4, 'HUBBLE', 1004, 1),
+  (17, 'Salads',               'FOOD',  NULL,                        5, 'HUBBLE', 1004, 1),
 
   -- Hubble: Snacks (1005)
-  (18, 'Snacks',               'FOOD',  NULL,                        1, 'HUBBLE', 1005),
-  (19, 'Sauces',               'FOOD',  NULL,                        2, 'HUBBLE', 1005),
-  (20, 'Snacks to Share',      'FOOD',  NULL,                        3, 'HUBBLE', 1005),
-  (21, 'Fries',                'FOOD',  NULL,                        4, 'HUBBLE', 1005),
+  (18, 'Snacks',               'FOOD',  NULL,                        1, 'HUBBLE', 1005, 1),
+  (19, 'Sauces',               'FOOD',  NULL,                        2, 'HUBBLE', 1005, 1),
+  (20, 'Snacks to Share',      'FOOD',  NULL,                        3, 'HUBBLE', 1005, 1),
+  (21, 'Fries',                'FOOD',  NULL,                        4, 'HUBBLE', 1005, 1),
 
   -- Hubble: Dinner (1006)
-  (22, 'Dinner Dishes',        'FOOD',  'Weekdays, until 19:30',    1, 'HUBBLE', 1006),
-  (23, 'Burger Add-ons',       'FOOD',  NULL,                        2, 'HUBBLE', 1006),
+  (22, 'Dinner Dishes',        'FOOD',  'Weekdays, until 19:30',    1, 'HUBBLE', 1006, 1),
+  (23, 'Burger Add-ons',       'FOOD',  NULL,                        2, 'HUBBLE', 1006, 1),
 
   -- Hubble: Weekend Menu (1007)
-  (24, 'Weekend Menu',         'FOOD',  'Weekends only',             1, 'HUBBLE', 1007),
+  (24, 'Weekend Menu',         'FOOD',  'Weekends only',             1, 'HUBBLE', 1007, 1),
 
   -- Hubble: Dessert (1008)
-  (25, 'Dessert',              'FOOD',  NULL,                        1, 'HUBBLE', 1008),
+  (25, 'Dessert',              'FOOD',  NULL,                        1, 'HUBBLE', 1008, 1),
 
   -- Meteor: Alcohol Free (1009)
-  (26, 'Iced Teas & Lemonades',    'DRINK', NULL,                                               1, 'METEOR', 1009),
-  (27, 'Sodas',                    'DRINK', NULL,                                               2, 'METEOR', 1009),
-  (28, 'Mocktails',                'DRINK', NULL,                                               3, 'METEOR', 1009),
-  (29, 'Alcohol-Free Beer',        'DRINK', NULL,                                               4, 'METEOR', 1009),
+  (26, 'Iced Teas & Lemonades',    'DRINK', NULL,                                               1, 'METEOR', 1009, 1),
+  (27, 'Sodas',                    'DRINK', NULL,                                               2, 'METEOR', 1009, 1),
+  (28, 'Mocktails',                'DRINK', NULL,                                               3, 'METEOR', 1009, 1),
+  (29, 'Alcohol-Free Beer',        'DRINK', NULL,                                               4, 'METEOR', 1009, 1),
 
   -- Meteor: Cocktails & More (1010)
-  (30, 'Cocktails',                'DRINK', NULL,                                               1, 'METEOR', 1010),
-  (31, 'Hard Iced Tea & Lemonade', 'DRINK', NULL,                                               2, 'METEOR', 1010),
-  (32, 'Seltzer',                  'DRINK', NULL,                                               3, 'METEOR', 1010),
-  (33, 'Shots',                    'DRINK', NULL,                                               4, 'METEOR', 1010),
+  (30, 'Cocktails',                'DRINK', NULL,                                               1, 'METEOR', 1010, 1),
+  (31, 'Hard Iced Tea & Lemonade', 'DRINK', NULL,                                               2, 'METEOR', 1010, 1),
+  (32, 'Seltzer',                  'DRINK', NULL,                                               3, 'METEOR', 1010, 1),
+  (33, 'Shots',                    'DRINK', NULL,                                               4, 'METEOR', 1010, 1),
 
   -- Meteor: Beer & Wine (1011)
-  (34, 'Draft Beers',              'DRINK', NULL,                                               1, 'METEOR', 1011),
-  (35, 'Bottled Beers',            'DRINK', NULL,                                               2, 'METEOR', 1011),
-  (36, 'Wine',                     'DRINK', NULL,                                               3, 'METEOR', 1011),
+  (34, 'Draft Beers',              'DRINK', NULL,                                               1, 'METEOR', 1011, 1),
+  (35, 'Bottled Beers',            'DRINK', NULL,                                               2, 'METEOR', 1011, 1),
+  (36, 'Wine',                     'DRINK', NULL,                                               3, 'METEOR', 1011, 1),
 
   -- Meteor: Hot Drinks (1012)
-  (37, 'Coffee',                   'DRINK', NULL,                                               1, 'METEOR', 1012),
-  (38, 'Special Coffee',           'DRINK', NULL,                                               2, 'METEOR', 1012),
-  (39, 'Tea',                      'DRINK', NULL,                                               3, 'METEOR', 1012),
+  (37, 'Coffee',                   'DRINK', NULL,                                               1, 'METEOR', 1012, 1),
+  (38, 'Special Coffee',           'DRINK', NULL,                                               2, 'METEOR', 1012, 1),
+  (39, 'Tea',                      'DRINK', NULL,                                               3, 'METEOR', 1012, 1),
 
   -- Meteor: Snacks (All Day) (1013)
-  (40, 'Snacks',                   'FOOD',  'Snacks cannot be ordered between 19:30 and 20:00', 1, 'METEOR', 1013),
-  (41, 'Snacks to Share',          'FOOD',  NULL,                                               2, 'METEOR', 1013),
-  (42, 'Sweet',                    'FOOD',  NULL,                                               3, 'METEOR', 1013),
+  (40, 'Snacks',                   'FOOD',  'Snacks cannot be ordered between 19:30 and 20:00', 1, 'METEOR', 1013, 1),
+  (41, 'Snacks to Share',          'FOOD',  NULL,                                               2, 'METEOR', 1013, 1),
+  (42, 'Sweet',                    'FOOD',  NULL,                                               3, 'METEOR', 1013, 1),
 
   -- Meteor: Food (Until 19:30) (1014)
-  (43, 'Pasta',                    'FOOD',  'Until 19:30',                                     1, 'METEOR', 1014),
-  (44, 'Rice Dishes',              'FOOD',  'Until 19:30',                                     2, 'METEOR', 1014),
-  (45, 'Wraps',                    'FOOD',  'Until 19:30',                                     3, 'METEOR', 1014),
-  (46, 'Flatbread',                'FOOD',  'Until 19:30',                                     4, 'METEOR', 1014),
-  (47, 'Loaded',                   'FOOD',  'Until 19:30',                                     5, 'METEOR', 1014),
-  (48, 'Schnitzel & Burgers',      'FOOD',  'Until 19:30',                                     6, 'METEOR', 1014);
+  (43, 'Pasta',                    'FOOD',  'Until 19:30',                                     1, 'METEOR', 1014, 1),
+  (44, 'Rice Dishes',              'FOOD',  'Until 19:30',                                     2, 'METEOR', 1014, 1),
+  (45, 'Wraps',                    'FOOD',  'Until 19:30',                                     3, 'METEOR', 1014, 1),
+  (46, 'Flatbread',                'FOOD',  'Until 19:30',                                     4, 'METEOR', 1014, 1),
+  (47, 'Loaded',                   'FOOD',  'Until 19:30',                                     5, 'METEOR', 1014, 1),
+  (48, 'Schnitzel & Burgers',      'FOOD',  'Until 19:30',                                     6, 'METEOR', 1014, 1);
 
 -- ============================================================
 -- ITEMS - HUBBLE

@@ -13,7 +13,10 @@
   "scripts": {
     "lint": "npm run lint --workspaces --if-present",
     "test:run": "npm run test:run --workspaces --if-present",
-    "build": "npm run build --workspaces --if-present"
+    "build": "npm run build --workspaces --if-present",
+    "dev:doctor": "bash scripts/dev-doctor.sh",
+    "dev:seed": "bash scripts/dev-seed.sh",
+    "dev:smoke": "node scripts/dev-smoke.mjs"
   },
   "devDependencies": {
     "vitest": "^4.1.11"
