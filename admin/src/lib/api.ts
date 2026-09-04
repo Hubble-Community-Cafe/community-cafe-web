@@ -478,7 +478,8 @@ export interface BoardTermRequest {
   type: BoardType
   bar: BarLocation | null
   current: boolean
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
   groupPhotoId: number | null
   photoCredit: string | null
 }
@@ -487,7 +488,8 @@ export interface BoardMemberRequest {
   name: string
   role: string | null
   photoId: number | null
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
 }
 
 // ── Board endpoints ────────────────────────────────────────────────────────────
@@ -524,6 +526,19 @@ export const updateBoardMember = (id: number, req: BoardMemberRequest) =>
 export const deleteBoardMember = (id: number) =>
   fetchWithAuth(`/api/admin/board/members/${id}`, { method: 'DELETE' })
 
+/** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
+export const reorderBoardTerms = (orderedIds: number[]) =>
+  sendNoContent('/api/admin/board/terms/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+
+export const reorderBoardMembers = (termId: number, orderedIds: number[]) =>
+  sendNoContent(`/api/admin/board/terms/${termId}/members/reorder`, {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
+
 // ── Vacancy types ──────────────────────────────────────────────────────────────
 export interface Vacancy {
   id: number
@@ -551,7 +566,8 @@ export interface VacancyRequest {
   imageId: number | null
   bar: BarLocation | null
   active: boolean
-  sortOrder: number
+  /** Omit to append on create, or to leave the position alone on update. Set by dragging. */
+  sortOrder?: number | null
 }
 
 // ── Vacancy endpoints ──────────────────────────────────────────────────────────
@@ -572,6 +588,13 @@ export const updateVacancy = (id: number, req: VacancyRequest) =>
 
 export const deleteVacancy = (id: number) =>
   fetchWithAuth(`/api/admin/vacancies/${id}`, { method: 'DELETE' })
+
+/** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
+export const reorderVacancies = (orderedIds: number[]) =>
+  sendNoContent('/api/admin/vacancies/reorder', {
+    method: 'PATCH',
+    body: JSON.stringify({ orderedIds }),
+  })
 
 // ── Association types ──────────────────────────────────────────────────────────
 export interface Association {

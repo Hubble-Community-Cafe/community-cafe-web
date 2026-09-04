@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X, ChevronDown, ChevronRight } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
+import { SortableList } from '../components/SortableList'
 import { usePermissions } from '../lib/usePermissions'
 import {
   fetchBoardTerms, createBoardTerm, updateBoardTerm, deleteBoardTerm,
   createBoardMember, updateBoardMember, deleteBoardMember,
+  reorderBoardTerms, reorderBoardMembers,
   type BoardTerm, type BoardMember, type BoardTermRequest, type BoardMemberRequest,
   type BarLocation, type BoardType, type MediaAsset,
 } from '../lib/api'
@@ -36,7 +38,6 @@ function MemberForm({
 }) {
   const [name, setName] = useState(initial?.name ?? '')
   const [role, setRole] = useState(initial?.role ?? '')
-  const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0)
   const [photo, setPhoto] = useState<MediaAsset | null>(
     initial?.photoId != null
       ? { id: initial.photoId, url: initial.photoUrl ?? '', alt: initial.photoAlt ?? null,
@@ -52,7 +53,9 @@ function MemberForm({
     setSaving(true)
     setError(null)
     try {
-      await onSave({ name, role: role || null, photoId: photo?.id ?? null, sortOrder })
+      // Position is set by dragging: omitting it appends a new member and leaves an
+      // existing one where they are.
+      await onSave({ name, role: role || null, photoId: photo?.id ?? null })
     } catch {
       setError('Failed to save member')
       setSaving(false)
@@ -73,11 +76,6 @@ function MemberForm({
           <input value={role} onChange={(e) => setRole(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="President" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600">Sort order</label>
-          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
-            className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600">Photo</label>
@@ -106,35 +104,46 @@ function MemberForm({
 function MemberRow({
   member,
   canEdit,
+  handle,
+  onEditingChange,
   onUpdated,
   onDeleted,
 }: {
   member: BoardMember
   canEdit: boolean
+  /** Drag handle from the surrounding SortableList; null for a viewer or while editing. */
+  handle: ReactNode
+  onEditingChange: (editing: boolean) => void
   onUpdated: (m: BoardMember) => void
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
   const [deleting, setDeleting] = useState(false)
 
+  const setEditingState = (value: boolean) => {
+    setEditing(value)
+    onEditingChange(value)
+  }
+
   if (editing && canEdit) {
     return (
-      <li className="py-2">
+      <div className="py-2">
         <MemberForm
           initial={member}
           onSave={async (req) => {
             const updated = await updateBoardMember(member.id, req)
             onUpdated(updated)
-            setEditing(false)
+            setEditingState(false)
           }}
-          onCancel={() => setEditing(false)}
+          onCancel={() => setEditingState(false)}
         />
-      </li>
+      </div>
     )
   }
 
   return (
-    <li className="flex items-center gap-3 border-t border-slate-100 py-2">
+    <div className="flex items-center gap-3 border-t border-slate-100 py-2">
+      {handle}
       {member.photoUrl ? (
         <img src={member.photoUrl} alt={member.photoAlt ?? member.name}
           className="h-9 w-9 shrink-0 rounded-full object-cover" />
@@ -149,7 +158,7 @@ function MemberRow({
       </div>
       {canEdit && (
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditing(true)}
+          <button onClick={() => setEditingState(true)}
             className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -164,7 +173,7 @@ function MemberRow({
           </button>
         </div>
       )}
-    </li>
+    </div>
   )
 }
 
@@ -183,7 +192,6 @@ function TermForm({
   const [type, setType] = useState<BoardType>(initial?.type ?? 'EXECUTIVE')
   const [bar, setBar] = useState<BarLocation | ''>(initial?.bar ?? '')
   const [current, setCurrent] = useState(initial?.current ?? false)
-  const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0)
   const [photoCredit, setPhotoCredit] = useState(initial?.photoCredit ?? '')
   const [groupPhoto, setGroupPhoto] = useState<MediaAsset | null>(
     initial?.groupPhotoId != null
@@ -201,7 +209,9 @@ function TermForm({
     setError(null)
     try {
       await onSave({
-        label, type, bar: bar || null, current, sortOrder,
+        // Position is set by dragging: omitting it appends a new term and leaves an
+        // existing one where it is.
+        label, type, bar: bar || null, current,
         groupPhotoId: groupPhoto?.id ?? null,
         photoCredit: photoCredit || null,
       })
@@ -236,11 +246,6 @@ function TermForm({
             <option value="HUBBLE">Hubble</option>
             <option value="METEOR">Meteor</option>
           </select>
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-slate-600">Sort order</label>
-          <input type="number" value={sortOrder} onChange={(e) => setSortOrder(Number(e.target.value))}
-            className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div className="flex items-end pb-1.5">
           <label className="flex items-center gap-2 text-sm text-slate-700">
@@ -283,11 +288,14 @@ function TermForm({
 function TermCard({
   term,
   canEdit,
+  handle,
   onUpdated,
   onDeleted,
 }: {
   term: BoardTerm
   canEdit: boolean
+  /** Drag handle from the surrounding SortableList; null for a viewer. */
+  handle: ReactNode
   onUpdated: (t: BoardTerm) => void
   onDeleted: () => void
 }) {
@@ -295,7 +303,22 @@ function TermCard({
   const [editingTerm, setEditingTerm] = useState(false)
   const [addingMember, setAddingMember] = useState(false)
   const [members, setMembers] = useState<BoardMember[]>(term.members)
+  const [editingMemberId, setEditingMemberId] = useState<number | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [reorderError, setReorderError] = useState<string | null>(null)
+
+  /** Optimistic, rolled back on failure, like the menu lists. */
+  const handleReorderMembers = async (next: BoardMember[]) => {
+    const previous = members
+    setMembers(next.map((m, i) => ({ ...m, sortOrder: i })))
+    setReorderError(null)
+    try {
+      await reorderBoardMembers(term.id, next.map((m) => m.id))
+    } catch {
+      setMembers(previous)
+      setReorderError('Could not save the new order. Please try again.')
+    }
+  }
 
   const handleDeleteTerm = async () => {
     if (!confirm(`Delete term "${term.label}" and all its members?`)) return
@@ -323,6 +346,7 @@ function TermCard({
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center gap-3 px-5 py-4">
+        {handle}
         <button onClick={() => setExpanded((v) => !v)}
           className="shrink-0 text-slate-400 hover:text-slate-600">
           {expanded
@@ -366,17 +390,26 @@ function TermCard({
 
       {expanded && (
         <div className="border-t border-slate-100 px-5 pb-4">
-          <ul>
-            {members.map((m) => (
+          {reorderError && <p className="pt-2 text-xs text-red-600">{reorderError}</p>}
+          <SortableList
+            items={members}
+            getId={(m) => m.id}
+            labelFor={(m) => m.name}
+            disabled={!canEdit}
+            draggable={(m) => editingMemberId !== m.id}
+            onReorder={handleReorderMembers}
+          >
+            {(m, handle) => (
               <MemberRow
-                key={m.id}
                 member={m}
                 canEdit={canEdit}
+                handle={handle}
+                onEditingChange={(editing) => setEditingMemberId(editing ? m.id : null)}
                 onUpdated={(updated) => setMembers((prev) => prev.map((x) => x.id === updated.id ? updated : x))}
                 onDeleted={() => setMembers((prev) => prev.filter((x) => x.id !== m.id))}
               />
-            ))}
-          </ul>
+            )}
+          </SortableList>
 
           {canEdit && (addingMember ? (
             <div className="mt-3">
@@ -417,6 +450,19 @@ export function BoardPage() {
       .finally(() => setLoading(false))
   }, [])
 
+  /** Optimistic, rolled back on failure, like the menu lists. */
+  const handleReorderTerms = async (next: BoardTerm[]) => {
+    const previous = terms
+    setTerms(next.map((t, i) => ({ ...t, sortOrder: i })))
+    setError(null)
+    try {
+      await reorderBoardTerms(next.map((t) => t.id))
+    } catch {
+      setTerms(previous)
+      setError('Could not save the new order. Please try again.')
+    }
+  }
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
@@ -456,17 +502,24 @@ export function BoardPage() {
         <p className="text-sm text-slate-400">No board terms yet.</p>
       )}
 
-      <div className="space-y-4">
-        {terms.map((term) => (
+      <SortableList
+        items={terms}
+        getId={(t) => t.id}
+        labelFor={(t) => t.label}
+        disabled={!canEditContent}
+        onReorder={handleReorderTerms}
+        className="space-y-4"
+      >
+        {(term, handle) => (
           <TermCard
-            key={term.id}
             term={term}
             canEdit={canEditContent}
+            handle={handle}
             onUpdated={(updated) => setTerms((prev) => prev.map((t) => t.id === updated.id ? updated : t))}
             onDeleted={() => setTerms((prev) => prev.filter((t) => t.id !== term.id))}
           />
-        ))}
-      </div>
+        )}
+      </SortableList>
     </div>
   )
 }
