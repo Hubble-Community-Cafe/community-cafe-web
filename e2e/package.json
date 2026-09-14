@@ -14,8 +14,8 @@
     "stack:down": "docker compose -f ../docker-compose.e2e.yml down -v"
   },
   "devDependencies": {
-    "@playwright/test": "^1.62.1",
+    "@playwright/test": "^1.63.0",
     "typescript": "^7.0.2",
-    "@types/node": "^26.4.0"
+    "@types/node": "^26.4.1"
   }
 }
