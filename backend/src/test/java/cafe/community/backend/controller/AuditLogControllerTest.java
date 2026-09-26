@@ -36,7 +36,7 @@ class AuditLogControllerTest {
     @BeforeEach
     void clean() {
         auditRepo.deleteAll();
-        userRepo.deleteAll();
+        userRepo.deleteAllInBatch();
     }
 
     private RequestPostProcessor as(String oid, AdminRole role) {
