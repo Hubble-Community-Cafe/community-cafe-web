@@ -78,12 +78,12 @@ public class FakeAuroraClient extends AuroraClient {
     }
 
     @Override
-    public List<Aurora.Poster> getStaticPosters() {
+    public List<Aurora.Poster> getPosters() {
         return List.of(
-                new Aurora.Poster(3, null, null,
-                        new Aurora.PosterFile("/static/local-posters/closed.png", "Closed slide.png"), null),
-                new Aurora.Poster(4, null, null,
-                        new Aurora.PosterFile("/static/local-posters/last-call.png", "Last Call slide.png"), null));
+                new Aurora.Poster(3, "Closed slide", "img",
+                        List.of(new Aurora.PosterFile("/static/posters/closed.png", "closed.png")), null),
+                new Aurora.Poster(4, "Last Call slide", "img",
+                        List.of(new Aurora.PosterFile("/static/posters/last-call.png", "last-call.png")), null));
     }
 
     @Override
@@ -91,7 +91,7 @@ public class FakeAuroraClient extends AuroraClient {
         if (activePosterId == null) {
             return new Aurora.StaticPosterState(null, true);
         }
-        Aurora.Poster active = getStaticPosters().stream()
+        Aurora.Poster active = getPosters().stream()
                 .filter(p -> p.id() == activePosterId)
                 .findFirst()
                 .orElse(null);

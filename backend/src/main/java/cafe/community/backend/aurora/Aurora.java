@@ -30,22 +30,27 @@ public final class Aurora {
     public record ScreenHandler(String id, String name, List<Screen> entities) {
     }
 
-    /** The stored file behind a static poster. {@code name} is the original upload filename. */
+    /** One stored file of a poster. {@code name} is the original upload filename. */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record PosterFile(String location, String name) {
     }
 
     /**
-     * A static poster, from {@code GET /handler/screen/poster/static/items}.
+     * A poster, from {@code GET /handler/screen/poster/items}. Mirrors Aurora's
+     * {@code PosterResponse}, trimmed to what we use.
      *
-     * <p>Aurora gives static posters no name of their own, so a scene is pinned to a poster by
-     * {@code id} and the admin picker labels it with the filename or URI.
+     * <p>Since Aurora's monorepo migration, static and carousel posters share one table and any of
+     * them can be shown by the static poster handler. A scene is pinned to a poster by {@code id}.
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    public record Poster(long id, String createdAt, String updatedAt, PosterFile file, String uri) {
+    public record Poster(long id, String name, String type, List<PosterFile> files, String uri) {
 
-        /** Best available label, since Aurora stores no name. */
+        /** Best available label for the admin picker. */
         public String label() {
+            if (name != null && !name.isBlank()) {
+                return name;
+            }
+            PosterFile file = firstFile();
             if (file != null && file.name() != null && !file.name().isBlank()) {
                 return file.name();
             }
@@ -55,9 +60,17 @@ public final class Aurora {
             return "Poster " + id;
         }
 
-        /** Path of the poster image, relative to the Aurora client host. Null when there is no file. */
+        /**
+         * Path of the poster image, relative to the Aurora host. Null unless this is an image
+         * poster with a file, since videos and external pages cannot be shown as a thumbnail.
+         */
         public String imagePath() {
-            return file == null ? null : file.location();
+            PosterFile file = firstFile();
+            return "img".equals(type) && file != null ? file.location() : null;
+        }
+
+        private PosterFile firstFile() {
+            return files == null || files.isEmpty() ? null : files.get(0);
         }
     }
 
