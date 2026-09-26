@@ -137,7 +137,7 @@ class ScreenSceneServiceTest {
                         new Aurora.Screen(1, "Hubble"), new Aurora.Screen(2, "Plaza"))),
                 new Aurora.ScreenHandler("u2", STATIC, List.of())));
         when(aurora.getStaticPosterState()).thenReturn(new Aurora.StaticPosterState(null, true));
-        when(aurora.getStaticPosters()).thenReturn(List.of());
+        when(aurora.getPosters()).thenReturn(List.of());
 
         ScreenSceneStatusDto status = service.status();
 
@@ -152,8 +152,8 @@ class ScreenSceneServiceTest {
         when(aurora.getScreenHandlers()).thenReturn(List.of(
                 new Aurora.ScreenHandler("u1", STATIC, List.of(new Aurora.Screen(1, "Hubble")))));
         when(aurora.getStaticPosterState()).thenReturn(new Aurora.StaticPosterState(
-                new Aurora.Poster(3, null, null, null, null), true));
-        when(aurora.getStaticPosters()).thenReturn(List.of());
+                new Aurora.Poster(3, "Closed", "img", List.of(), null), true));
+        when(aurora.getPosters()).thenReturn(List.of());
 
         assertThat(service.status().currentScene()).isEqualTo("CLOSED");
     }
@@ -164,7 +164,7 @@ class ScreenSceneServiceTest {
                 new Aurora.ScreenHandler("u1", CAROUSEL, List.of(new Aurora.Screen(1, "Hubble"))),
                 new Aurora.ScreenHandler("u2", STATIC, List.of(new Aurora.Screen(2, "Plaza")))));
         when(aurora.getStaticPosterState()).thenReturn(new Aurora.StaticPosterState(null, true));
-        when(aurora.getStaticPosters()).thenReturn(List.of());
+        when(aurora.getPosters()).thenReturn(List.of());
 
         assertThat(service.status().currentScene()).isEqualTo("MIXED");
     }
@@ -173,14 +173,14 @@ class ScreenSceneServiceTest {
     void status_buildsPosterThumbnailUrlFromTheClientHost() {
         when(aurora.getScreenHandlers()).thenReturn(List.of());
         when(aurora.getStaticPosterState()).thenReturn(new Aurora.StaticPosterState(null, true));
-        when(aurora.getStaticPosters()).thenReturn(List.of(
-                new Aurora.Poster(3, null, null,
-                        new Aurora.PosterFile("/static/local-posters/abc.png", "Closed slide.png"), null),
-                new Aurora.Poster(9, null, null, null, null)));
+        when(aurora.getPosters()).thenReturn(List.of(
+                new Aurora.Poster(3, "Closed slide", "img",
+                        List.of(new Aurora.PosterFile("/static/posters/abc.png", "abc.png")), null),
+                new Aurora.Poster(9, null, "video", List.of(), null)));
 
         assertThat(service.status().posters()).containsExactly(
-                new ScreenSceneStatusDto.Poster(3, "Closed slide.png",
-                        "https://aurora-client.test/static/local-posters/abc.png"),
+                new ScreenSceneStatusDto.Poster(3, "Closed slide",
+                        "https://aurora-client.test/static/posters/abc.png"),
                 new ScreenSceneStatusDto.Poster(9, "Poster 9", null));
     }
 

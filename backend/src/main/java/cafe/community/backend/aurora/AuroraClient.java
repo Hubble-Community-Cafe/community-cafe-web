@@ -117,10 +117,13 @@ public class AuroraClient {
                 .toBodilessEntity());
     }
 
-    /** All static posters available to show. */
-    public List<Aurora.Poster> getStaticPosters() {
-        List<Aurora.Poster> posters = call("GET /handler/screen/poster/static/items", () -> restClient.get()
-                .uri("/handler/screen/poster/static/items")
+    /**
+     * All posters, any of which the static poster handler can show. Aurora dropped the separate
+     * {@code /handler/screen/poster/static/items} list when it merged static and carousel posters.
+     */
+    public List<Aurora.Poster> getPosters() {
+        List<Aurora.Poster> posters = call("GET /handler/screen/poster/items", () -> restClient.get()
+                .uri("/handler/screen/poster/items")
                 .retrieve()
                 .onStatus(HttpStatusCode::isError, this::fail)
                 .body(POSTER_LIST));

@@ -136,7 +136,7 @@ public class ScreenSceneService {
 
     private List<ScreenSceneStatusDto.Poster> posterOptions() {
         List<ScreenSceneStatusDto.Poster> options = new ArrayList<>();
-        for (Aurora.Poster poster : aurora.getStaticPosters()) {
+        for (Aurora.Poster poster : aurora.getPosters()) {
             options.add(new ScreenSceneStatusDto.Poster(poster.id(), poster.label(), imageUrl(poster)));
         }
         return options;

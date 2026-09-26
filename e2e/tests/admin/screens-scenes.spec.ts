@@ -58,7 +58,7 @@ test.describe('Admin screen scenes', () => {
     const screens = new ScreensAdminPage(page)
     await screens.goto()
 
-    await screens.posterSelect('Closed').selectOption({ label: 'Last Call slide.png' })
+    await screens.posterSelect('Closed').selectOption({ label: 'Last Call slide' })
     await expect(screens.posterSelect('Closed')).toHaveValue('4')
 
     // The choice survives a reload, so it is persisted rather than local state.

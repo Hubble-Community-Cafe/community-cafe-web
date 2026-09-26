@@ -50,7 +50,7 @@ class AdminScreenSceneControllerTest {
 
     @BeforeEach
     void clean() {
-        userRepo.deleteAll();
+        userRepo.deleteAllInBatch();
     }
 
     private RequestPostProcessor as(String oid, AdminRole role) {

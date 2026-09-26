@@ -149,22 +149,27 @@ class AuroraClientTest {
     }
 
     @Test
-    void getStaticPosters_parsesLabelFallbacks() {
-        server.expect(requestTo(BASE + "/api/handler/screen/poster/static/items"))
+    void getPosters_readsTheUnifiedPosterList() {
+        server.expect(requestTo(BASE + "/api/handler/screen/poster/items"))
+                .andExpect(method(org.springframework.http.HttpMethod.GET))
+                .andExpect(header("x-api-key", API_KEY))
                 .andRespond(withSuccess("""
                         [
-                          {"id":3,"createdAt":"2026-01-01","updatedAt":"2026-01-01",
-                           "file":{"location":"local-posters/closed.png","name":"closed.png"}},
-                          {"id":4,"createdAt":"2026-01-01","updatedAt":"2026-01-01",
-                           "uri":"https://example.test/last-call"},
-                          {"id":5,"createdAt":"2026-01-01","updatedAt":"2026-01-01"}
+                          {"id":3,"name":"Closed","type":"img","enabled":true,"protected":false,
+                           "files":[{"id":1,"location":"/static/posters/closed.png","name":"closed.png"}]},
+                          {"id":4,"name":"","type":"img",
+                           "files":[{"id":2,"location":"/static/posters/lc.png","name":"last-call.png"}]},
+                          {"id":5,"name":"","type":"extern","files":[],"uri":"https://example.test/x"},
+                          {"id":6,"name":"","type":"video","files":[]}
                         ]
                         """, MediaType.APPLICATION_JSON));
 
-        List<Aurora.Poster> posters = client.getStaticPosters();
+        List<Aurora.Poster> posters = client.getPosters();
 
         assertThat(posters).extracting(Aurora.Poster::label)
-                .containsExactly("closed.png", "https://example.test/last-call", "Poster 5");
+                .containsExactly("Closed", "last-call.png", "https://example.test/x", "Poster 6");
+        assertThat(posters).extracting(Aurora.Poster::imagePath)
+                .containsExactly("/static/posters/closed.png", "/static/posters/lc.png", null, null);
         server.verify();
     }
 

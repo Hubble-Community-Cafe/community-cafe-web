@@ -48,7 +48,7 @@ class AdminAuthorizationTest {
 
     @BeforeEach
     void clean() {
-        userRepo.deleteAll();
+        userRepo.deleteAllInBatch();
     }
 
     /** Seed a user with a fixed role so the role filter assigns its authorities. */
