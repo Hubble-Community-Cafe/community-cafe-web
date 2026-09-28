@@ -24,6 +24,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -36,7 +37,8 @@ import java.util.List;
  * authorization, RBAC, and audit-actor attribution behave as in production.</p>
  *
  * <p>An e2e request sends {@code X-Test-Oid} (a seeded admin's Azure OID), plus
- * optional {@code X-Test-Email} and {@code X-Test-Name}. Never active outside e2e.</p>
+ * optional {@code X-Test-Email}, {@code X-Test-Name} and {@code X-Test-Groups}. Never active
+ * outside e2e.</p>
  */
 @Configuration
 @EnableWebSecurity
@@ -101,6 +103,9 @@ public class E2eSecurityConfig {
      * filter then assigns authorities from the database.
      */
     static class TestHeaderAuthFilter extends OncePerRequestFilter {
+        /** Matches ALLOWED_GROUP_ID of the backend in docker-compose.e2e.yml. */
+        static final String E2E_STAFF_GROUP = "e2e-staff-group";
+
         @Override
         protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
                 throws ServletException, IOException {
@@ -112,6 +117,14 @@ public class E2eSecurityConfig {
                 if (email == null || email.isBlank()) email = oid + "@e2e.test";
                 String name = request.getHeader("X-Test-Name");
                 if (name == null || name.isBlank()) name = oid;
+                // Staff group membership, as the Entra groups claim. Defaults to the e2e staff
+                // group so the backend group check passes; a spec can send X-Test-Groups to
+                // impersonate a tenant member outside that group.
+                String groupsHeader = request.getHeader("X-Test-Groups");
+                List<String> groups = groupsHeader == null
+                        ? List.of(E2E_STAFF_GROUP)
+                        : Arrays.stream(groupsHeader.split(",")).map(String::trim)
+                                .filter(g -> !g.isEmpty()).toList();
 
                 Instant now = Instant.now();
                 Jwt jwt = Jwt.withTokenValue("e2e-test-token")
@@ -120,6 +133,7 @@ public class E2eSecurityConfig {
                         .claim("oid", oid)
                         .claim("preferred_username", email)
                         .claim("name", name)
+                        .claim("groups", groups)
                         .issuedAt(now)
                         .expiresAt(now.plusSeconds(3600))
                         .build();

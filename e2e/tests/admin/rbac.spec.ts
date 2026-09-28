@@ -1,7 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { resetBackend, setUiRole, seedAssociation } from '../../fixtures/backend'
+import { BACKEND_URL } from '../../playwright.config'
+import { resetBackend, setUiRole, seedAssociation, seedUser } from '../../fixtures/backend'
 import { AdminApp } from '../../pages/AdminApp'
-import { captureScreenshot } from '../../fixtures/evidence'
+import { attachJson, captureScreenshot } from '../../fixtures/evidence'
 
 test.describe('Admin role-based access', () => {
   test.beforeEach(async ({ request }) => {
@@ -51,5 +52,33 @@ test.describe('Admin role-based access', () => {
 
     await admin.goto('/associations')
     await expect(admin.addButton(/Add association/)).toBeVisible()
+  })
+
+  test('a tenant member outside the staff group is refused and never provisioned', async ({ request }, testInfo) => {
+    // The e2e backend runs with ALLOWED_GROUP_ID=e2e-staff-group, and the header login puts that
+    // group in the token by default. X-Test-Groups impersonates someone outside the staff group.
+    await seedUser(request, { oid: 'e2e-admin', role: 'ADMIN' })
+    await setUiRole(request, 'VIEWER')
+    const outsider = { 'X-Test-Oid': 'e2e-outsider', 'X-Test-Groups': 'some-other-group' }
+
+    const outsiderMe = await request.get(`${BACKEND_URL}/api/admin/users/me`, { headers: outsider })
+    const outsiderEvents = await request.get(`${BACKEND_URL}/api/admin/events/HUBBLE`, { headers: outsider })
+    const staffMe = await request.get(`${BACKEND_URL}/api/admin/users/me`, {
+      headers: { 'X-Test-Oid': 'e2e-user' },
+    })
+    const users = await request.get(`${BACKEND_URL}/api/admin/users`, { headers: { 'X-Test-Oid': 'e2e-admin' } })
+    const userOids: string[] = (await users.json()).map((u: { azureOid: string }) => u.azureOid)
+
+    await attachJson(testInfo, 'rbac-group-results.json', {
+      outsiderMe: outsiderMe.status(),
+      outsiderEvents: outsiderEvents.status(),
+      staffMe: staffMe.status(),
+      userOids,
+    })
+
+    expect(outsiderMe.status()).toBe(403)
+    expect(outsiderEvents.status()).toBe(403)
+    expect(staffMe.status()).toBe(200) // staff group members are unaffected
+    expect(userOids).not.toContain('e2e-outsider') // no admin_user row was created
   })
 })

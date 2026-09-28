@@ -58,6 +58,8 @@ services:
       - SPRING_DATASOURCE_USERNAME=cafeweb
       - SPRING_DATASOURCE_PASSWORD=e2e_password
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      # Backend staff-group check, matched by the default groups claim of the e2e header login.
+      - ALLOWED_GROUP_ID=e2e-staff-group
       - MEDIA_DIR=/data/media
       - MEDIA_BASE_URL=http://127.0.0.1:8090
       # Forms deliver to Mailpit; the suite asserts on the captured messages.
