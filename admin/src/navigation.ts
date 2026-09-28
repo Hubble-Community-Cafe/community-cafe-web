@@ -24,8 +24,6 @@ export interface NavItem {
   to: string
   icon: LucideIcon
   requires?: NavRequirement
-  /** Marks modules not yet built, so the UI can show a "coming soon" tag. */
-  placeholder?: boolean
 }
 
 export interface NavSection {

@@ -15,7 +15,6 @@ import { isE2E } from './lib/e2eAuth'
 // opened (the menu editor brings the drag-and-drop library). The Suspense is in Layout.
 const UsersPage = lazy(() => import('./pages/UsersPage').then((m) => ({ default: m.UsersPage })))
 const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })))
-const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage').then((m) => ({ default: m.PlaceholderPage })))
 const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })))
 const DailyDishPage = lazy(() => import('./pages/DailyDishPage').then((m) => ({ default: m.DailyDishPage })))
 const OpeningHoursPage = lazy(() => import('./pages/OpeningHoursPage').then((m) => ({ default: m.OpeningHoursPage })))
@@ -100,8 +99,6 @@ function RequireRole({ need, children }: { need: 'viewer' | 'editor' | 'admin'; 
   return allowed ? <>{children}</> : <Navigate to="/" replace />
 }
 
-const CONTENT_MODULES: { path: string; title: string }[] = []
-
 function App() {
   return (
     <ErrorBoundary>
@@ -183,17 +180,6 @@ function App() {
             />
             {/* Switching the screens is a bar-shift action, open to any signed-in staff. */}
             <Route path="screens" element={<ScreensPage />} />
-            {CONTENT_MODULES.map((m) => (
-              <Route
-                key={m.path}
-                path={m.path}
-                element={
-                  <RequireRole need="viewer">
-                    <PlaceholderPage title={m.title} />
-                  </RequireRole>
-                }
-              />
-            ))}
             <Route
               path="users"
               element={

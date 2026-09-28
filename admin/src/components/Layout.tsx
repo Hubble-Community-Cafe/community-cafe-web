@@ -68,11 +68,6 @@ export function Layout() {
                 >
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>
-                  {item.placeholder && (
-                    <span className="ml-auto rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
-                      soon
-                    </span>
-                  )}
                 </NavLink>
               </li>
             ))}
