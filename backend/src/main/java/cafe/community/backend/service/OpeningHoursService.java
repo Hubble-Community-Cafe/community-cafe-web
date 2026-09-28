@@ -13,7 +13,10 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -22,6 +25,7 @@ public class OpeningHoursService {
 
     private static final ZoneId TZ = ZoneId.of("Europe/Amsterdam");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
+    private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
 
     private final OpeningHoursRepository hoursRepo;
     private final HoursOverrideRepository overrideRepo;
@@ -105,17 +109,79 @@ public class OpeningHoursService {
     public HoursOverrideDto createOverride(BarLocation bar, HoursOverrideRequest req) {
         HoursOverride o = new HoursOverride();
         o.setBar(bar);
+        applyAndValidate(o, req);
+        HoursOverride saved = overrideRepo.save(o);
+        String label = bar.name() + " " + saved.getDate();
+        auditService.recordCreate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, List.of(),
+                "Added override for " + label + ": " + describe(saved));
+        return HoursOverrideDto.from(saved);
+    }
+
+    /** Change an existing override: its date, status, times and note. The bar stays the same. */
+    public HoursOverrideDto updateOverride(Long id, HoursOverrideRequest req) {
+        HoursOverride o = overrideRepo.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Override not found: " + id));
+        String oldDate = o.getDate().toString();
+        String oldStatus = describe(o);
+        String oldNote = o.getNote();
+
+        applyAndValidate(o, req);
+        HoursOverride saved = overrideRepo.save(o);
+
+        List<FieldChange> changes = new ArrayList<>();
+        if (!oldDate.equals(saved.getDate().toString())) changes.add(new FieldChange("date", oldDate, saved.getDate().toString()));
+        if (!oldStatus.equals(describe(saved))) changes.add(new FieldChange("status", oldStatus, describe(saved)));
+        if (!Objects.equals(oldNote, saved.getNote())) changes.add(new FieldChange("note", oldNote, saved.getNote()));
+        String label = saved.getBar().name() + " " + saved.getDate();
+        auditService.recordUpdate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, changes,
+                "Updated override for " + label + ": " + describe(saved));
+        return HoursOverrideDto.from(saved);
+    }
+
+    /**
+     * Copy a request onto an override, enforcing the rules staff see as messages: one override per
+     * bar and date (two would make today's status ambiguous), a closed day has no times, and an open
+     * day has both an opening and a closing time or neither (neither shows plain "Open"). A closing
+     * time before the opening time means past midnight, e.g. 20:00 to 02:00.
+     */
+    private void applyAndValidate(HoursOverride o, HoursOverrideRequest req) {
+        overrideRepo.findByBarAndDate(o.getBar(), req.date())
+                .filter(existing -> !existing.getId().equals(o.getId()))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("There is already an override for "
+                            + req.date().format(DAY_FMT) + ". Edit that one instead.");
+                });
+
+        LocalTime open = null;
+        LocalTime close = null;
+        if (!req.closed()) {
+            boolean hasOpen = req.open() != null && !req.open().isBlank();
+            boolean hasClose = req.close() != null && !req.close().isBlank();
+            if (hasOpen != hasClose) {
+                throw new IllegalArgumentException(
+                        "Enter both an opening and a closing time, or leave both empty to show \"Open\".");
+            }
+            if (hasOpen) {
+                open = LocalTime.parse(req.open(), TIME_FMT);
+                close = LocalTime.parse(req.close(), TIME_FMT);
+                if (open.equals(close)) {
+                    throw new IllegalArgumentException("The opening and closing time cannot be the same.");
+                }
+            }
+        }
         o.setDate(req.date());
         o.setClosed(req.closed());
-        o.setOpen(req.open() != null ? LocalTime.parse(req.open(), TIME_FMT) : null);
-        o.setClose(req.close() != null ? LocalTime.parse(req.close(), TIME_FMT) : null);
-        o.setNote(req.note());
-        HoursOverride saved = overrideRepo.save(o);
-        String label = bar.name() + " " + req.date();
-        auditService.recordCreate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, List.of(),
-                "Added override for " + label + ": " + (req.closed() ? "Closed" : "Open")
-                + (req.note() != null ? " (" + req.note() + ")" : ""));
-        return HoursOverrideDto.from(saved);
+        o.setOpen(open);
+        o.setClose(close);
+        o.setNote(req.note() == null || req.note().isBlank() ? null : req.note().trim());
+    }
+
+    /** "Closed", "Open" or "Open 20:00 to 02:00", plus the note, for the audit log. */
+    private static String describe(HoursOverride o) {
+        String status = o.isClosed() ? "Closed"
+                : o.getOpen() != null ? "Open " + o.getOpen().format(TIME_FMT) + " to " + o.getClose().format(TIME_FMT)
+                : "Open";
+        return status + (o.getNote() != null ? " (" + o.getNote() + ")" : "");
     }
 
     /** Delete a date override by id. */

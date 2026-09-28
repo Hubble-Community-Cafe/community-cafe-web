@@ -61,6 +61,13 @@ public class AdminOpeningHoursController {
         return service.createOverride(bar, req);
     }
 
+    /** Change a date override (date, status, times, note). */
+    @PutMapping("/overrides/{id}")
+    @PreAuthorize("hasRole('EDITOR')")
+    public HoursOverrideDto updateOverride(@PathVariable Long id, @Valid @RequestBody HoursOverrideRequest req) {
+        return service.updateOverride(id, req);
+    }
+
     /** Remove a date override. */
     @DeleteMapping("/overrides/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)

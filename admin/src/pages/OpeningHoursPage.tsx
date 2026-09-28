@@ -3,7 +3,7 @@ import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import {
   fetchWeeklyHours, upsertDay, closeDay,
-  fetchOverrides, createOverride, deleteOverride,
+  fetchOverrides, createOverride, updateOverride, deleteOverride,
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
@@ -153,65 +153,118 @@ function DayRow({
   )
 }
 
+/** "Open 20:00 to 02:00", "Open" or "Closed", as the override shows on the public sites. */
+function overrideStatus(o: HoursOverride): string {
+  if (o.closed) return 'Closed'
+  return o.open && o.close ? `Open ${o.open} to ${o.close}` : 'Open'
+}
+
+/** Adds an override, or edits one when `initial` is given. */
 function OverrideForm({
-  bar, onCreated,
+  bar, initial, onSaved, onCancel,
 }: {
   bar: BarLocation
-  onCreated: (o: HoursOverride) => void
+  initial?: HoursOverride
+  onSaved: (o: HoursOverride) => void
+  onCancel?: () => void
 }) {
   const fieldId = useId()
-  const [date, setDate] = useState('')
-  const [closed, setClosed] = useState(true)
-  const [note, setNote] = useState('')
+  const [date, setDate] = useState(initial?.date ?? '')
+  const [closed, setClosed] = useState(initial?.closed ?? true)
+  const [open, setOpen] = useState(initial?.open ?? '')
+  const [close, setClose] = useState(initial?.close ?? '')
+  const [note, setNote] = useState(initial?.note ?? '')
   // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
-  useUnsavedChangesGuard(useChangedSince({ date, closed, note }))
+  useUnsavedChangesGuard(useChangedSince({ date, closed, open, close, note }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!date) return
+    if (!closed && !!open !== !!close) {
+      setError('Enter both an opening and a closing time, or leave both empty to show "Open".')
+      return
+    }
     setSaving(true)
     setError(null)
+    const req = {
+      date, closed,
+      open: closed ? null : open || null,
+      close: closed ? null : close || null,
+      note: note.trim() || null,
+    }
     try {
-      const created = await createOverride(bar, { date, closed, open: null, close: null, note: note || null })
-      onCreated(created)
-      setDate('')
-      setNote('')
-      setClosed(true)
-    } catch {
-      setError('Failed to create override')
+      const saved = initial ? await updateOverride(initial.id, req) : await createOverride(bar, req)
+      onSaved(saved)
+      if (!initial) {
+        setDate('')
+        setNote('')
+        setOpen('')
+        setClose('')
+        setClosed(true)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not save the override. Please try again.')
     } finally {
       setSaving(false)
     }
   }
 
+  const label = 'block text-xs font-medium text-slate-600'
+  const input = 'mt-1 rounded border border-slate-200 px-2 py-1.5 text-sm'
   return (
-    <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
+    <form onSubmit={submit} className={initial ? 'flex flex-wrap items-end gap-3 py-2.5' : 'mt-4 flex flex-wrap items-end gap-3'}
+      aria-label={initial ? `Edit the override for ${initial.date}` : 'Add an override'}>
       <div>
-        <label htmlFor={`${fieldId}-date`} className="block text-xs font-medium text-slate-600">Date</label>
+        <label htmlFor={`${fieldId}-date`} className={label}>Date</label>
         <input id={`${fieldId}-date`} type="date" value={date} onChange={(e) => setDate(e.target.value)} required
-          className="mt-1 rounded border border-slate-200 px-2 py-1.5 text-sm" />
+          className={input} />
       </div>
       <div>
-        <label htmlFor={`${fieldId}-status`} className="block text-xs font-medium text-slate-600">Status</label>
+        <label htmlFor={`${fieldId}-status`} className={label}>Status</label>
         <select id={`${fieldId}-status`} value={closed ? 'closed' : 'open'} onChange={(e) => setClosed(e.target.value === 'closed')}
-          className="mt-1 rounded border border-slate-200 px-2 py-1.5 text-sm">
+          className={input}>
           <option value="closed">Closed</option>
           <option value="open">Special hours (open)</option>
         </select>
       </div>
-      <div className="flex-1">
-        <label htmlFor={`${fieldId}-note`} className="block text-xs font-medium text-slate-600">Note (optional)</label>
+      {!closed && (
+        <>
+          <div>
+            <label htmlFor={`${fieldId}-open`} className={label}>Opens (optional)</label>
+            <input id={`${fieldId}-open`} type="time" value={open} onChange={(e) => setOpen(e.target.value)}
+              className={`${input} tabular-nums`} />
+          </div>
+          <div>
+            <label htmlFor={`${fieldId}-close`} className={label}>Closes (optional)</label>
+            <input id={`${fieldId}-close`} type="time" value={close} onChange={(e) => setClose(e.target.value)}
+              className={`${input} tabular-nums`} />
+          </div>
+        </>
+      )}
+      <div className="min-w-48 flex-1">
+        <label htmlFor={`${fieldId}-note`} className={label}>Note (optional)</label>
         <input id={`${fieldId}-note`} type="text" value={note} onChange={(e) => setNote(e.target.value)}
           placeholder="e.g. Bank holiday, Special event"
-          className="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm" />
+          className={`${input} w-full`} />
       </div>
       <button type="submit" disabled={saving || !date}
         className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
-        <Plus className="h-4 w-4" /> Add
+        {initial ? <><Check className="h-4 w-4" /> Save changes</> : <><Plus className="h-4 w-4" /> Add</>}
       </button>
-      {error && <p className="w-full text-xs text-red-600">{error}</p>}
+      {onCancel && (
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
+          className="rounded bg-slate-100 px-2.5 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
+          <X className="h-4 w-4" />
+        </button>
+      )}
+      {!closed && (
+        <p className="w-full text-xs text-slate-600">
+          Give both times for a partial opening (a closing time before the opening time means past midnight), or leave both empty to show "Open".
+        </p>
+      )}
+      {error && <p role="alert" className="w-full text-xs text-red-600">{error}</p>}
     </form>
   )
 }
@@ -221,11 +274,13 @@ export function OpeningHoursPage() {
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [slots, setSlots] = useState<WeeklyHours[]>([])
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
+  const [editingOverride, setEditingOverride] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   const load = async (b: BarLocation) => {
     setLoading(true)
+    setEditingOverride(null)
     setError(null)
     try {
       const [h, o] = await Promise.all([fetchWeeklyHours(b), fetchOverrides(b)])
@@ -247,8 +302,15 @@ export function OpeningHoursPage() {
     })
   }
 
+  const byDate = (list: HoursOverride[]) => [...list].sort((a, b) => a.date.localeCompare(b.date))
+
   const handleOverrideCreated = (o: HoursOverride) => {
-    setOverrides((prev) => [...prev, o].sort((a, b) => a.date.localeCompare(b.date)))
+    setOverrides((prev) => byDate([...prev, o]))
+  }
+
+  const handleOverrideUpdated = (o: HoursOverride) => {
+    setOverrides((prev) => byDate(prev.map((existing) => (existing.id === o.id ? o : existing))))
+    setEditingOverride(null)
   }
 
   const handleDeleteOverride = async (id: number) => {
@@ -329,28 +391,39 @@ export function OpeningHoursPage() {
             )}
             {overrides.length > 0 && (
               <ul className="mt-4 divide-y divide-slate-100">
-                {overrides.map((o) => (
+                {overrides.map((o) => editingOverride === o.id && canEditContent ? (
+                  <li key={o.id}>
+                    <OverrideForm bar={bar} initial={o} onSaved={handleOverrideUpdated}
+                      onCancel={() => setEditingOverride(null)} />
+                  </li>
+                ) : (
                   <li key={o.id} className="flex items-center justify-between py-2.5">
                     <div>
                       <span className="text-sm font-medium text-slate-700">{o.date}</span>
                       <span className={`ml-3 rounded-full px-2 py-0.5 text-xs font-semibold ${
                         o.closed ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-700'
                       }`}>
-                        {o.closed ? 'Closed' : 'Open'}
+                        {overrideStatus(o)}
                       </span>
                       {o.note && <span className="ml-2 text-xs text-slate-500">{o.note}</span>}
                     </div>
                     {canEditContent && (
-                      <button onClick={() => handleDeleteOverride(o.id)} aria-label={`Delete the override for ${o.date}`}
-                        className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <div className="flex shrink-0 gap-1">
+                        <button onClick={() => setEditingOverride(o.id)} aria-label={`Edit the override for ${o.date}`}
+                          className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
+                          <Pencil className="h-4 w-4" />
+                        </button>
+                        <button onClick={() => handleDeleteOverride(o.id)} aria-label={`Delete the override for ${o.date}`}
+                          className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     )}
                   </li>
                 ))}
               </ul>
             )}
-            {canEditContent && <OverrideForm bar={bar} onCreated={handleOverrideCreated} />}
+            {canEditContent && <OverrideForm key={bar} bar={bar} onSaved={handleOverrideCreated} />}
           </section>
         </>
       )}

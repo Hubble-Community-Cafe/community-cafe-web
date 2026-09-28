@@ -117,7 +117,12 @@ The weekly schedule is shown on the home page and in the footer of that cafe's s
       },
       {
         title: 'Date overrides',
-        content: `Use an **override** for a single date that differs from the normal week: a holiday, a closing for an event, or different hours. Mark it as closed or give special hours, and add a short **note** (for example *Christmas*). Upcoming overrides appear on the site under *Special dates*.`,
+        content: `Use an **override** for a single date that differs from the normal week: a holiday, a closing for an event, or different hours. Add a short **note** (for example *Christmas* or *LED Party*). Upcoming overrides appear on the site under *Special dates*.
+
+- **Closed**: the cafe is closed that day.
+- **Special hours (open)**: give an **opening and a closing time** for a partial opening, for example 20:00 to 02:00 (a closing time before the opening time means past midnight). The site then shows those times. Leave both empty to show plain *Open*.
+
+Use the pencil next to an override to change its date, status, times or note. There can be only one override per date for each cafe.`,
       },
       {
         title: 'The open or closed banner',

@@ -46,7 +46,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Menu reorder by dragging (mouse, keyboard, touch) | ✅ | n/a | ✅ | ✅ |
 | Menu bulk edit (one price across a section, move items) | ✅ | n/a | ✅ | ⬜ |
 | Daily dinner dish | ✅ | n/a | ✅ | ✅ |
-| Opening hours (+ CMS footer) | ✅ | ✅ | ✅ | ✅ |
+| Opening hours (+ CMS footer, editable date overrides with times) | ✅ | ✅ | ✅ | ✅ |
 | Status banner (Meteor) | n/a | ✅ | n/a | ✅ |
 | Events | ✅ | ✅ | ✅ | ✅ |
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
