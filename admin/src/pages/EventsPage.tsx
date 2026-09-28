@@ -6,6 +6,7 @@ import {
   type BarLocation, type CafeEvent, type EventRequest,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 
@@ -34,6 +35,8 @@ function EventForm({
   const [price, setPrice] = useState(initial?.price ?? '')
   const [subscribeLink, setSubscribeLink] = useState(initial?.subscribeLink ?? '')
   const [published, setPublished] = useState(initial?.published ?? true)
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ title, description, date, startTime, price, subscribeLink, published }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

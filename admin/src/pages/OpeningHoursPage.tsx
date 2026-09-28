@@ -7,6 +7,7 @@ import {
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
@@ -42,6 +43,10 @@ function DayRow({
   const [kitchenClose, setKitchenClose] = useState(slot?.kitchenClose ?? '')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  // The row stays mounted, so compare with the saved hours while it is being edited.
+  useUnsavedChangesGuard(editing && (
+    open !== (slot?.open ?? '11:00') || close !== (slot?.close ?? '23:00')
+    || kitchenOpen !== (slot?.kitchenOpen ?? '') || kitchenClose !== (slot?.kitchenClose ?? '')))
 
   const startEdit = () => {
     setOpen(slot?.open ?? '11:00')
@@ -158,6 +163,8 @@ function OverrideForm({
   const [date, setDate] = useState('')
   const [closed, setClosed] = useState(true)
   const [note, setNote] = useState('')
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ date, closed, note }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

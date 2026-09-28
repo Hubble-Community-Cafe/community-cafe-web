@@ -11,6 +11,7 @@ import {
   type BarLocation, type BoardType, type MediaAsset,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const TYPE_LABELS: Record<BoardType, string> = {
   EXECUTIVE: 'Executive board',
@@ -45,6 +46,8 @@ function MemberForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, role, photo: photo?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -200,6 +203,8 @@ function TermForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ label, type, bar, current, photoCredit, groupPhoto: groupPhoto?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

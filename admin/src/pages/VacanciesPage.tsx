@@ -8,6 +8,7 @@ import {
   type Vacancy, type VacancyRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const BAR_LABELS: Record<string, string> = { HUBBLE: 'Hubble', METEOR: 'Meteor' }
 
@@ -34,6 +35,8 @@ function VacancyForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ title, description, hours, type, applyEmail, applyLink, bar, active, image: image?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { Route, Routes } from 'react-router-dom'
+import { renderInDataRouter } from './renderInDataRouter'
 import { Layout } from '../components/Layout'
 import { useRole } from '../lib/RoleContext'
 import type { AdminRole } from '../lib/api'
@@ -21,11 +22,7 @@ function renderLayoutAs(role: AdminRole) {
     error: null,
     refetch: () => {},
   })
-  return render(
-    <MemoryRouter>
-      <Layout />
-    </MemoryRouter>,
-  )
+  return renderInDataRouter(<Layout />)
 }
 
 describe('Layout role-gated navigation', () => {
@@ -91,15 +88,13 @@ describe('Layout skip link and focus on navigation', () => {
       role: 'EDITOR', isLoading: false, error: null, refetch: () => {},
     })
     Element.prototype.scrollIntoView = vi.fn()
-    return render(
-      <MemoryRouter initialEntries={['/']}>
-        <Routes>
-          <Route element={<Layout />}>
-            <Route path="/" element={<p>Dashboard content</p>} />
-            <Route path="/menu" element={<p>Menu content</p>} />
-          </Route>
-        </Routes>
-      </MemoryRouter>,
+    return renderInDataRouter(
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<p>Dashboard content</p>} />
+          <Route path="/menu" element={<p>Menu content</p>} />
+        </Route>
+      </Routes>,
     )
   }
 

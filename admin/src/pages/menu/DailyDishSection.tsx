@@ -8,6 +8,7 @@ import {
   type DailyDish,
   type DailyDishRequest,
 } from '../../lib/api'
+import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 
 function DishForm({
   initial,
@@ -22,6 +23,8 @@ function DishForm({
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : '')
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ date, name, description, price }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

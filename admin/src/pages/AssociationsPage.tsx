@@ -7,6 +7,7 @@ import {
   type Association, type AssociationRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 function AssociationForm({
   initial,
@@ -25,6 +26,8 @@ function AssociationForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, bar, logo: logo?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 

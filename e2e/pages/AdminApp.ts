@@ -39,6 +39,11 @@ export class AdminApp {
     return dialog
   }
 
+  /** The "Discard unsaved changes?" question shown when leaving a page with unsaved input. */
+  unsavedChangesDialog(): Locator {
+    return this.page.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
+  }
+
   async expectDashboardRole(role: string): Promise<void> {
     await this.page.goto('/')
     await expect(this.page.getByText(role, { exact: true })).toBeVisible()

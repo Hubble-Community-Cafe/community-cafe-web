@@ -37,7 +37,10 @@ export const GUIDES: Record<string, Guide> = {
 - The **daily dish**, **vacancies**, **associations** and the supervisory board only have a page on the Hubble site.
 - Anything marked **Shared** appears for both cafes.
 
-The dashboard shows today's dish, upcoming events and special opening hours, so you can spot what needs attention.`,
+The dashboard shows today's dish, upcoming events and special opening hours, so you can spot what needs attention.
+
+## Unsaved changes
+If you have typed something in a form and click another page (or the back button), the admin asks whether to **discard your changes** or **keep editing**, so a mis-tap does not lose your work. Closing the tab shows a similar warning from your browser.`,
       },
       { title: 'Roles', content: ROLES },
       {

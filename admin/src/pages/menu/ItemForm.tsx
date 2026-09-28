@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { MenuItem, MenuItemRequest } from '../../lib/api'
+import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 
 interface Props {
   initial?: MenuItem
@@ -31,6 +32,8 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
   const [dietaryTags, setDietaryTags] = useState(listToCsv(initial?.dietaryTags ?? []))
   const [allergens, setAllergens] = useState(listToCsv(initial?.allergens ?? []))
   const [active, setActive] = useState(initial?.active ?? true)
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, description, regularPrice, studentPrice, sizeOptions, dietaryTags, allergens, active }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()
