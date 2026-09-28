@@ -1,12 +1,15 @@
 name: Security
 
+# Triggers: pull requests into main and develop, pushes to main, weekly and manual. Not pushes to
+# develop, which its pull requests already cover (otherwise every commit is scanned twice).
+#
 # Blocking policy: a job fails only on CRITICAL findings (OWASP CVSS 9 or higher, npm audit
 # critical, Trivy CRITICAL with a fix available, and any leaked secret). Everything else is
 # reported in the Security tab (code scanning) or the job log without failing the check.
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main, develop]
   schedule:
@@ -84,9 +87,14 @@ jobs:
         working-directory: e2e
         run: npm audit --audit-level=critical
 
+  # Weekly and manual only: the first run downloads the whole NVD database (about an hour), and
+  # runs on every push kept being cancelled by the next one before the cache could be saved.
+  # Scheduled runs use main, whose cache every branch can restore, so later runs are incremental.
+  # To seed or refresh the cache, run this workflow manually on main (Actions > Security).
   owasp-dependency-check:
     name: Dependency audit (backend, OWASP)
     runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
     permissions:
       contents: read
       security-events: write

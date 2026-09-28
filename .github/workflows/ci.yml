@@ -1,8 +1,10 @@
 name: CI
 
 on:
+  # Pushes to main only (they build and publish the images). Work on develop is tested through its
+  # pull requests, so a commit is not tested twice by both a push run and a pull_request run.
   push:
-    branches: [main, develop]
+    branches: [main]
   pull_request:
     branches: [main, develop]   # develop: integration branch, also Dependabot's target-branch
 
