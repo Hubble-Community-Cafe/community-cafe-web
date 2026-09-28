@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { useMsal } from '@azure/msal-react'
 import { BarChart3, ExternalLink, LogOut, Menu, X } from 'lucide-react'
@@ -163,7 +163,10 @@ export function Layout() {
         )}
 
         <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 overflow-y-auto p-4 focus:outline-none md:p-8">
-          <Outlet />
+          {/* Editors load on demand: keep the sidebar while one downloads. */}
+          <Suspense fallback={null}>
+            <Outlet />
+          </Suspense>
         </main>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { type ReactNode } from 'react'
+import { lazy, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useIsAuthenticated } from '@azure/msal-react'
 import { Loader2, ShieldX } from 'lucide-react'
@@ -6,22 +6,25 @@ import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
-import { UsersPage } from './pages/UsersPage'
-import { AuditLogPage } from './pages/AuditLogPage'
-import { PlaceholderPage } from './pages/PlaceholderPage'
-import { MenuPage } from './pages/MenuPage'
-import { DailyDishPage } from './pages/DailyDishPage'
-import { OpeningHoursPage } from './pages/OpeningHoursPage'
-import { EventsPage } from './pages/EventsPage'
-import { MediaPage } from './pages/MediaPage'
-import { BoardPage } from './pages/BoardPage'
-import { VacanciesPage } from './pages/VacanciesPage'
-import { AssociationsPage } from './pages/AssociationsPage'
-import { ScreensPage } from './pages/ScreensPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
 import { isE2E } from './lib/e2eAuth'
+
+// The layout, sign-in and dashboard are in the main bundle; each editor downloads when it is first
+// opened (the menu editor brings the drag-and-drop library). The Suspense is in Layout.
+const UsersPage = lazy(() => import('./pages/UsersPage').then((m) => ({ default: m.UsersPage })))
+const AuditLogPage = lazy(() => import('./pages/AuditLogPage').then((m) => ({ default: m.AuditLogPage })))
+const PlaceholderPage = lazy(() => import('./pages/PlaceholderPage').then((m) => ({ default: m.PlaceholderPage })))
+const MenuPage = lazy(() => import('./pages/MenuPage').then((m) => ({ default: m.MenuPage })))
+const DailyDishPage = lazy(() => import('./pages/DailyDishPage').then((m) => ({ default: m.DailyDishPage })))
+const OpeningHoursPage = lazy(() => import('./pages/OpeningHoursPage').then((m) => ({ default: m.OpeningHoursPage })))
+const EventsPage = lazy(() => import('./pages/EventsPage').then((m) => ({ default: m.EventsPage })))
+const MediaPage = lazy(() => import('./pages/MediaPage').then((m) => ({ default: m.MediaPage })))
+const BoardPage = lazy(() => import('./pages/BoardPage').then((m) => ({ default: m.BoardPage })))
+const VacanciesPage = lazy(() => import('./pages/VacanciesPage').then((m) => ({ default: m.VacanciesPage })))
+const AssociationsPage = lazy(() => import('./pages/AssociationsPage').then((m) => ({ default: m.AssociationsPage })))
+const ScreensPage = lazy(() => import('./pages/ScreensPage').then((m) => ({ default: m.ScreensPage })))
 
 function FullScreen({ children }: { children: ReactNode }) {
   return (

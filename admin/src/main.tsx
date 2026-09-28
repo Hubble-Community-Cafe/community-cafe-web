@@ -4,12 +4,16 @@ import { PublicClientApplication, EventType, type AccountInfo } from '@azure/msa
 import { MsalProvider } from '@azure/msal-react'
 import { BrowserRouter } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
+import { installChunkReload } from '@cafe/shared-web'
 import { msalConfig } from './lib/authConfig'
 import { setMsalInstance } from './lib/api'
 import App from './App'
 import './index.css'
 
 declare const __APP_VERSION__: string
+
+// Pages load on demand; recover a tab left open across a deploy (see installChunkReload).
+installChunkReload()
 
 const sentryDsn = window.__RUNTIME_CONFIG__?.SENTRY_DSN ?? import.meta.env.VITE_SENTRY_DSN
 if (sentryDsn && !sentryDsn.startsWith('__')) {
