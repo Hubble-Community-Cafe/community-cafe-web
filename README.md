@@ -89,6 +89,10 @@ cd backend && ./mvnw spring-boot:run
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.
 
+## Content-Security-Policy
+
+All three frontends send an enforcing Content-Security-Policy, so the browser blocks any script, image, style or request from an origin that is not listed. The public sites set it in their `nginx.conf`; the admin keeps it in [`admin/nginx-csp.conf`](admin/nginx-csp.conf), rendered at container startup with the origin of `API_URL` filled in. When a feature needs another origin (an external API, image host or embed), add it to the right policy or the browser will block it. The admin allows `https://aurora-client.hubble.cafe` for Screens poster thumbnails, so a different `AURORA_POSTER_BASE_URL` on the backend also needs that entry changed. To try an admin policy change without blocking anything, set `CSP_REPORT_ONLY=true` on the admin container: violations are then only logged in the browser console. The e2e spec `admin/csp` fails on any violation.
+
 ## Domains and certificates
 
 Each site has one **canonical host**, `hubble.cafe` and `meteor.cafe`. Everything else is an alias that resolves to the same container:

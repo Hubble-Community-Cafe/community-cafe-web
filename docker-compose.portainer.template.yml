@@ -127,6 +127,9 @@ services:
       # Entra security group whose members may access the admin
       - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
       - SENTRY_DSN=__SENTRY_DSN_ADMIN__
+      # The admin sends an enforcing Content-Security-Policy (admin/nginx-csp.conf). Uncomment to only
+      # report violations in the browser console instead of blocking, e.g. while checking a new host.
+      # - CSP_REPORT_ONLY=true
 
 volumes:
   cafe_media:
