@@ -11,6 +11,8 @@ test.describe('Hubble SEO meta', () => {
       .toHaveAttribute('content', 'Discount policy | Hubble Community Cafe')
     await expect(page.locator('link[rel="canonical"]'))
       .toHaveAttribute('href', /\/cafe\/discount-policy$/)
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /\/og-image\.jpg$/)
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image')
   })
 
   test('updates the title on client-side navigation', async ({ page }) => {

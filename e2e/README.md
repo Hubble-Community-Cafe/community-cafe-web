@@ -39,7 +39,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
 | Canonical host (alias domains 301, legacy permalinks stay https) | ✅ | ✅ | n/a | n/a |
-| SEO meta (title/OG/canonical/404 noindex) | 🟡 | ⬜ | n/a | n/a |
+| SEO meta (title/OG/preview image/canonical/404 noindex) | ✅ | ✅ | n/a | n/a |
 | Plaza kiosk screen (`/plaza-page`) | 🟡 | n/a | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
 | Menu visibility toggles (hide item / section / tab) | ✅ | n/a | ✅ | ⬜ |

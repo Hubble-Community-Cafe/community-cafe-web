@@ -2,7 +2,8 @@ import { useEffect } from 'react'
 import { applyPageMeta } from '@cafe/shared-web'
 
 const SITE = 'Hubble Community Cafe'
-const DEFAULT_IMAGE = '/hubble-logo.png'
+// Link-preview image, 1200x630 (the 1.91:1 ratio WhatsApp, Facebook and LinkedIn crop to).
+const DEFAULT_IMAGE = '/og-image.jpg'
 
 /**
  * Set per-page SEO meta. `title` is the page name (the site name is appended); pass an empty
