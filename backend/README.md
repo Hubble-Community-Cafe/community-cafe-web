@@ -19,4 +19,4 @@ cd backend
 ./mvnw -q -DskipTests package     # boot jar in target/
 ```
 
-Config is environment-driven (see `.env.example`): `SPRING_DATASOURCE_*`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `INITIAL_ADMIN_OID`, `CORS_ALLOWED_ORIGINS`, `SENTRY_DSN`. Profiles: default (dev), `prod` (validate schema, Swagger off), `e2e` (header-auth bridge), `test` (in-memory H2).
+Config is environment-driven (see `.env.example`): `SPRING_DATASOURCE_*`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `INITIAL_ADMIN_OID`, `ALLOWED_GROUP_ID` (optional staff group required in the token's `groups` claim, 403 otherwise), `CORS_ALLOWED_ORIGINS`, `SENTRY_DSN`. Profiles: default (dev), `prod` (validate schema, Swagger off), `e2e` (header-auth bridge), `test` (in-memory H2).

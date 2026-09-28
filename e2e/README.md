@@ -54,6 +54,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Media library (upload, size limit) | n/a | n/a | 🟡 | ⬜ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
+| Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Identity refresh under concurrency (regression) | n/a | n/a | ✅ | n/a |
 | Aurora screen scenes (open / last call / closed) | n/a | n/a | ✅ | ⬜ |
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |

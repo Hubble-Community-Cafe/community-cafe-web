@@ -60,6 +60,8 @@ Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT
 > signed in once and were provisioned as VIEWER, setting it afterwards changes nothing. Promote
 > the account directly instead, which `npm run dev:doctor` prints the exact command for.
 
+**Staff group in the backend.** `ALLOWED_GROUP_ID` on the admin container only hides the admin UI from people outside the staff group. Set the same group id as `ALLOWED_GROUP_ID` on the backend to also refuse their API calls: tokens without the group get a 403 and no user row is created for them. The backend reads the group from the `groups` claim of the access token, so first enable it in the app registration (Token configuration > Add groups claim > "Security groups", ticked for the Access token), then set the variable, or every staff member is refused. Entra leaves the claim out for users in more than 200 groups; the backend then refuses them too. Where the Entra plan allows it, also set "Assignment required?" to Yes on the enterprise application and assign only the staff group. The local dev stack leaves the backend check off.
+
 ### Checking the local stack
 
 Three commands, all aimed at the dev stack above (not the Playwright stack in `e2e/`):

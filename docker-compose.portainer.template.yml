@@ -43,6 +43,11 @@ services:
       - AZURE_CLIENT_SECRET=__AZURE_CLIENT_SECRET__
       # Azure object id of the first admin (only used on first-ever login)
       - INITIAL_ADMIN_OID=__INITIAL_ADMIN_OID__
+      # Staff group enforced by the backend (same group as the admin's ALLOWED_GROUP_ID). Enable
+      # only AFTER the app registration emits the groups claim in access tokens (Token
+      # configuration > Add groups claim > Security groups > Access token), or every staff
+      # member is refused with 403. See the README, section on the Entra app registration.
+      # - ALLOWED_GROUP_ID=__AZURE_GROUP_ID__
       # Forms mail. provider=graph sends via Microsoft Graph; each from address must be a real,
       # sendable mailbox in the tenant. Meteor complaints send from the meteor address, Hubble
       # forms from the Hubble one. Recipients default to the lists below; override if they change.
