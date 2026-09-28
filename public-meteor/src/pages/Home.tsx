@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
-import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
+import {
+  getWeeklyHours, getUpcomingOverrides, reportApiFailure, type WeeklyHours, type HoursOverride,
+} from '@cafe/shared-web'
 import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
 
@@ -41,14 +43,19 @@ export function Home() {
   usePageSeo('', 'Meteor Community Cafe on the TU/e campus: a lively cafe and meeting space by day, a relaxed spot for events by night.')
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [hoursLoaded, setHoursLoaded] = useState(false)
+  const [hoursError, setHoursError] = useState(false)
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
 
   useEffect(() => {
     getWeeklyHours('METEOR')
       .then(setHours)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('opening-hours', err)
+        setHoursError(true)
+      })
       .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('METEOR').then(setOverrides).catch(() => {})
+    getUpcomingOverrides('METEOR').then(setOverrides)
+      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
   }, [])
 
   const closedDays = DAY_ORDER.filter((d) => !hours.find((h) => h.dayOfWeek === d))
@@ -110,7 +117,11 @@ export function Home() {
           {!hoursLoaded && (
             <p className="mt-6 text-sm text-meteor-700/50">Loading…</p>
           )}
-          {hoursLoaded && (
+          {/* Without this, a failed load would list every day as closed. */}
+          {hoursError && (
+            <p className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
+          )}
+          {hoursLoaded && !hoursError && (
             <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
               {grouped.map(({ label, open, close }) => (
                 <div key={label} className="flex items-center justify-between py-3">

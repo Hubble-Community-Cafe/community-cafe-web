@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getVacancies, type Vacancy } from '@cafe/shared-web'
+import { getVacancies, reportApiFailure, type Vacancy } from '@cafe/shared-web'
 import { usePageSeo } from '../lib/seo'
 
 const TEAM_PHOTOS = [
@@ -49,11 +49,15 @@ export function VacanciesPage() {
   usePageSeo('Vacancies', 'Open positions and volunteer roles at Hubble Community Cafe.')
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     getVacancies('HUBBLE')
       .then(setVacancies)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('vacancies', err)
+        setError(true)
+      })
       .finally(() => setLoaded(true))
   }, [])
 
@@ -112,6 +116,9 @@ export function VacanciesPage() {
           {/* Vacancy listings */}
           {!loaded && (
             <p className="mt-10 text-sm text-hubble-700/50">Loading…</p>
+          )}
+          {error && (
+            <p className="mt-10 text-sm text-red-600">Could not load the open positions. Please try again later.</p>
           )}
           {loaded && vacancies.length > 0 && (
             <div className="mt-10 space-y-4">

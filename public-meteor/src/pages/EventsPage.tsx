@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
-import { getUpcomingEvents, type CafeEvent } from '@cafe/shared-web'
+import { getUpcomingEvents, reportApiFailure, type CafeEvent } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { usePageSeo } from '../lib/seo'
 
@@ -53,11 +53,15 @@ export function EventsPage() {
   usePageSeo('Agenda', 'Upcoming events at Meteor Community Cafe.')
   const [events, setEvents] = useState<CafeEvent[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     getUpcomingEvents('METEOR')
       .then(setEvents)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('events', err)
+        setError(true)
+      })
       .finally(() => setLoaded(true))
   }, [])
 
@@ -66,7 +70,10 @@ export function EventsPage() {
       {!loaded && (
         <p className="text-sm text-meteor-700/50">Loading…</p>
       )}
-      {loaded && events.length === 0 && (
+      {error && (
+        <p className="text-sm text-red-700">Could not load the events. Please try again later.</p>
+      )}
+      {loaded && !error && events.length === 0 && (
         <p className="text-sm text-meteor-700/70">No upcoming events at the moment. Check back soon!</p>
       )}
       {loaded && events.length > 0 && (

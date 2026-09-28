@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
-  getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours,
+  getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours, reportApiFailure,
   DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
 } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
@@ -35,14 +35,19 @@ export function Home() {
   usePageSeo('', 'Hubble Community Cafe on the TU/e campus: food, drinks, events, and a living room for over 70 student associations.')
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [hoursLoaded, setHoursLoaded] = useState(false)
+  const [hoursError, setHoursError] = useState(false)
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
 
   useEffect(() => {
     getWeeklyHours('HUBBLE')
       .then(setHours)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('opening-hours', err)
+        setHoursError(true)
+      })
       .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('HUBBLE').then(setOverrides).catch(() => {})
+    getUpcomingOverrides('HUBBLE').then(setOverrides)
+      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
   }, [])
 
   const allDays = DAY_ORDER.map((d) => ({ day: d, slot: hours.find((h) => h.dayOfWeek === d) ?? null }))
@@ -97,7 +102,10 @@ export function Home() {
         {!hoursLoaded && (
           <p className="mt-6 text-center text-sm text-hubble-700/50">Loading…</p>
         )}
-        {hoursLoaded && hours.length === 0 && (
+        {hoursError && (
+          <p className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
+        )}
+        {hoursLoaded && !hoursError && hours.length === 0 && (
           <p className="mt-6 text-center text-sm text-hubble-700/50">Opening times coming soon.</p>
         )}
         {hoursLoaded && hours.length > 0 && (

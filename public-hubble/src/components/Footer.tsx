@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Mail, MapPin, Phone } from 'lucide-react'
 import {
-  getWeeklyHours, groupWeeklyHours, DAY_LABELS, DAY_ORDER, type WeeklyHours,
+  getWeeklyHours, groupWeeklyHours, reportApiFailure, DAY_LABELS, DAY_ORDER, type WeeklyHours,
 } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
 
@@ -14,7 +14,8 @@ function FooterHours() {
   useEffect(() => {
     getWeeklyHours('HUBBLE')
       .then(setHours)
-      .catch(() => {})
+      // No message in the footer: it just leaves the hours out, but the failure is reported.
+      .catch((err: unknown) => void reportApiFailure('footer-hours', err))
       .finally(() => setLoaded(true))
   }, [])
 

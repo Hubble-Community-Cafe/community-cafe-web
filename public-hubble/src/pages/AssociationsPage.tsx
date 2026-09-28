@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getAssociations, type Association } from '@cafe/shared-web'
+import { getAssociations, reportApiFailure, type Association } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -8,11 +8,15 @@ export function AssociationsPage() {
   usePageSeo('Associations', 'The student associations that are part of the Hubble community.')
   const [associations, setAssociations] = useState<Association[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     getAssociations('HUBBLE')
       .then(setAssociations)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('associations', err)
+        setError(true)
+      })
       .finally(() => setLoaded(true))
   }, [])
 
@@ -35,7 +39,11 @@ export function AssociationsPage() {
         </ul>
       )}
 
-      {loaded && associations.length === 0 && (
+      {error && (
+        <p className="mt-8 text-sm text-red-600">Could not load the associations. Please try again later.</p>
+      )}
+
+      {loaded && !error && associations.length === 0 && (
         <p className="mt-8 text-sm text-hubble-500">No associations listed yet.</p>
       )}
 

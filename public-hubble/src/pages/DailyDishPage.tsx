@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getTodaysDishes, type DailyDish } from '@cafe/shared-web'
+import { getTodaysDishes, reportApiFailure, type DailyDish } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -26,7 +26,10 @@ export function DailyDishPage() {
   useEffect(() => {
     getTodaysDishes()
       .then(setDishes)
-      .catch(() => setError(true))
+      .catch((err: unknown) => {
+        void reportApiFailure('daily-dish', err)
+        setError(true)
+      })
       .finally(() => setIsLoading(false))
   }, [])
 
