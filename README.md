@@ -162,4 +162,4 @@ Feature-complete and running at `hubble.cafe` and `meteor.cafe`: all CMS modules
 
 ## Contributing
 
-Conventional Commits, branch off `main`, every PR requires owner approval (see [`.github/pull_request_template.md`](.github/pull_request_template.md)).
+Conventional Commits, branch off `main`, every PR requires owner approval (see [`.github/pull_request_template.md`](.github/pull_request_template.md)). Open issues from one of the templates (bug report, feature request, task / improvement); blank issues are turned off, and security vulnerabilities are reported by email instead (see the issue chooser).
