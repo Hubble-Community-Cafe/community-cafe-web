@@ -204,7 +204,7 @@ Use **Shared** or **Hubble** for the cafe: the Meteor site has no associations p
 
 Location and camera details stored inside photos are removed automatically when you upload, so a photo never reveals where it was taken.
 
-Only delete an image that nothing uses any more: first pick another image (or none) on the event, board member or item that shows it.`,
+An image that is still shown somewhere cannot be deleted: the admin tells you what uses it (for example *the event 'Pub quiz'*). Pick another image, or none, there first, then delete it here.`,
       },
     ],
   },

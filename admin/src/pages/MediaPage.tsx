@@ -12,10 +12,12 @@ function AssetCard({
   asset,
   canEdit,
   onDeleted,
+  onDeleteFailed,
 }: {
   asset: MediaAsset
   canEdit: boolean
   onDeleted: () => void
+  onDeleteFailed: (message: string) => void
 }) {
   const [copied, setCopied] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -32,7 +34,9 @@ function AssetCard({
     try {
       await deleteMedia(asset.id)
       onDeleted()
-    } catch {
+    } catch (err) {
+      // The image stays in the library; say why (usually what still uses it).
+      onDeleteFailed(err instanceof Error ? err.message : 'Could not delete the image. Please try again.')
       setDeleting(false)
     }
   }
@@ -91,6 +95,7 @@ export function MediaPage() {
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [alt, setAlt] = useState('')
   const [bar, setBar] = useState<BarLocation | ''>('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -210,6 +215,12 @@ export function MediaPage() {
         <p className="text-sm text-slate-600">No images uploaded yet.</p>
       )}
 
+      {deleteError && (
+        <p role="alert" className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {deleteError}
+        </p>
+      )}
+
       {!loading && assets.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {assets.map((asset) => (
@@ -217,7 +228,11 @@ export function MediaPage() {
               key={asset.id}
               asset={asset}
               canEdit={canEditContent}
-              onDeleted={() => setAssets((prev) => prev.filter((a) => a.id !== asset.id))}
+              onDeleted={() => {
+                setDeleteError(null)
+                setAssets((prev) => prev.filter((a) => a.id !== asset.id))
+              }}
+              onDeleteFailed={setDeleteError}
             />
           ))}
         </div>

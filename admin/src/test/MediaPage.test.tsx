@@ -100,3 +100,38 @@ describe('MediaPage uploads', () => {
       .toHaveTextContent('That file is too large. The maximum upload size is 10 MB.')
   })
 })
+
+describe('MediaPage deleting', () => {
+  const ASSET = {
+    id: 7, filename: 'quiz.jpg', contentType: 'image/jpeg', url: '/media/quiz.jpg', alt: 'Quiz night',
+    sizeBytes: 1000, bar: null, createdAt: '2026-09-28T12:00:00',
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    mockFetch.mockResolvedValue([ASSET] as never)
+    asEditor()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+  })
+
+  it('shows why an image cannot be deleted and keeps it in the library', async () => {
+    vi.mocked(deleteMedia).mockRejectedValue(
+      new Error("This image is still used by the event 'Pub quiz'. Choose another image there first."))
+    renderPage()
+    fireEvent.click(await screen.findByTitle('Delete'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "This image is still used by the event 'Pub quiz'. Choose another image there first.")
+    expect(screen.getByText('quiz.jpg')).toBeInTheDocument()
+    expect(deleteMedia).toHaveBeenCalledWith(7)
+  })
+
+  it('removes a deleted image from the library', async () => {
+    vi.mocked(deleteMedia).mockResolvedValue(undefined)
+    renderPage()
+    fireEvent.click(await screen.findByTitle('Delete'))
+
+    await waitFor(() => expect(screen.queryByText('quiz.jpg')).not.toBeInTheDocument())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
