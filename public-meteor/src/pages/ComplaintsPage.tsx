@@ -91,7 +91,7 @@ export function ComplaintsPage() {
                 className={fieldClass} placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div>
-              <label htmlFor="date" className={labelClass}>Date <span className="font-normal text-meteor-800/50">(if relevant)</span></label>
+              <label htmlFor="date" className={labelClass}>Date <span className="font-normal text-meteor-800/70">(if relevant)</span></label>
               <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className={fieldClass} />
             </div>

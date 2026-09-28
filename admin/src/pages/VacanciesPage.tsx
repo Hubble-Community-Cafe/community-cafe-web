@@ -128,7 +128,7 @@ function VacancyForm({
           className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
           <Check className="h-4 w-4" /> {initial ? 'Save changes' : 'Add vacancy'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
@@ -191,7 +191,7 @@ function VacancyRow({
         <img src={vacancy.imageUrl} alt={vacancy.imageAlt ?? vacancy.title}
           className="h-12 w-12 shrink-0 rounded object-cover" />
       ) : (
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-400">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-500">
           {vacancy.title.charAt(0).toUpperCase()}
         </div>
       )}
@@ -204,23 +204,23 @@ function VacancyRow({
             </span>
           )}
           {vacancy.bar && (
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
               {BAR_LABELS[vacancy.bar] ?? vacancy.bar}
             </span>
           )}
         </div>
-        <p className="mt-0.5 text-xs text-slate-400">
+        <p className="mt-0.5 text-xs text-slate-500">
           {[vacancy.hours, vacancy.type].filter(Boolean).join(' · ') || 'No details'}
         </p>
       </div>
       {canEdit && (
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditingState(true)}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={() => setEditingState(true)} aria-label={`Edit ${vacancy.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting}
-            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${vacancy.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -261,7 +261,7 @@ export function VacanciesPage() {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Vacancies</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Manage open positions. Active vacancies appear on the public site. Bar left blank means shown on both sites.
         </p>
       </div>
@@ -288,13 +288,13 @@ export function VacanciesPage() {
         />
       )}
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           {vacancies.length === 0 && !creating && (
-            <p className="text-sm text-slate-400">No vacancies yet.</p>
+            <p className="text-sm text-slate-500">No vacancies yet.</p>
           )}
           <SortableList
             items={vacancies}

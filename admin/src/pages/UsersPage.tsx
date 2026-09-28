@@ -64,7 +64,7 @@ export function UsersPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+                <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                   <th className="py-2 pr-4 font-semibold">Name</th>
                   <th className="py-2 pr-4 font-semibold">Email</th>
                   <th className="py-2 font-semibold">Role</th>
@@ -91,7 +91,7 @@ export function UsersPage() {
                             </option>
                           ))}
                         </select>
-                        {isSelf && <span className="ml-2 text-xs text-slate-400">(you)</span>}
+                        {isSelf && <span className="ml-2 text-xs text-slate-500">(you)</span>}
                       </td>
                     </tr>
                   )

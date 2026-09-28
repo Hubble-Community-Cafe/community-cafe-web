@@ -67,7 +67,7 @@ function AssetCard({
       </div>
       <div className="px-3 py-2">
         <p className="truncate text-xs font-medium text-slate-700">{asset.filename}</p>
-        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-400">
+        <div className="mt-0.5 flex items-center gap-2 text-xs text-slate-500">
           {asset.bar && (
             <span className="rounded-full bg-slate-100 px-1.5 py-0.5 text-xs font-medium">
               {BAR_LABELS[asset.bar]}
@@ -76,7 +76,7 @@ function AssetCard({
           {formatBytes(asset.sizeBytes)}
         </div>
         {asset.alt && (
-          <p className="mt-0.5 truncate text-xs text-slate-400">{asset.alt}</p>
+          <p className="mt-0.5 truncate text-xs text-slate-500">{asset.alt}</p>
         )}
       </div>
     </div>
@@ -136,7 +136,7 @@ export function MediaPage() {
     <div className="mx-auto max-w-5xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Media library</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Upload images for events, board members, and menu items.
           JPEG, PNG, WebP and GIF, max {MAX_UPLOAD_LABEL} each.
         </p>
@@ -148,8 +148,9 @@ export function MediaPage() {
         <h2 className="mb-4 text-base font-semibold text-slate-800">Upload image</h2>
         <div className="flex flex-wrap items-end gap-3">
           <div>
-            <label className="block text-xs font-medium text-slate-600">Alt text</label>
+            <label htmlFor="media-alt" className="block text-xs font-medium text-slate-600">Alt text</label>
             <input
+              id="media-alt"
               value={alt}
               onChange={(e) => setAlt(e.target.value)}
               placeholder="Describe the image for screen readers"
@@ -157,8 +158,9 @@ export function MediaPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-600">Bar</label>
+            <label htmlFor="media-bar" className="block text-xs font-medium text-slate-600">Bar</label>
             <select
+              id="media-bar"
               value={bar}
               onChange={(e) => setBar(e.target.value as BarLocation | '')}
               className="mt-1 rounded border border-slate-200 px-2.5 py-1.5 text-sm"
@@ -174,6 +176,9 @@ export function MediaPage() {
               type="file"
               accept="image/jpeg,image/png,image/webp,image/gif"
               onChange={handleUpload}
+              aria-label="Image file to upload"
+              // Out of the tab order: keyboard users reach it through the "Choose file" button.
+              tabIndex={-1}
               className="sr-only"
             />
             <button
@@ -194,11 +199,11 @@ export function MediaPage() {
       </section>
       )}
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && assets.length === 0 && (
-        <p className="text-sm text-slate-400">No images uploaded yet.</p>
+        <p className="text-sm text-slate-600">No images uploaded yet.</p>
       )}
 
       {!loading && assets.length > 0 && (

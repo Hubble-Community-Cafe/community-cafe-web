@@ -56,6 +56,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
 | Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Admin Content-Security-Policy (every page, no violations, security headers) | n/a | n/a | ✅ | n/a |
+| Accessibility (axe, WCAG 2.2 AA: every page, forms with validation errors) | ✅ | ✅ | ✅ | ✅ |
 | Identity refresh under concurrency (regression) | n/a | n/a | ✅ | n/a |
 | Aurora screen scenes (open / last call / closed) | n/a | n/a | ✅ | ⬜ |
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
@@ -73,6 +74,8 @@ space) needs a pause after each press, because a pickup and each move settle ove
 and presses sent in the same tick are dropped. Touch is dispatched over CDP, since Playwright's mouse
 API does not become touch under device emulation and its touchscreen can only tap; that path is worth
 the detour, because touch is exactly what native HTML5 drag and drop cannot do at all.
+
+The `accessibility` spec in each project runs axe (WCAG 2.2 A/AA) on every main page with seeded content, and on each public form after submitting it empty (validation errors), on desktop and mobile. Helpers live in `fixtures/a11y.ts`. Violations that are accepted for now go in `fixtures/a11y-known-issues.ts` per project and page; the list is empty, so any violation fails. When adding a page or form, add its route to the lists in `fixtures/a11y.ts`.
 
 Form specs assert both the staff notification (to the per-form team list, with any upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
 

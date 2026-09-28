@@ -70,7 +70,7 @@ function AssociationForm({
           className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
           <Check className="h-4 w-4" /> {initial ? 'Save changes' : 'Add association'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
@@ -124,26 +124,26 @@ function AssociationRow({
         <img src={association.logoUrl} alt={association.logoAlt ?? association.name}
           className="h-10 w-16 shrink-0 rounded object-contain" />
       ) : (
-        <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-400">
+        <div className="flex h-10 w-16 shrink-0 items-center justify-center rounded bg-slate-100 text-xs font-bold text-slate-500">
           {association.name.charAt(0).toUpperCase()}
         </div>
       )}
       <div className="min-w-0 flex-1">
         <p className="font-medium text-slate-800">{association.name}</p>
         {association.bar && (
-          <p className="mt-0.5 text-xs text-slate-400">
+          <p className="mt-0.5 text-xs text-slate-500">
             {association.bar === 'HUBBLE' ? 'Hubble only' : 'Meteor only'}
           </p>
         )}
       </div>
       {canEdit && (
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditing(true)}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={() => setEditing(true)} aria-label={`Edit ${association.name}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting}
-            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${association.name}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -170,7 +170,7 @@ export function AssociationsPage() {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Associations</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Manage connected study associations. Sorted alphabetically on the public site. Bar left blank means shown on both sites.
         </p>
       </div>
@@ -197,13 +197,13 @@ export function AssociationsPage() {
         />
       )}
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
           {associations.length === 0 && !creating && (
-            <p className="text-sm text-slate-400">No associations yet.</p>
+            <p className="text-sm text-slate-500">No associations yet.</p>
           )}
           <ul>
             {associations.map((a) => (

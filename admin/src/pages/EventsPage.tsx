@@ -109,7 +109,7 @@ function EventForm({
           className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
           <Check className="h-4 w-4" /> {initial ? 'Save changes' : 'Create event'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
@@ -161,7 +161,7 @@ function EventRow({
   return (
     <li className="flex items-start justify-between gap-4 border-t border-slate-100 py-3">
       <div className="min-w-0">
-        <p className="text-xs font-semibold text-slate-400">{formatDate(event.date)}{event.startTime ? `, ${event.startTime}` : ''}</p>
+        <p className="text-xs font-semibold text-slate-500">{formatDate(event.date)}{event.startTime ? `, ${event.startTime}` : ''}</p>
         <p className="mt-0.5 font-medium text-slate-800">
           {event.title}
           {!event.published && (
@@ -173,19 +173,19 @@ function EventRow({
         {event.description && (
           <p className="mt-0.5 truncate text-xs text-slate-500">{event.description}</p>
         )}
-        <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-400">
+        <div className="mt-1 flex flex-wrap gap-3 text-xs text-slate-500">
           {event.price && <span>{event.price}</span>}
           {event.subscribeLink && <span>Has sign-up link</span>}
         </div>
       </div>
       {canEdit && (
         <div className="flex shrink-0 items-center gap-1">
-          <button onClick={() => setEditing(true)}
-            className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={() => setEditing(true)} aria-label={`Edit ${event.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting}
-            className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${event.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -225,7 +225,7 @@ export function EventsPage() {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Events</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Manage upcoming events for each bar. Published events appear on the public site.
         </p>
       </div>
@@ -243,7 +243,7 @@ export function EventsPage() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
@@ -271,7 +271,7 @@ export function EventsPage() {
           )}
 
           {events.length === 0 && !creating && (
-            <p className="text-sm text-slate-400">No events yet.</p>
+            <p className="text-sm text-slate-500">No events yet.</p>
           )}
 
           <ul>

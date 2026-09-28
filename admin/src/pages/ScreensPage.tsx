@@ -123,12 +123,12 @@ export function ScreensPage() {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Screens</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Switch every Aurora screen between the poster carousel and the closed or last call slide.
         </p>
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {error && (
         <p className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
@@ -173,7 +173,7 @@ export function ScreensPage() {
                     ? <Loader2 className="h-6 w-6 animate-spin text-hubble-600" />
                     : <Icon className="h-6 w-6 text-hubble-700" />}
                   <span className="font-semibold text-slate-800">{label}</span>
-                  <span className="text-xs text-slate-500">{hint}</span>
+                  <span className="text-xs text-slate-600">{hint}</span>
                 </button>
               ))}
             </div>
@@ -182,14 +182,14 @@ export function ScreensPage() {
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
             <h2 className="font-semibold text-slate-800">Screens</h2>
             {status.screens.length === 0 ? (
-              <p className="mt-2 text-sm text-slate-400">Aurora reports no screens.</p>
+              <p className="mt-2 text-sm text-slate-500">Aurora reports no screens.</p>
             ) : (
               <ul className="mt-2">
                 {status.screens.map((screen) => (
                   <li key={screen.id} className="flex items-center gap-3 border-t border-slate-100 py-2.5">
-                    <Monitor className="h-4 w-4 shrink-0 text-slate-400" />
+                    <Monitor className="h-4 w-4 shrink-0 text-slate-500" />
                     <span className="flex-1 text-sm font-medium text-slate-700">{screen.name}</span>
-                    <span className="text-xs text-slate-400">{screen.handler}</span>
+                    <span className="text-xs text-slate-500">{screen.handler}</span>
                   </li>
                 ))}
               </ul>
@@ -199,7 +199,7 @@ export function ScreensPage() {
           {canEditContent && (
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-semibold text-slate-800">Posters</h2>
-              <p className="mt-1 text-sm text-slate-500">
+              <p className="mt-1 text-sm text-slate-600">
                 Which slide the closed and last call scenes show. Re-upload a slide in Aurora, then
                 re-pick it here.
               </p>
@@ -222,7 +222,7 @@ export function ScreensPage() {
                 />
               </div>
               {savingSettings && (
-                <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-400">
+                <p className="mt-3 flex items-center gap-1.5 text-xs text-slate-500">
                   <Loader2 className="h-3 w-3 animate-spin" /> Saving…
                 </p>
               )}

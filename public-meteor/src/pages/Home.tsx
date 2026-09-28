@@ -80,7 +80,7 @@ export function Home() {
               href={EXTERNAL.reservations}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-meteor-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-950 transition hover:brightness-110"
+              className="inline-flex items-center gap-2 bg-meteor-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-800 transition hover:brightness-110"
             >
               Reservations
               <ExternalLink className="h-4 w-4" />
@@ -194,7 +194,7 @@ export function Home() {
             className="order-2 aspect-[4/5] w-full rounded-2xl object-cover shadow-lg md:order-1"
           />
           <div className="order-1 md:order-2">
-            <p className="font-title text-xs font-bold uppercase tracking-widest text-meteor-accent">
+            <p className="font-title text-xs font-bold uppercase tracking-widest text-meteor-accent-on-light">
               A non-profit
             </p>
             <p className="mt-3 text-xl font-semibold leading-relaxed text-meteor-500 md:text-2xl">

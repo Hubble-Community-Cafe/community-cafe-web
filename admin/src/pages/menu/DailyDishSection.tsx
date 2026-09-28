@@ -74,7 +74,7 @@ function DishForm({
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Price (€) <span className="text-slate-400">(optional)</span>
+            Price (€) <span className="text-slate-500">(optional)</span>
           </label>
           <input
             type="number"
@@ -87,7 +87,7 @@ function DishForm({
         </div>
         <div className="sm:col-span-3">
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Description <span className="text-slate-400">(optional)</span>
+            Description <span className="text-slate-500">(optional)</span>
           </label>
           <textarea
             rows={2}
@@ -204,21 +204,21 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
                       <span className="ml-2 text-sm text-slate-500">€{dish.price.toFixed(2)}</span>
                     )}
                     {dish.description && (
-                      <p className="mt-0.5 text-xs text-slate-400">{dish.description}</p>
+                      <p className="mt-0.5 text-xs text-slate-500">{dish.description}</p>
                     )}
                   </div>
                   {canEdit && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => { setEditing(dish); setShowNew(false) }}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                         aria-label="Edit"
                       >
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(dish.id)}
-                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                        className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                         aria-label="Delete"
                       >
                         <Trash2 className="h-4 w-4" />

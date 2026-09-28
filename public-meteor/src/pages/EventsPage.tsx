@@ -24,7 +24,7 @@ function EventCard({ event }: { event: CafeEvent }) {
         />
       )}
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-meteor-accent">
+        <p className="text-xs font-bold uppercase tracking-widest text-meteor-accent-on-light">
           {formatEventDate(event.date, event.startTime)}
         </p>
         <h3 className="mt-2 font-title text-lg font-bold uppercase text-meteor-700">{event.title}</h3>

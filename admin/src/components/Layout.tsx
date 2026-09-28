@@ -17,7 +17,7 @@ const ROLE_BADGE: Record<string, string> = {
   ADMIN: 'bg-hubble-100 text-hubble-700',
   EDITOR: 'bg-emerald-100 text-emerald-700',
   DDD_POSTER: 'bg-amber-100 text-amber-700',
-  VIEWER: 'bg-slate-100 text-slate-500',
+  VIEWER: 'bg-slate-100 text-slate-600',
 }
 
 export function Layout() {
@@ -41,7 +41,7 @@ export function Layout() {
       {sections.map((section, i) => (
         <div key={section.title ?? i}>
           {section.title && (
-            <p className="px-3 pb-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+            <p className="px-3 pb-2 text-xs font-bold uppercase tracking-wider text-slate-500">
               {section.title}
             </p>
           )}
@@ -64,7 +64,7 @@ export function Layout() {
                   <item.icon className="h-4 w-4 shrink-0" />
                   <span>{item.label}</span>
                   {item.placeholder && (
-                    <span className="ml-auto rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-400">
+                    <span className="ml-auto rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-slate-500">
                       soon
                     </span>
                   )}
@@ -87,7 +87,7 @@ export function Layout() {
           <span
             className={cn(
               'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-              ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-500',
+              ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-600',
             )}
           >
             {role.replace('_', ' ')}
@@ -102,7 +102,7 @@ export function Layout() {
       >
         <BarChart3 className="h-4 w-4" />
         Statistics
-        <ExternalLink className="ml-auto h-3.5 w-3.5 text-slate-400" />
+        <ExternalLink className="ml-auto h-3.5 w-3.5 text-slate-500" />
       </a>
       <button
         type="button"
@@ -122,7 +122,7 @@ export function Layout() {
       aria-label="Community Cafe admin home"
     >
       <BrandLogos className="flex-row items-center gap-2" size={30} />
-      <span className="text-xs font-normal text-slate-400">Staff &amp; board admin</span>
+      <span className="text-xs font-normal text-slate-500">Staff &amp; board admin</span>
     </Link>
   )
 

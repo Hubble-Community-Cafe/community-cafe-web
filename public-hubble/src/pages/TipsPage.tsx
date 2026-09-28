@@ -93,7 +93,7 @@ export function TipsPage() {
               <input id="t-phone" value={form.phone} onChange={set('phone')} className={field} placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div>
-              <label htmlFor="t-date" className={label}>Date <span className="font-normal text-hubble-800/50">(if relevant)</span></label>
+              <label htmlFor="t-date" className={label}>Date <span className="font-normal text-hubble-800/70">(if relevant)</span></label>
               <input id="t-date" type="date" value={form.date} onChange={set('date')} className={field} />
             </div>
             <div>

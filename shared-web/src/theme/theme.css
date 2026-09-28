@@ -115,7 +115,11 @@
   --color-meteor-900: #010b08;
   --color-meteor-950: #343436;
   --color-meteor-accent: #9b8d6f;
-  --color-meteor-text: #7a7a7a;
+  /* The brand gold as text needs a shade either way to reach WCAG AA (4.5:1): lighter on the dark
+     footer (#343436), darker on white. Backgrounds, stripes and focus rings keep the brand gold. */
+  --color-meteor-accent-on-dark: #a99d83;
+  --color-meteor-accent-on-light: #807459;
+  --color-meteor-text: #757575;
 
   /* Font stacks */
   --font-sans: 'Lato', system-ui, sans-serif;

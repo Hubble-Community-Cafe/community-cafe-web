@@ -45,7 +45,7 @@ function timeAgo(iso: string): string {
 // ── Small UI bits ──────────────────────────────────────────────────────────────
 
 function CardLabel({ children }: { children: React.ReactNode }) {
-  return <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">{children}</p>
+  return <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{children}</p>
 }
 
 function BarBadge({ bar }: { bar: BarLocation }) {
@@ -65,7 +65,7 @@ function CardLink({ to, children }: { to: string; children: React.ReactNode }) {
   )
 }
 
-const Loading = () => <p className="mt-2 text-sm text-slate-400">Loading…</p>
+const Loading = () => <p className="mt-2 text-sm text-slate-500">Loading…</p>
 
 // ── Widgets ─────────────────────────────────────────────────────────────────────
 
@@ -130,7 +130,7 @@ function EventsWidget() {
             <li key={`${e.bar}-${e.id}`} className="flex items-center gap-2 text-sm">
               <BarBadge bar={e.bar} />
               <span className="min-w-0 flex-1 truncate font-medium text-slate-700">{e.title}</span>
-              <span className="shrink-0 text-xs text-slate-400">{formatDate(e.date)}</span>
+              <span className="shrink-0 text-xs text-slate-500">{formatDate(e.date)}</span>
               {!e.published && (
                 <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-600">
                   draft
@@ -173,7 +173,7 @@ function OverridesWidget() {
           {overrides.map((o) => (
             <li key={`${o.bar}-${o.id}`} className="flex items-center gap-2 text-sm">
               <BarBadge bar={o.bar} />
-              <span className="shrink-0 text-xs text-slate-400">{formatDate(o.date)}</span>
+              <span className="shrink-0 text-xs text-slate-500">{formatDate(o.date)}</span>
               <span className="min-w-0 flex-1 truncate text-slate-700">
                 {o.closed ? 'Closed' : `${o.open ?? '?'}–${o.close ?? '?'}`}
                 {o.note ? ` · ${o.note}` : ''}
@@ -211,7 +211,7 @@ function AuditWidget() {
               <span className="text-slate-500">
                 {a.action.toLowerCase()} {a.entityLabel ?? a.entityType.toLowerCase()}
               </span>
-              <span className="ml-1 text-xs text-slate-400">· {timeAgo(a.createdAt)}</span>
+              <span className="ml-1 text-xs text-slate-500">· {timeAgo(a.createdAt)}</span>
             </li>
           ))}
         </ul>
@@ -259,7 +259,7 @@ export function DashboardPage() {
           <p className="mt-2 font-title text-2xl font-bold text-slate-800">
             {isLoading ? '…' : role ? ROLE_LABELS[role] : 'Unknown'}
           </p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1 text-sm text-slate-600">
             {isAdmin
               ? 'Full access, including users and the audit log.'
               : isEditor

@@ -72,7 +72,7 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Availability note <span className="text-slate-400">(optional)</span>
+            Availability note <span className="text-slate-500">(optional)</span>
           </label>
           <input
             maxLength={255}

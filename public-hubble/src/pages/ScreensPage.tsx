@@ -166,7 +166,7 @@ export function ScreensPage() {
               </p>
             )}
             <div>
-              <label htmlFor="s-hex" className={label}>Clock / progress colour <span className="font-normal text-hubble-800/50">(optional hex)</span></label>
+              <label htmlFor="s-hex" className={label}>Clock / progress colour <span className="font-normal text-hubble-800/70">(optional hex)</span></label>
               <input id="s-hex" value={form.hexColor} onChange={set('hexColor')} className={field}
                 placeholder="#FFF200" pattern="^#?[0-9A-Fa-f]{6}$" />
             </div>

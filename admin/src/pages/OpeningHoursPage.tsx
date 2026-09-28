@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useId, useState } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import {
@@ -90,14 +90,14 @@ function DayRow({
         <td className="py-2 pr-2">
           <div className="flex flex-wrap items-center gap-2">
             <TimeInput value={open} onChange={setOpen} />
-            <span className="text-slate-400">–</span>
+            <span className="text-slate-500">–</span>
             <TimeInput value={close} onChange={setClose} />
           </div>
         </td>
         <td className="py-2 pr-2">
           <div className="flex flex-wrap items-center gap-2">
             <TimeInput value={kitchenOpen} onChange={setKitchenOpen} />
-            <span className="text-slate-400">–</span>
+            <span className="text-slate-500">–</span>
             <TimeInput value={kitchenClose} onChange={setKitchenClose} />
           </div>
         </td>
@@ -107,7 +107,7 @@ function DayRow({
               className="flex items-center gap-1 rounded bg-hubble-700 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
               <Check className="h-3.5 w-3.5" /> Save
             </button>
-            <button onClick={() => setEditing(false)} disabled={saving}
+            <button onClick={() => setEditing(false)} disabled={saving} aria-label="Cancel"
               className="rounded bg-slate-100 px-2.5 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-200">
               <X className="h-3.5 w-3.5" />
             </button>
@@ -128,12 +128,12 @@ function DayRow({
     <tr className="border-t border-slate-100 hover:bg-slate-50">
       <td className="py-2.5 pr-4 text-sm font-medium text-slate-700">{DAY_LABELS[day]}</td>
       <td className="py-2.5 pr-2 text-sm text-slate-600">
-        {slot ? `${slot.open} – ${slot.close}` : <span className="text-slate-400">Closed</span>}
+        {slot ? `${slot.open} – ${slot.close}` : <span className="text-slate-500">Closed</span>}
       </td>
       <td className="py-2.5 pr-2 text-sm text-slate-600">
         {slot?.kitchenOpen || slot?.kitchenClose
           ? `${slot.kitchenOpen ?? '–'} – ${slot.kitchenClose ?? '–'}`
-          : <span className="text-slate-400">–</span>}
+          : <span className="text-slate-500">–</span>}
       </td>
       <td className="py-2.5">
         {canEdit && (
@@ -153,6 +153,7 @@ function OverrideForm({
   bar: BarLocation
   onCreated: (o: HoursOverride) => void
 }) {
+  const fieldId = useId()
   const [date, setDate] = useState('')
   const [closed, setClosed] = useState(true)
   const [note, setNote] = useState('')
@@ -180,21 +181,21 @@ function OverrideForm({
   return (
     <form onSubmit={submit} className="mt-4 flex flex-wrap items-end gap-3">
       <div>
-        <label className="block text-xs font-medium text-slate-600">Date</label>
-        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required
+        <label htmlFor={`${fieldId}-date`} className="block text-xs font-medium text-slate-600">Date</label>
+        <input id={`${fieldId}-date`} type="date" value={date} onChange={(e) => setDate(e.target.value)} required
           className="mt-1 rounded border border-slate-200 px-2 py-1.5 text-sm" />
       </div>
       <div>
-        <label className="block text-xs font-medium text-slate-600">Status</label>
-        <select value={closed ? 'closed' : 'open'} onChange={(e) => setClosed(e.target.value === 'closed')}
+        <label htmlFor={`${fieldId}-status`} className="block text-xs font-medium text-slate-600">Status</label>
+        <select id={`${fieldId}-status`} value={closed ? 'closed' : 'open'} onChange={(e) => setClosed(e.target.value === 'closed')}
           className="mt-1 rounded border border-slate-200 px-2 py-1.5 text-sm">
           <option value="closed">Closed</option>
           <option value="open">Special hours (open)</option>
         </select>
       </div>
       <div className="flex-1">
-        <label className="block text-xs font-medium text-slate-600">Note (optional)</label>
-        <input type="text" value={note} onChange={(e) => setNote(e.target.value)}
+        <label htmlFor={`${fieldId}-note`} className="block text-xs font-medium text-slate-600">Note (optional)</label>
+        <input id={`${fieldId}-note`} type="text" value={note} onChange={(e) => setNote(e.target.value)}
           placeholder="e.g. Bank holiday, Special event"
           className="mt-1 w-full rounded border border-slate-200 px-2 py-1.5 text-sm" />
       </div>
@@ -255,7 +256,7 @@ export function OpeningHoursPage() {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Opening Hours</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <p className="mt-1 text-sm text-slate-600">
           Set the regular weekly schedule and add one-off date overrides for closures or special hours.
         </p>
       </div>
@@ -274,7 +275,7 @@ export function OpeningHoursPage() {
         ))}
       </div>
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
@@ -284,7 +285,7 @@ export function OpeningHoursPage() {
             <h2 className="mb-4 text-base font-semibold text-slate-800">Weekly schedule</h2>
             <table className="w-full">
               <thead>
-                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-400">
+                <tr className="text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <th className="pb-2 pr-4">Day</th>
                   <th className="pb-2 pr-2">Open – Close</th>
                   <th className="pb-2 pr-2">Kitchen open – close</th>
@@ -313,7 +314,7 @@ export function OpeningHoursPage() {
               Override the schedule for a specific date. Closed overrides take precedence over the weekly schedule.
             </p>
             {overrides.length === 0 && (
-              <p className="mt-4 text-sm text-slate-400">No upcoming overrides.</p>
+              <p className="mt-4 text-sm text-slate-500">No upcoming overrides.</p>
             )}
             {overrides.length > 0 && (
               <ul className="mt-4 divide-y divide-slate-100">
@@ -329,8 +330,8 @@ export function OpeningHoursPage() {
                       {o.note && <span className="ml-2 text-xs text-slate-500">{o.note}</span>}
                     </div>
                     {canEditContent && (
-                      <button onClick={() => handleDeleteOverride(o.id)}
-                        className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500">
+                      <button onClick={() => handleDeleteOverride(o.id)} aria-label={`Delete the override for ${o.date}`}
+                        className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     )}

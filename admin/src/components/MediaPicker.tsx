@@ -69,13 +69,13 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
           />
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs text-slate-600">{value.filename}</p>
-            {value.alt && <p className="truncate text-xs text-slate-400">{value.alt}</p>}
+            {value.alt && <p className="truncate text-xs text-slate-500">{value.alt}</p>}
           </div>
           <div className="flex shrink-0 gap-1">
             <button
               type="button"
               onClick={openPicker}
-              className="rounded p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-600"
+              className="rounded p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-600"
               title="Change image"
             >
               <ImagePlus className="h-4 w-4" />
@@ -83,7 +83,7 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
             <button
               type="button"
               onClick={() => onChange(null)}
-              className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500"
+              className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-500"
               title="Remove image"
             >
               <X className="h-4 w-4" />
@@ -110,7 +110,7 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="rounded p-1 text-slate-400 hover:bg-slate-100"
+                className="rounded p-1 text-slate-500 hover:bg-slate-100"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -134,7 +134,7 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
                 <Upload className="h-4 w-4" />
                 {uploading ? 'Uploading…' : 'Upload new image'}
               </button>
-              <p className="mt-1.5 text-xs text-slate-400">
+              <p className="mt-1.5 text-xs text-slate-500">
                 JPEG, PNG, WebP and GIF, max {MAX_UPLOAD_LABEL}.
               </p>
               {uploadError && (
@@ -147,10 +147,10 @@ export function MediaPicker({ value, onChange, bar }: MediaPickerProps) {
             {/* Asset grid */}
             <div className="flex-1 overflow-y-auto p-4">
               {loading && (
-                <p className="text-center text-sm text-slate-400">Loading…</p>
+                <p className="text-center text-sm text-slate-500">Loading…</p>
               )}
               {!loading && assets.length === 0 && (
-                <p className="text-center text-sm text-slate-400">No images yet. Upload one above.</p>
+                <p className="text-center text-sm text-slate-500">No images yet. Upload one above.</p>
               )}
               {!loading && assets.length > 0 && (
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
