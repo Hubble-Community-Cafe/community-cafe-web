@@ -105,6 +105,16 @@ public class SecurityConfig {
         String jwkSetUri = "https://login.microsoftonline.com/" + azureTenantId + "/discovery/v2.0/keys";
         NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
+        jwtDecoder.setJwtValidator(tokenValidator(azureTenantId, azureClientId));
+        return jwtDecoder;
+    }
+
+    /**
+     * Token checks on top of the signature: expiry and not-before (the defaults), an issuer of this
+     * tenant, and this app as the audience. Package-private so tests can check tokens without
+     * fetching Microsoft's signing keys.
+     */
+    static OAuth2TokenValidator<Jwt> tokenValidator(String azureTenantId, String azureClientId) {
         // Azure AD issues v1.0 or v2.0 issuers depending on accessTokenAcceptedVersion.
         String issuerV1 = "https://sts.windows.net/" + azureTenantId + "/";
         String issuerV2 = "https://login.microsoftonline.com/" + azureTenantId + "/v2.0";
@@ -126,9 +136,8 @@ public class SecurityConfig {
             return false;
         });
 
-        jwtDecoder.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                JwtValidators.createDefault(), issuerValidator, audienceValidator));
-        return jwtDecoder;
+        return new DelegatingOAuth2TokenValidator<>(
+                JwtValidators.createDefault(), issuerValidator, audienceValidator);
     }
 
     @Bean

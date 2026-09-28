@@ -5,6 +5,7 @@ import cafe.community.backend.media.TestImages;
 import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.model.MediaAsset;
 import cafe.community.backend.repository.MediaAssetRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -16,6 +17,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -32,6 +34,7 @@ class MediaServiceTest {
     Path mediaDir;
 
     private final MediaAssetRepository repo = mock(MediaAssetRepository.class);
+
     private MediaService service;
 
     @BeforeEach
@@ -85,5 +88,43 @@ class MediaServiceTest {
         assertThatThrownBy(() -> service.upload(file, null, null))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Unsupported file type");
+    }
+
+    @Test
+    void pngAndGifAreStoredWithTheirOwnExtension() {
+        MediaAssetDto png = service.upload(
+                new MockMultipartFile("file", "logo.png", "image/png", TestImages.png(8, 8)), null, null);
+        MediaAssetDto gif = service.upload(
+                new MockMultipartFile("file", "anim.gif", "image/gif", TestImages.gif(8, 8)), null, BarLocation.METEOR);
+
+        assertThat(png.filename()).endsWith(".png");
+        assertThat(png.contentType()).isEqualTo("image/png");
+        assertThat(gif.filename()).endsWith(".gif");
+        assertThat(gif.bar()).isEqualTo("METEOR");
+        assertThat(mediaDir.resolve(png.filename())).exists();
+        assertThat(mediaDir.resolve(gif.filename())).exists();
+    }
+
+    @Test
+    void deleteRemovesTheFileAndTheRow() {
+        MediaAssetDto dto = service.upload(
+                new MockMultipartFile("file", "a.jpg", "image/jpeg", TestImages.jpeg(8, 8)), null, null);
+        MediaAsset stored = new MediaAsset();
+        stored.setId(1L);
+        stored.setFilename(dto.filename());
+        when(repo.findById(1L)).thenReturn(Optional.of(stored));
+
+        service.delete(1L);
+
+        assertThat(mediaDir.resolve(dto.filename())).doesNotExist();
+        verify(repo).deleteById(1L);
+    }
+
+    @Test
+    void deletingAnUnknownAssetFailsAndTouchesNothing() {
+        when(repo.findById(99L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(99L)).isInstanceOf(EntityNotFoundException.class);
+        verify(repo, never()).deleteById(any());
     }
 }
