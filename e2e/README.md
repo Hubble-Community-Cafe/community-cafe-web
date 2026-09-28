@@ -52,7 +52,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
 | Vacancies | ✅ | n/a | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
-| Media library (upload, size limit) | n/a | n/a | 🟡 | ⬜ |
+| Media library (upload, size limit, real file type) | n/a | n/a | ✅ | ⬜ |
 | Roles / read-only viewer / DDD poster | n/a | n/a | ✅ | ✅ |
 | Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Admin Content-Security-Policy (every page, no violations, security headers) | n/a | n/a | ✅ | n/a |

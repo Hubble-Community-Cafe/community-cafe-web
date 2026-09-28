@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.repository.MediaAssetRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,10 +33,8 @@ class MediaControllerTest {
     }
 
     private MockMultipartFile jpeg(String name) {
-        // Minimal valid JPEG header bytes (just enough to pass content-type check)
-        return new MockMultipartFile("file", name, "image/jpeg", new byte[]{
-                (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0
-        });
+        // A real JPEG: uploads are parsed to strip metadata, so bare header bytes are refused.
+        return new MockMultipartFile("file", name, "image/jpeg", TestImages.jpeg(16, 16));
     }
 
     @Test
