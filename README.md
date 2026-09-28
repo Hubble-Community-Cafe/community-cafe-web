@@ -101,6 +101,19 @@ The schema is managed by Flyway. Migrations live in [`backend/src/main/resources
 - The database user needs `CREATE`, `ALTER`, `INDEX` and `REFERENCES` rights on the database, because the backend applies the migrations itself. Take a MariaDB backup before deploying a version that contains new migrations.
 - **A local database from before Flyway** (built by the old `ddl-auto=update`) is upgraded automatically, but may still carry old columns the entities no longer have. Recreate it once with `docker compose down -v` (this deletes your local data and uploads) and `npm run dev:seed`.
 
+## Data retention
+
+The backend removes personal data it no longer needs, every night at 03:30 (`DataRetentionService`):
+
+| Data | Rule | Setting (days, `0` switches the rule off) |
+| --- | --- | --- |
+| Audit log: who made a change (name, email, Entra ID) | blanked after 1 year; the change itself stays | `DATA_RETENTION_AUDIT_ANONYMISE_DAYS` (365) |
+| Audit log entries | deleted after 2 years | `DATA_RETENTION_AUDIT_DELETE_DAYS` (730) |
+| Form submission records (form type, date, attachment flag; no personal data) | deleted after 2 years | `DATA_RETENTION_FORM_SUBMISSION_DAYS` (730) |
+| Staff/board accounts without a sign-in | deleted after 1 year, **never ADMIN accounts** | `DATA_RETENTION_INACTIVE_ADMIN_USER_DAYS` (365) |
+
+A removed account that signs in again (still gated by the staff group) comes back as VIEWER, so an admin has to give the role back. The last sign-in is tracked from the release that added this; existing accounts start counting from that deploy. Each run logs one line such as `event=data_retention audit_anonymised=2 audit_deleted=1 form_submissions_deleted=0 admin_users_deleted=1`, with counts only. The schedule is `DATA_RETENTION_CRON` (Spring cron, default `0 30 3 * * *`); it is off in the e2e stack.
+
 ## Content-Security-Policy
 
 All three frontends send an enforcing Content-Security-Policy, so the browser blocks any script, image, style or request from an origin that is not listed. The public sites set it in their `nginx.conf`; the admin keeps it in [`admin/nginx-csp.conf`](admin/nginx-csp.conf), rendered at container startup with the origin of `API_URL` filled in. When a feature needs another origin (an external API, image host or embed), add it to the right policy or the browser will block it. The admin allows `https://aurora-client.hubble.cafe` for Screens poster thumbnails, so a different `AURORA_POSTER_BASE_URL` on the backend also needs that entry changed. To try an admin policy change without blocking anything, set `CSP_REPORT_ONLY=true` on the admin container: violations are then only logged in the browser console. The e2e spec `admin/csp` fails on any violation.

@@ -44,6 +44,7 @@ public class AdminUserService {
         return adminUserRepository.findByAzureOid(azureOid)
                 .map(existing -> {
                     updateIfChanged(existing, email, displayName);
+                    touchLastSeen(existing);
                     return existing;
                 })
                 .orElseGet(() -> createUser(azureOid, email, displayName));
@@ -83,6 +84,7 @@ public class AdminUserService {
         user.setAzureOid(azureOid);
         user.setEmail(email);
         user.setDisplayName(displayName);
+        user.setLastSeenAt(LocalDateTime.now());
 
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
@@ -123,6 +125,25 @@ public class AdminUserService {
         } catch (DataAccessException e) {
             // A concurrent request is writing the same values; the row still ends up correct.
             log.debug("Skipped identity refresh for oid={}, lost a concurrent write", user.getAzureOid(), e);
+        }
+    }
+
+    /**
+     * Record that the user is active, for the inactive-account retention rule. Written at most once
+     * a day per user, since this runs on every admin request. Best effort for the same reason as
+     * {@link #updateIfChanged}: a lost concurrent write only means another request already stored
+     * a moment later.
+     */
+    private void touchLastSeen(AdminUser user) {
+        LocalDateTime now = LocalDateTime.now();
+        if (user.getLastSeenAt() != null && user.getLastSeenAt().isAfter(now.minusDays(1))) {
+            return;
+        }
+        try {
+            adminUserRepository.updateLastSeen(user.getId(), now);
+            user.setLastSeenAt(now);
+        } catch (DataAccessException e) {
+            log.debug("Skipped last-seen update for oid={}, lost a concurrent write", user.getAzureOid(), e);
         }
     }
 }
