@@ -1,6 +1,6 @@
 # backend
 
-Spring Boot 4 + Java 21 + JPA API on MariaDB. Serves the CMS modules to the public sites and admin, with content scoped by `BarLocation { HUBBLE, METEOR }` (nullable = shared). Reuses the Harry List patterns: Microsoft Entra resource-server auth, audit log, Sentry. Public form submissions email staff via Microsoft Graph (Mailpit in dev/e2e), protected by a honeypot, a per-IP rate limit, and self-hosted ALTCHA proof-of-work.
+Spring Boot 4 + Java 25 + JPA API on MariaDB. Serves the CMS modules to the public sites and admin, with content scoped by `BarLocation { HUBBLE, METEOR }` (nullable = shared). Reuses the Harry List patterns: Microsoft Entra resource-server auth, audit log, Sentry. Public form submissions email staff via Microsoft Graph (Mailpit in dev/e2e), protected by a honeypot, a per-IP rate limit, and self-hosted ALTCHA proof-of-work.
 
 ## Status
 

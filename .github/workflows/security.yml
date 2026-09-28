@@ -112,7 +112,7 @@ jobs:
         if: env.NVD_API_KEY != ''
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: "25"
           cache: maven
 
       # The NVD database gets its own cache: inside ~/.m2 it would be wiped by every pom.xml change

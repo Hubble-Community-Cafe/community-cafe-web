@@ -30,7 +30,7 @@ Note that [star-wind](https://github.com/Hubble-Community-Cafe/star-wind) drives
 
 ## Tech stack
 
-React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
+React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 25 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
 
 ## Getting started
 
