@@ -199,7 +199,7 @@ function VacancyRow({
         <div className="flex flex-wrap items-center gap-2">
           <p className="font-medium text-slate-800">{vacancy.title}</p>
           {!vacancy.active && (
-            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-600">
+            <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
               Inactive
             </span>
           )}

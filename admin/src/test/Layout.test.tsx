@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { useRole } from '../lib/RoleContext'
 import type { AdminRole } from '../lib/api'
@@ -80,5 +81,48 @@ describe('Layout footer', () => {
     expect(stats).toHaveAttribute('href', 'https://stats.hubble.cafe')
     expect(stats).toHaveAttribute('target', '_blank')
     expect(stats).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+})
+
+describe('Layout skip link and focus on navigation', () => {
+  function renderAdmin() {
+    mockUseRole.mockReturnValue({
+      user: { id: 1, email: 'staff@hubble.cafe', displayName: 'Staff', role: 'EDITOR' },
+      role: 'EDITOR', isLoading: false, error: null, refetch: () => {},
+    })
+    Element.prototype.scrollIntoView = vi.fn()
+    return render(
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route path="/" element={<p>Dashboard content</p>} />
+            <Route path="/menu" element={<p>Menu content</p>} />
+          </Route>
+        </Routes>
+      </MemoryRouter>,
+    )
+  }
+
+  it('the first Tab reaches "Skip to content", which moves focus to the main content', async () => {
+    const user = userEvent.setup()
+    renderAdmin()
+    await user.tab()
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('main')).toHaveFocus()
+  })
+
+  it('after navigating, the content area starts at the top with focus on the new page', async () => {
+    const user = userEvent.setup()
+    renderAdmin()
+    const main = screen.getByRole('main')
+    main.scrollTop = 400
+    expect(main).not.toHaveFocus()
+
+    const nav = screen.getByRole('navigation', { name: 'Admin' })
+    await user.click(within(nav).getByText('Menu'))
+    expect(await screen.findByText('Menu content')).toBeInTheDocument()
+    expect(main).toHaveFocus()
+    expect(main.scrollTop).toBe(0)
   })
 })

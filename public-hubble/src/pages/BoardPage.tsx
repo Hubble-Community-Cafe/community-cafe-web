@@ -100,7 +100,7 @@ export function CurrentBoardPage() {
 
           {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
           {!error && (!term || term.members.length === 0) && (
-            <p className="mt-4 text-sm text-hubble-700/60">Board information coming soon.</p>
+            <p className="mt-4 text-sm text-hubble-700/70">Board information coming soon.</p>
           )}
         </>
       )}
@@ -122,7 +122,7 @@ export function PreviousBoardsPage() {
       {!loaded && <BoardLinesSkeleton />}
       {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
       {loaded && !error && previous.length === 0 && (
-        <p className="text-sm text-hubble-700/60">No previous board information available.</p>
+        <p className="text-sm text-hubble-700/70">No previous board information available.</p>
       )}
       {loaded && previous.map((term) => (
         <section key={term.id} className="mt-10 first:mt-6">
@@ -178,7 +178,7 @@ export function SupervisoryBoardPage() {
       ))}
       {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
       {loaded && !error && supervisory.length === 0 && (
-        <p className="mt-4 text-sm text-hubble-700/60">Supervisory board information coming soon.</p>
+        <p className="mt-4 text-sm text-hubble-700/70">Supervisory board information coming soon.</p>
       )}
     </PageShell>
   )

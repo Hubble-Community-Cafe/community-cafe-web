@@ -100,13 +100,13 @@ export function Home() {
           Opening Times
         </h2>
         {!hoursLoaded && (
-          <p className="mt-6 text-center text-sm text-hubble-700/50">Loading…</p>
+          <p className="mt-6 text-center text-sm text-hubble-700/70">Loading…</p>
         )}
         {hoursError && (
           <p className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
         )}
         {hoursLoaded && !hoursError && hours.length === 0 && (
-          <p className="mt-6 text-center text-sm text-hubble-700/50">Opening times coming soon.</p>
+          <p className="mt-6 text-center text-sm text-hubble-700/70">Opening times coming soon.</p>
         )}
         {hoursLoaded && hours.length > 0 && (
           <dl className="mx-auto mt-6 max-w-xl text-sm">

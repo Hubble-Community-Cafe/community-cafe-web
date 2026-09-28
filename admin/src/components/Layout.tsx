@@ -4,6 +4,8 @@ import { useMsal } from '@azure/msal-react'
 import { BarChart3, ExternalLink, LogOut, Menu, X } from 'lucide-react'
 import { cn } from '@cafe/shared-web'
 import { BrandLogos } from './BrandLogos'
+import { SkipLink } from './SkipLink'
+import { MAIN_CONTENT_ID, useFocusMainOnNavigate } from '../lib/mainContent'
 import { NAV, canSee } from '../navigation'
 import { useRole } from '../lib/RoleContext'
 import { usePermissions } from '../lib/usePermissions'
@@ -25,6 +27,8 @@ export function Layout() {
   const { user, role } = useRole()
   const { isViewer, isEditor, isAdmin } = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
+  // The admin scrolls inside <main>, not the window.
+  useFocusMainOnNavigate('main')
 
   const handleSignOut = () => {
     if (isE2E()) return
@@ -128,6 +132,7 @@ export function Layout() {
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-100">
+      <SkipLink />
       {/* Desktop sidebar: fixed, does not scroll with the content */}
       <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
         {brand}
@@ -157,7 +162,7 @@ export function Layout() {
           </div>
         )}
 
-        <main className="flex-1 overflow-y-auto p-4 md:p-8">
+        <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 overflow-y-auto p-4 focus:outline-none md:p-8">
           <Outlet />
         </main>
       </div>

@@ -91,7 +91,7 @@ function DailyDishWidget() {
         </>
       ) : (
         <>
-          <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-amber-600">
+          <p className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-amber-700">
             <AlertTriangle className="h-4 w-4" /> No dish set for today
           </p>
           <CardLink to="/daily-dish">Add today&rsquo;s dish</CardLink>
@@ -132,7 +132,7 @@ function EventsWidget() {
               <span className="min-w-0 flex-1 truncate font-medium text-slate-700">{e.title}</span>
               <span className="shrink-0 text-xs text-slate-500">{formatDate(e.date)}</span>
               {!e.published && (
-                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-600">
+                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
                   draft
                 </span>
               )}

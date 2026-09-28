@@ -50,7 +50,7 @@ export function DailyDishPage() {
       )}
 
       {!isLoading && !error && dishes.length === 0 && (
-        <p className="mt-6 text-sm text-hubble-700/60">No daily dish set for today yet.</p>
+        <p className="mt-6 text-sm text-hubble-700/70">No daily dish set for today yet.</p>
       )}
 
       {!isLoading && !error && dishes.length > 0 && (

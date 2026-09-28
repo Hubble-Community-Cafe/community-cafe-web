@@ -68,7 +68,7 @@ export function EventsPage() {
   return (
     <PageShell title="Events">
       {!loaded && (
-        <p className="text-sm text-hubble-700/50">Loading…</p>
+        <p className="text-sm text-hubble-700/70">Loading…</p>
       )}
       {error && (
         <p className="text-sm text-red-600">Could not load the events. Please try again later.</p>

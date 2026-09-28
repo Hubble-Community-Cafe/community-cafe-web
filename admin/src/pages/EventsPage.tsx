@@ -165,7 +165,7 @@ function EventRow({
         <p className="mt-0.5 font-medium text-slate-800">
           {event.title}
           {!event.published && (
-            <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-600">
+            <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
               Draft
             </span>
           )}

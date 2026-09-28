@@ -115,7 +115,7 @@ export function VacanciesPage() {
 
           {/* Vacancy listings */}
           {!loaded && (
-            <p className="mt-10 text-sm text-hubble-700/50">Loading…</p>
+            <p className="mt-10 text-sm text-hubble-700/70">Loading…</p>
           )}
           {error && (
             <p className="mt-10 text-sm text-red-600">Could not load the open positions. Please try again later.</p>

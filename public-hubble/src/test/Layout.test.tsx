@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import userEvent from '@testing-library/user-event'
+import { Link, MemoryRouter, Route, Routes } from 'react-router-dom'
 import { barStatus } from '@cafe/shared-web/testing'
 import { Layout } from '../components/Layout'
 
@@ -46,5 +47,57 @@ describe('Hubble Layout status banner', () => {
     await vi.waitFor(() => expect(reportApiFailure).toHaveBeenCalledWith('footer-hours', expect.any(Error)))
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
     expect(screen.getByRole('contentinfo')).toBeInTheDocument()
+  })
+})
+
+describe('Hubble Layout skip link and focus on navigation', () => {
+  beforeAll(() => {
+    // jsdom does not implement scrolling.
+    window.scrollTo = vi.fn()
+    Element.prototype.scrollIntoView = vi.fn()
+  })
+  beforeEach(() => {
+    getBarStatus.mockReset()
+    getWeeklyHours.mockReset()
+    getBarStatus.mockResolvedValue(barStatus({ isOpen: true }))
+    getWeeklyHours.mockResolvedValue([])
+    vi.mocked(window.scrollTo).mockClear()
+  })
+
+  const renderSite = () => render(
+    <MemoryRouter initialEntries={['/']}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<p>Home content <Link to="/events">Go to events</Link></p>} />
+          <Route path="/events" element={<p>Events content</p>} />
+        </Route>
+      </Routes>
+    </MemoryRouter>,
+  )
+
+  it('the first Tab reaches "Skip to content", which moves focus to the main content', async () => {
+    const user = userEvent.setup()
+    renderSite()
+    await user.tab()
+    expect(screen.getByRole('link', { name: 'Skip to content' })).toHaveFocus()
+
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('main')).toHaveFocus()
+    expect(screen.getByRole('main')).toHaveAttribute('id', 'main-content')
+  })
+
+  it('does not move focus on the first load', () => {
+    renderSite()
+    expect(screen.getByRole('main')).not.toHaveFocus()
+  })
+
+  it('after navigating, starts at the top with focus on the new page', async () => {
+    const user = userEvent.setup()
+    renderSite()
+    await user.click(screen.getByRole('link', { name: 'Go to events' }))
+
+    expect(await screen.findByText('Events content')).toBeInTheDocument()
+    expect(screen.getByRole('main')).toHaveFocus()
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 })

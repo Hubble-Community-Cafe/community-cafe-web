@@ -115,7 +115,7 @@ export function Home() {
             Opening hours
           </h2>
           {!hoursLoaded && (
-            <p className="mt-6 text-sm text-meteor-700/50">Loading…</p>
+            <p className="mt-6 text-sm text-meteor-700/70">Loading…</p>
           )}
           {/* Without this, a failed load would list every day as closed. */}
           {hoursError && (

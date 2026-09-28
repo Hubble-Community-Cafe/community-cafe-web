@@ -135,7 +135,7 @@ export function MenuPage() {
       )}
 
       {!isLoading && !error && tabs.length === 0 && (
-        <p className="mt-4 text-sm text-hubble-700/60">
+        <p className="mt-4 text-sm text-hubble-700/70">
           The menu is being updated. Check back soon.
         </p>
       )}
