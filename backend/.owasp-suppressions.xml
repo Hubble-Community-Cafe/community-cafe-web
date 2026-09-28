@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+  <!--
+    OWASP Dependency-Check false-positive suppressions, used by the security workflow.
+    Add confirmed false positives only, each with a note explaining WHY, the CVE, and a package
+    pattern as narrow as possible so a real match still alerts.
+  -->
+
+  <suppress>
+    <notes>CVE-2026-33117 is in the Azure Key Vault Keys library (azure-security-keyvault-keys before
+    4.10.6): a broken authentication-tag check in its local cryptography path. It is listed under the
+    generic "Azure SDK for Java" CPE with versionEndExcluding 4.10.6, so every other Azure SDK jar with a
+    lower version number matches (here azure-core, azure-identity, azure-json and friends), although none
+    of them contains that code. Key Vault Keys is not in our dependency tree. The package pattern
+    excludes it on purpose, so the CVE still alerts if it is ever added. Reviewed for the-harry-list,
+    which uses the same Azure SDK jars.</notes>
+    <packageUrl regex="true">^pkg:maven/com\.azure/(?!azure-security-keyvault-keys@).*$</packageUrl>
+    <cve>CVE-2026-33117</cve>
+  </suppress>
+
+</suppressions>

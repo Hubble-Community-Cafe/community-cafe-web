@@ -131,6 +131,10 @@ is usually the visitor's network.
 
 Feature-complete and running at `hubble.cafe` and `meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place.
 
+## Security checks
+
+[`.github/workflows/security.yml`](.github/workflows/security.yml) runs on every push and PR to `main` and `develop`, and weekly on Monday (so a new CVE in an unchanged dependency still surfaces): gitleaks (secrets in the git history), Semgrep (static analysis), `npm audit` (the frontend workspace and `e2e`), OWASP Dependency-Check (backend Maven dependencies) and Trivy (lockfiles, Dockerfiles and compose files; the backend is left to OWASP via [`.github/trivy.yaml`](.github/trivy.yaml)). Only critical findings fail the check: a leaked secret, OWASP CVSS 9 or higher, a critical npm advisory, or a critical Trivy finding with a fix available. Everything else is reported in the repository's Security tab (code scanning). The OWASP job needs an `NVD_API_KEY` repository secret ([request a key](https://nvd.nist.gov/developers/request-an-api-key)); without it the job is skipped with a warning. Confirmed false positives go in [`backend/.owasp-suppressions.xml`](backend/.owasp-suppressions.xml) with a reason, never in `continue-on-error`.
+
 ## Contributing
 
 Conventional Commits, branch off `main`, every PR requires owner approval (see [`.github/pull_request_template.md`](.github/pull_request_template.md)).
