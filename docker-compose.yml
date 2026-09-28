@@ -58,7 +58,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mariadb://db:3306/cafeweb
       - SPRING_DATASOURCE_USERNAME=cafeweb
       - SPRING_DATASOURCE_PASSWORD=local_dev_password
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate # never update: schema changes ship as Flyway migrations
       # Entra (JWT validation). The admin gets tokens for this same app.
       - AZURE_TENANT_ID=${AZURE_TENANT_ID:-}
       - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-}

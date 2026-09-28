@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>cafe.community</groupId>
 	<artifactId>community-cafe-backend</artifactId>
-	<version>1.2.9</version>
+	<version>1.2.10</version>
 	<name>community-cafe-backend</name>
 	<description>Backend for the Hubble and Meteor community cafes: shared staff/board CMS.</description>
 
@@ -33,6 +33,16 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-data-jpa</artifactId>
+		</dependency>
+		<!-- Schema migrations (src/main/resources/db/migration), applied at startup. Versions come
+		     from the Spring Boot BOM; flyway-mysql also covers MariaDB. -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-flyway</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.flywaydb</groupId>
+			<artifactId>flyway-mysql</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

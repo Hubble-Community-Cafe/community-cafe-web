@@ -91,6 +91,16 @@ See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage 
 
 CI measures unit-test coverage (JaCoCo for the backend, `npm run test:coverage` per frontend) and shows the line, branch and function totals on each run's summary page, with the full HTML reports as artifacts. It is report-only for now: no minimum fails the build. Run the same locally with `./mvnw test` (report in `backend/target/site/jacoco/`) or `npm run test:coverage --workspace @cafe/<app>` (report in `<app>/coverage/`).
 
+## Database schema (Flyway)
+
+The schema is managed by Flyway. Migrations live in [`backend/src/main/resources/db/migration`](backend/src/main/resources/db/migration) and run automatically when the backend starts, in every environment; there are no manual migration steps. Hibernate only validates the entities against the result (`ddl-auto=validate`, also in the compose files and the Portainer template). Never switch to `update`: it hides a missing migration until production.
+
+- **Changing the schema:** add `V<next number>__short_description.sql` (for example `V3__add_event_location.sql`) next to the entity change. Never edit a migration that has already run; fix it with a new one. An entity change without its migration fails at startup, locally and in e2e, before it can reach production.
+- `V1__baseline.sql` is the production schema from before Flyway. Production was marked as V1 without running it; it only builds new databases (e2e, local development).
+- Enums are stored as `VARCHAR` (`hibernate.type.prefer_native_enum_types=false`), so a new enum value needs no migration.
+- The database user needs `CREATE`, `ALTER`, `INDEX` and `REFERENCES` rights on the database, because the backend applies the migrations itself. Take a MariaDB backup before deploying a version that contains new migrations.
+- **A local database from before Flyway** (built by the old `ddl-auto=update`) is upgraded automatically, but may still carry old columns the entities no longer have. Recreate it once with `docker compose down -v` (this deletes your local data and uploads) and `npm run dev:seed`.
+
 ## Content-Security-Policy
 
 All three frontends send an enforcing Content-Security-Policy, so the browser blocks any script, image, style or request from an origin that is not listed. The public sites set it in their `nginx.conf`; the admin keeps it in [`admin/nginx-csp.conf`](admin/nginx-csp.conf), rendered at container startup with the origin of `API_URL` filled in. When a feature needs another origin (an external API, image host or embed), add it to the right policy or the browser will block it. The admin allows `https://aurora-client.hubble.cafe` for Screens poster thumbnails, so a different `AURORA_POSTER_BASE_URL` on the backend also needs that entry changed. To try an admin policy change without blocking anything, set `CSP_REPORT_ONLY=true` on the admin container: violations are then only logged in the browser console. The e2e spec `admin/csp` fails on any violation.

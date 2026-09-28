@@ -36,7 +36,7 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:mariadb://mariadb:3306/cafeweb
       - SPRING_DATASOURCE_USERNAME=__DB_USERNAME__
       - SPRING_DATASOURCE_PASSWORD=__DB_PASSWORD__
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update # tighten to validate once schema is stable
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=validate # never update: schema changes ship as Flyway migrations
       # Entra: JWT validation AND Graph form-mail (Mail.Send) reuse these credentials.
       - AZURE_TENANT_ID=__AZURE_TENANT_ID__
       - AZURE_CLIENT_ID=__AZURE_CLIENT_ID__

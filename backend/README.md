@@ -9,6 +9,7 @@ Spring Boot 4 + Java 25 + JPA API on MariaDB. Serves the CMS modules to the publ
 - **Auth.** OAuth2 resource server validating Entra JWTs (`SecurityConfig`, `!e2e`); a header-auth bridge for end-to-end tests (`E2eSecurityConfig`, `e2e` profile). `/api/public/**` reads are open; `/api/admin/**` requires a token. `RoleAuthorizationFilter` auto-provisions the user on first login and adds hierarchical roles (VIEWER < DDD_POSTER < EDITOR < ADMIN); `app.initial-admin-oid` bootstraps the first admin.
 - **Audit log.** `AuditService` records who/what/when with field-level diffs; never breaks the underlying operation. Read via `GET /api/admin/audit` (admin).
 - **Media.** `MediaAsset` entity + repository + upload/serve endpoints for event/board/menu/vacancy/association images. Uploads are checked by their real file type (magic bytes, not the browser's claim) and stripped of metadata before they are stored (`media/ImageSanitizer`): EXIF with GPS position, camera and timestamps, XMP, IPTC and comments are removed without re-encoding, while the orientation and colour profile are kept.
+- **Schema.** Flyway migrations in `src/main/resources/db/migration` run at startup; Hibernate only validates (`ddl-auto=validate`), and enums are stored as `VARCHAR`. See the root README, section Database schema.
 - **Ops.** Sentry wired (blank DSN disables it), actuator health, OpenAPI/Swagger UI, CORS, global exception handling. Multi-stage `Dockerfile` (non-root, health check).
 
 ## Build & test
@@ -19,7 +20,7 @@ cd backend
 ./mvnw -q -DskipTests package     # boot jar in target/
 ```
 
-Config is environment-driven (see `.env.example`): `SPRING_DATASOURCE_*`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `INITIAL_ADMIN_OID`, `ALLOWED_GROUP_ID` (optional staff group required in the token's `groups` claim, 403 otherwise), `CORS_ALLOWED_ORIGINS`, `SENTRY_DSN`. Profiles: default (dev), `prod` (validate schema, Swagger off), `e2e` (header-auth bridge), `test` (in-memory H2).
+Config is environment-driven (see `.env.example`): `SPRING_DATASOURCE_*`, `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `INITIAL_ADMIN_OID`, `ALLOWED_GROUP_ID` (optional staff group required in the token's `groups` claim, 403 otherwise), `CORS_ALLOWED_ORIGINS`, `SENTRY_DSN`. Profiles: default (dev), `prod` (Swagger off), `e2e` (header-auth bridge), `test` (in-memory H2, schema from the entities, Flyway off).
 
 ## Stripping metadata from images uploaded before this check
 
