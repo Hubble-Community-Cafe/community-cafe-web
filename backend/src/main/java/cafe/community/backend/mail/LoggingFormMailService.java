@@ -17,8 +17,11 @@ public class LoggingFormMailService implements FormMailService {
 
     @Override
     public void send(FormEmail email) {
-        log.info("[mail:log] would send form notification to={} cc={} replyTo={} subject='{}' attachments={}",
-                email.to(), email.cc(), email.replyTo(), email.subject(),
+        // No recipients, reply-to or subject: they can be a visitor's address or name, and this
+        // provider may also be switched on in production while mail is being set up.
+        log.info("[mail:log] would send form email from={} cc={} replyTo={} attachments={}",
+                email.from(), email.cc() != null && !email.cc().isBlank(),
+                email.replyTo() != null && !email.replyTo().isBlank(),
                 email.attachments() == null ? 0 : email.attachments().size());
     }
 }

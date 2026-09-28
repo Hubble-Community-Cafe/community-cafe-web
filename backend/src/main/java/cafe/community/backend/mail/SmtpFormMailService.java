@@ -47,10 +47,15 @@ public class SmtpFormMailService implements FormMailService {
                 }
             }
             mailSender.send(message);
-            log.info("Sent form notification to {} (subject '{}')", email.to(), email.subject());
+            // Never log recipients or the subject: they can be a visitor's address or name.
+            log.info("Sent form email from {} ({} attachment(s))", email.from(), attachmentCount(email));
         } catch (Exception e) {
-            log.error("Failed to send form notification to {}", email.to(), e);
+            log.error("Failed to send form email from {}", email.from(), e);
             throw new RuntimeException("Failed to send form notification", e);
         }
+    }
+
+    private static int attachmentCount(FormEmail email) {
+        return email.attachments() == null ? 0 : email.attachments().size();
     }
 }

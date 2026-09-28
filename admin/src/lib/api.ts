@@ -411,12 +411,26 @@ export const closeDay = (bar: BarLocation, day: DayOfWeek) =>
 export const fetchOverrides = (bar: BarLocation) =>
   getJson<HoursOverride[]>(`/api/admin/opening-hours/${bar}/overrides`)
 
-export const createOverride = (bar: BarLocation, req: HoursOverrideRequest) =>
-  getJson<HoursOverride>(`/api/admin/opening-hours/${bar}/overrides`, {
-    method: 'POST',
+/** Send an override, passing the backend's message through (e.g. a date that already has one). */
+async function sendOverride(url: string, method: 'POST' | 'PUT', req: HoursOverrideRequest): Promise<HoursOverride> {
+  const response = await fetchWithAuth(url, {
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
   })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { message?: string }
+    throw new Error(err.message ?? `Could not save the override (${response.status}). Please try again.`)
+  }
+  return response.json() as Promise<HoursOverride>
+}
+
+export const createOverride = (bar: BarLocation, req: HoursOverrideRequest) =>
+  sendOverride(`/api/admin/opening-hours/${bar}/overrides`, 'POST', req)
+
+/** Change an override's date, status, times or note; the bar stays the same. */
+export const updateOverride = (id: number, req: HoursOverrideRequest) =>
+  sendOverride(`/api/admin/opening-hours/overrides/${id}`, 'PUT', req)
 
 export const deleteOverride = (id: number) =>
   fetchWithAuth(`/api/admin/opening-hours/overrides/${id}`, { method: 'DELETE' })
@@ -694,8 +708,17 @@ export const uploadMedia = async (file: File, alt?: string, bar?: BarLocation | 
   return response.json() as Promise<MediaAsset>
 }
 
-export const deleteMedia = (id: number) =>
-  fetchWithAuth(`/api/admin/media/${id}`, { method: 'DELETE' })
+/**
+ * Delete an image. Rejects with the backend's message when that refuses, for example a 409 naming
+ * the event or item that still shows the image, so the page can tell staff what to change first.
+ */
+export async function deleteMedia(id: number): Promise<void> {
+  const response = await fetchWithAuth(`/api/admin/media/${id}`, { method: 'DELETE' })
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({})) as { message?: string }
+    throw new Error(err.message ?? `Could not delete the image (${response.status}). Please try again.`)
+  }
+}
 
 // ── Screen scene types ─────────────────────────────────────────────────────────
 /** The scenes the bar can put the Aurora screens into. */

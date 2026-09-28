@@ -6,6 +6,7 @@
   "description": "Shared low-level building blocks for both public sites and the admin: API client, TypeScript types, theme tokens, self-hosted AXIS/Lato fonts, and base build/lint config. No page layouts.",
   "exports": {
     ".": "./src/index.ts",
+    "./testing": "./src/testing/fixtures.ts",
     "./theme.css": "./src/theme/theme.css",
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./eslint.config.base.js": "./eslint.config.base.js"

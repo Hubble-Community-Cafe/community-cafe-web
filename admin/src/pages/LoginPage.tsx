@@ -38,7 +38,7 @@ export function LoginPage() {
         <div className="mb-8 text-center">
           <BrandLogos className="mb-5" size={56} />
           <h1 className="font-title text-2xl font-bold text-slate-800">Community Cafe Admin</h1>
-          <p className="mt-1 text-sm text-slate-500">Staff and board administration</p>
+          <p className="mt-1 text-sm text-slate-600">Staff and board administration</p>
         </div>
 
         <div className="rounded-2xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -47,7 +47,7 @@ export function LoginPage() {
               <ShieldCheck className="h-6 w-6" />
             </span>
             <h2 className="text-lg font-semibold text-slate-800">Staff login</h2>
-            <p className="mt-1 text-sm text-slate-500">
+            <p className="mt-1 text-sm text-slate-600">
               Sign in with your organization Microsoft account.
             </p>
           </div>
@@ -80,7 +80,7 @@ export function LoginPage() {
           </button>
         </div>
 
-        <p className="mt-6 text-center text-sm text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-500">
           Authorized staff only. All actions are logged.
         </p>
       </div>

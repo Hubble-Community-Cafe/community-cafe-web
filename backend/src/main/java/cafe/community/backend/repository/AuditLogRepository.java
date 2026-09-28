@@ -6,10 +6,13 @@ import cafe.community.backend.model.AuditLog;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -34,4 +37,18 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     /** Entries for a single entity, newest first (per-entity history timeline). */
     List<AuditLog> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(AuditEntityType entityType, Long entityId);
+
+    /** Data retention: blank who made the change on entries older than {@code cutoff}; the change stays. */
+    @Transactional
+    @Modifying
+    @Query("UPDATE AuditLog a SET a.actorOid = NULL, a.actorEmail = NULL, a.actorName = NULL "
+            + "WHERE a.createdAt < :cutoff "
+            + "AND (a.actorOid IS NOT NULL OR a.actorEmail IS NOT NULL OR a.actorName IS NOT NULL)")
+    int anonymiseActorsBefore(@Param("cutoff") LocalDateTime cutoff);
+
+    /** Data retention: delete entries older than {@code cutoff}. */
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM AuditLog a WHERE a.createdAt < :cutoff")
+    int deleteCreatedBefore(@Param("cutoff") LocalDateTime cutoff);
 }

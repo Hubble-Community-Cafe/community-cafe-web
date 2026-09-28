@@ -46,6 +46,10 @@ public class AdminUser {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    /** Last time this account used the admin (at most a day off); drives inactive-account removal. */
+    @Column(name = "last_seen_at")
+    private LocalDateTime lastSeenAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();

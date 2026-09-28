@@ -1,5 +1,6 @@
 package cafe.community.backend.repository;
 
+import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
@@ -39,4 +40,20 @@ public interface AdminUserRepository extends JpaRepository<AdminUser, Long> {
                        @Param("email") String email,
                        @Param("displayName") String displayName,
                        @Param("now") LocalDateTime now);
+
+    /** Record that the user used the admin. A bulk update for the same reasons as updateIdentity. */
+    @Transactional
+    @Modifying(clearAutomatically = true)
+    @Query("UPDATE AdminUser u SET u.lastSeenAt = :now WHERE u.id = :id")
+    int updateLastSeen(@Param("id") Long id, @Param("now") LocalDateTime now);
+
+    /**
+     * Data retention: remove accounts not seen since {@code cutoff}, except those with the kept role
+     * (ADMIN), so the app can never lose its last administrator. Rows without a last-seen time are
+     * left alone.
+     */
+    @Transactional
+    @Modifying
+    @Query("DELETE FROM AdminUser u WHERE u.lastSeenAt < :cutoff AND u.role <> :keptRole")
+    int deleteInactiveSince(@Param("cutoff") LocalDateTime cutoff, @Param("keptRole") AdminRole keptRole);
 }

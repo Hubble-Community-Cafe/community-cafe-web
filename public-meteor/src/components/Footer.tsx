@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Clock, Mail, MapPin, Phone } from 'lucide-react'
 import {
-  getWeeklyHours, groupWeeklyHours, DAY_LABELS, DAY_ORDER, type WeeklyHours,
+  getWeeklyHours, groupWeeklyHours, reportApiFailure, DAY_LABELS, DAY_ORDER, type WeeklyHours,
 } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
 
@@ -14,7 +14,8 @@ function FooterHours() {
   useEffect(() => {
     getWeeklyHours('METEOR')
       .then(setHours)
-      .catch(() => {})
+      // No message in the footer: it just leaves the hours out, but the failure is reported.
+      .catch((err: unknown) => void reportApiFailure('footer-hours', err))
       .finally(() => setLoaded(true))
   }, [])
 
@@ -27,14 +28,21 @@ function FooterHours() {
 
   return (
     <dl className="mt-3 space-y-1.5 text-sm text-white/80">
+      {/* dt/dd pairs so assistive tech reads each day with its hours; looks like "Monday: 11:00 to 01:00". */}
       {open.map(({ label, open, close }) => (
-        <div key={label} className="flex items-center gap-2">
-          <Clock className="h-4 w-4 shrink-0" />
-          <span>{label}: {open} to {close}</span>
+        <div key={label} className="flex items-center gap-1">
+          <dt className="flex items-center gap-2">
+            <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
+            {label}:
+          </dt>
+          <dd>{open} to {close}</dd>
         </div>
       ))}
       {closed.length > 0 && (
-        <div className="pl-6">{closed.join(', ')}: closed</div>
+        <div className="flex gap-1 pl-6">
+          <dt>{closed.join(', ')}:</dt>
+          <dd>closed</dd>
+        </div>
       )}
     </dl>
   )
@@ -53,7 +61,7 @@ export function Footer() {
         </div>
 
         <div>
-          <h2 className="font-title text-sm font-bold uppercase tracking-wide text-meteor-accent">
+          <h2 className="font-title text-sm font-bold uppercase tracking-wide text-meteor-accent-on-dark">
             Visit us
           </h2>
           <address className="mt-3 space-y-2 text-sm not-italic text-white/80">
@@ -77,11 +85,11 @@ export function Footer() {
         </div>
 
         <div>
-          <h2 className="font-title text-sm font-bold uppercase tracking-wide text-meteor-accent">
+          <h2 className="font-title text-sm font-bold uppercase tracking-wide text-meteor-accent-on-dark">
             Opening hours
           </h2>
           <FooterHours />
-          <h2 className="mt-6 font-title text-sm font-bold uppercase tracking-wide text-meteor-accent">
+          <h2 className="mt-6 font-title text-sm font-bold uppercase tracking-wide text-meteor-accent-on-dark">
             Quick links
           </h2>
           <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
@@ -95,7 +103,7 @@ export function Footer() {
               href={EXTERNAL.reservations}
               target="_blank"
               rel="noopener noreferrer"
-              className="font-semibold text-meteor-accent hover:underline"
+              className="font-semibold text-meteor-accent-on-dark hover:underline"
             >
               Make a reservation
             </a>

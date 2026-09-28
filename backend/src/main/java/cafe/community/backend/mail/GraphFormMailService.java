@@ -1,6 +1,5 @@
 package cafe.community.backend.mail;
 
-import com.azure.identity.ClientSecretCredential;
 import com.azure.identity.ClientSecretCredentialBuilder;
 import com.microsoft.graph.models.Attachment;
 import com.microsoft.graph.models.BodyType;
@@ -37,10 +36,14 @@ public class GraphFormMailService implements FormMailService {
             @Value("${app.mail.graph.tenant-id}") String tenantId,
             @Value("${app.mail.graph.client-id}") String clientId,
             @Value("${app.mail.graph.client-secret}") String clientSecret) {
-        ClientSecretCredential credential = new ClientSecretCredentialBuilder()
-                .tenantId(tenantId).clientId(clientId).clientSecret(clientSecret).build();
-        this.graph = new GraphServiceClient(credential);
+        this(new GraphServiceClient(new ClientSecretCredentialBuilder()
+                .tenantId(tenantId).clientId(clientId).clientSecret(clientSecret).build()));
         log.info("Microsoft Graph form-mail provider initialised.");
+    }
+
+    /** Package-private: lets tests pass a mocked Graph client. */
+    GraphFormMailService(GraphServiceClient graph) {
+        this.graph = graph;
     }
 
     @Override
@@ -80,9 +83,10 @@ public class GraphFormMailService implements FormMailService {
             requestBody.setSaveToSentItems(true);
             // Send as the per-site from address (must be a sendable mailbox in the tenant).
             graph.users().byUserId(email.from()).sendMail().post(requestBody);
-            log.info("Sent form notification from {} to {} via Microsoft Graph", email.from(), email.to());
+            // Never log recipients or the subject: they can be a visitor's address or name.
+            log.info("Sent form email from {} via Microsoft Graph", email.from());
         } catch (Exception e) {
-            log.error("Failed to send form notification to {} via Microsoft Graph", email.to(), e);
+            log.error("Failed to send form email from {} via Microsoft Graph", email.from(), e);
             throw new RuntimeException("Failed to send form notification", e);
         }
     }

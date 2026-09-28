@@ -38,8 +38,8 @@ export function VisibilityToggle({
       aria-label={active ? `Hide ${label} from the site` : `Show ${label} on the site`}
       className={`rounded-lg p-1.5 transition-colors disabled:opacity-50 ${
         active
-          ? 'text-slate-400 hover:bg-slate-100 hover:text-slate-700'
-          : 'bg-amber-50 text-amber-600 hover:bg-amber-100'
+          ? 'text-slate-500 hover:bg-slate-100 hover:text-slate-700'
+          : 'bg-amber-50 text-amber-700 hover:bg-amber-100'
       }`}
     >
       {active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}

@@ -50,7 +50,7 @@ function MenuItemRow({ item, index }: { item: MenuItem; index: number }) {
         </p>
       )}
       {tags.length > 0 && (
-        <p className="mt-0.5 text-xs uppercase tracking-wide text-meteor-700/50">{tags.join(', ')}</p>
+        <p className="mt-0.5 text-xs uppercase tracking-wide text-meteor-700/70">{tags.join(', ')}</p>
       )}
     </div>
   )
@@ -142,7 +142,7 @@ export function MenuPage() {
       )}
 
       {!isLoading && !error && tabs.length === 0 && (
-        <p className="mt-8 text-sm text-meteor-700/60">
+        <p className="mt-8 text-sm text-meteor-700/70">
           The menu is being updated. Check back soon.
         </p>
       )}

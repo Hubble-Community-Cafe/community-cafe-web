@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { AuditLogPage } from '../pages/AuditLogPage'
 import { fetchAuditLog, type AuditLogEntry, type Page } from '../lib/api'
@@ -15,6 +16,9 @@ const emptyPage: Page<AuditLogEntry> = {
   size: 50,
 }
 
+/** The page title's Help button reads the route, so the page renders inside a router. */
+const renderPage = () => render(<MemoryRouter initialEntries={['/audit']}><AuditLogPage /></MemoryRouter>)
+
 describe('AuditLogPage filtering', () => {
   beforeEach(() => {
     mockFetch.mockReset()
@@ -22,14 +26,14 @@ describe('AuditLogPage filtering', () => {
   })
 
   it('loads unfiltered on mount', async () => {
-    render(<AuditLogPage />)
+    renderPage()
     await waitFor(() =>
       expect(mockFetch).toHaveBeenCalledWith(0, 50, { entityType: undefined, action: undefined }),
     )
   })
 
   it('refetches with the selected entity filter from the first page', async () => {
-    render(<AuditLogPage />)
+    renderPage()
     await waitFor(() => expect(mockFetch).toHaveBeenCalled())
     fireEvent.change(screen.getByLabelText('Filter by entity'), { target: { value: 'EVENT' } })
     await waitFor(() =>
@@ -38,7 +42,7 @@ describe('AuditLogPage filtering', () => {
   })
 
   it('shows a filter-specific empty message', async () => {
-    render(<AuditLogPage />)
+    renderPage()
     fireEvent.change(await screen.findByLabelText('Filter by action'), {
       target: { value: 'DELETE' },
     })

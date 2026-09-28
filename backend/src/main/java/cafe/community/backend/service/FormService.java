@@ -327,7 +327,8 @@ public class FormService {
             // Reply-to stays the site noreply address; this is an acknowledgment, not a thread.
             mail.send(new FormEmail(from, to, null, from, subject, body, List.of()));
         } catch (RuntimeException e) {
-            log.warn("Could not send submitter confirmation to {}: {}", to, e.getMessage());
+            // No address in the log: it is the visitor's own email.
+            log.warn("Could not send submitter confirmation from {}: {}", from, e.getMessage());
         }
     }
 

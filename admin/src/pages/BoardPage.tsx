@@ -10,6 +10,8 @@ import {
   type BoardTerm, type BoardMember, type BoardTermRequest, type BoardMemberRequest,
   type BarLocation, type BoardType, type MediaAsset,
 } from '../lib/api'
+import { PageHelp } from '../components/HelpGuide'
+import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const TYPE_LABELS: Record<BoardType, string> = {
   EXECUTIVE: 'Executive board',
@@ -44,6 +46,8 @@ function MemberForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, role, photo: photo?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -89,7 +93,7 @@ function MemberForm({
           className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
           <Check className="h-4 w-4" /> {initial ? 'Save' : 'Add member'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
@@ -158,8 +162,8 @@ function MemberRow({
       </div>
       {canEdit && (
         <div className="flex shrink-0 gap-1">
-          <button onClick={() => setEditingState(true)}
-            className="rounded p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+          <button onClick={() => setEditingState(true)} aria-label={`Edit ${member.name}`}
+            className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-3.5 w-3.5" />
           </button>
           <button onClick={async () => {
@@ -167,8 +171,8 @@ function MemberRow({
             setDeleting(true)
             try { await deleteBoardMember(member.id); onDeleted() }
             catch { setDeleting(false) }
-          }} disabled={deleting}
-            className="rounded p-1 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+          }} disabled={deleting} aria-label={`Remove ${member.name}`}
+            className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
             <Trash2 className="h-3.5 w-3.5" />
           </button>
         </div>
@@ -199,6 +203,8 @@ function TermForm({
           filename: '', contentType: '', sizeBytes: null, bar: null, createdAt: '' }
       : null,
   )
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ label, type, bar, current, photoCredit, groupPhoto: groupPhoto?.id }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -259,7 +265,7 @@ function TermForm({
           <div className="mt-1">
             <MediaPicker value={groupPhoto} onChange={setGroupPhoto} />
           </div>
-          <p className="mt-1 text-xs text-slate-400">Shown on the previous-boards page for this term.</p>
+          <p className="mt-1 text-xs text-slate-500">Shown on the previous-boards page for this term.</p>
         </div>
         <div className="sm:col-span-2">
           <label className="block text-xs font-medium text-slate-600">Photo credit</label>
@@ -273,7 +279,7 @@ function TermForm({
           className="flex items-center gap-1.5 rounded bg-hubble-700 px-3 py-1.5 text-sm font-semibold text-white hover:bg-hubble-600 disabled:opacity-50">
           <Check className="h-4 w-4" /> {initial ? 'Save changes' : 'Create term'}
         </button>
-        <button type="button" onClick={onCancel} disabled={saving}
+        <button type="button" onClick={onCancel} disabled={saving} aria-label="Cancel"
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
@@ -347,8 +353,9 @@ function TermCard({
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
       <div className="flex items-center gap-3 px-5 py-4">
         {handle}
-        <button onClick={() => setExpanded((v) => !v)}
-          className="shrink-0 text-slate-400 hover:text-slate-600">
+        <button onClick={() => setExpanded((v) => !v)} aria-expanded={expanded}
+          aria-label={`${expanded ? 'Hide' : 'Show'} members of ${term.label}`}
+          className="shrink-0 text-slate-500 hover:text-slate-700">
           {expanded
             ? <ChevronDown className="h-4 w-4" />
             : <ChevronRight className="h-4 w-4" />}
@@ -359,7 +366,7 @@ function TermCard({
             <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
               {TYPE_LABELS[term.type]}
             </span>
-            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">
+            <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
               {termScope(term)}
             </span>
             {term.current && (
@@ -368,7 +375,7 @@ function TermCard({
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-slate-400">
+          <p className="mt-0.5 text-xs text-slate-500">
             {members.length} {members.length === 1 ? 'member' : 'members'}
             {term.groupPhotoUrl && ' · group photo set'}
             {term.photoCredit && ' · credit set'}
@@ -376,12 +383,12 @@ function TermCard({
         </div>
         {canEdit && (
           <div className="flex shrink-0 gap-1">
-            <button onClick={() => setEditingTerm(true)}
-              className="rounded p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600">
+            <button onClick={() => setEditingTerm(true)} aria-label={`Edit ${term.label}`}
+              className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
               <Pencil className="h-4 w-4" />
             </button>
-            <button onClick={handleDeleteTerm} disabled={deleting}
-              className="rounded p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-500 disabled:opacity-50">
+            <button onClick={handleDeleteTerm} disabled={deleting} aria-label={`Delete ${term.label}`}
+              className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
@@ -466,8 +473,11 @@ export function BoardPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Board</h1>
-        <p className="mt-1 text-sm text-slate-500">
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold text-slate-900">Board</h1>
+          <PageHelp />
+        </div>
+        <p className="mt-1 text-sm text-slate-600">
           Manage board terms and members. The current executive board is shared across both bars;
           previous terms are per bar.
         </p>
@@ -495,11 +505,11 @@ export function BoardPage() {
         />
       )}
 
-      {loading && <p className="text-sm text-slate-400">Loading…</p>}
+      {loading && <p className="text-sm text-slate-500">Loading…</p>}
       {error && <p className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && terms.length === 0 && !creating && (
-        <p className="text-sm text-slate-400">No board terms yet.</p>
+        <p className="text-sm text-slate-500">No board terms yet.</p>
       )}
 
       <SortableList

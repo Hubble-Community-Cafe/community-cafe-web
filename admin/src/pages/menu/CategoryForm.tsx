@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { BarLocation, MenuCategory, MenuCategoryRequest, MenuKind } from '../../lib/api'
+import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 
 interface Props {
   initial?: MenuCategory
@@ -15,6 +16,8 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
   const [kind, setKind] = useState<MenuKind>(initial?.kind ?? 'DRINK')
   const [note, setNote] = useState(initial?.availabilityNote ?? '')
   const [bar, setBar] = useState<BarLocation>(initial?.bar ?? defaultBar)
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, kind, note, bar }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()
@@ -72,7 +75,7 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Availability note <span className="text-slate-400">(optional)</span>
+            Availability note <span className="text-slate-500">(optional)</span>
           </label>
           <input
             maxLength={255}

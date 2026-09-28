@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MediaPage } from '../pages/MediaPage'
 import { fetchAllMedia, uploadMedia, deleteMedia } from '../lib/api'
@@ -33,6 +34,9 @@ const pickFile = (file: File) => {
   fireEvent.change(input, { target: { files: [file] } })
 }
 
+/** The page title's Help button reads the route, so the page renders inside a router. */
+const renderPage = () => render(<MemoryRouter initialEntries={['/media']}><MediaPage /></MemoryRouter>)
+
 describe('MediaPage uploads', () => {
   beforeEach(() => {
     vi.resetAllMocks()
@@ -42,12 +46,12 @@ describe('MediaPage uploads', () => {
   })
 
   it('states the size limit up front', async () => {
-    render(<MediaPage />)
+    renderPage()
     expect(await screen.findByText(/max 10 MB each/)).toBeInTheDocument()
   })
 
   it('rejects an oversize file without calling the API', async () => {
-    render(<MediaPage />)
+    renderPage()
     await screen.findByText('Upload image')
 
     pickFile(fileOfSize('holiday.jpg', 24.5 * 1024 * 1024))
@@ -60,7 +64,7 @@ describe('MediaPage uploads', () => {
 
   it('draws the line at exactly the limit', async () => {
     mockUpload.mockRejectedValue(new Error('ignored'))
-    render(<MediaPage />)
+    renderPage()
     await screen.findByText('Upload image')
 
     pickFile(fileOfSize('exact.jpg', MAX_UPLOAD_BYTES))
@@ -76,7 +80,7 @@ describe('MediaPage uploads', () => {
       id: 1, filename: 'ok.jpg', contentType: 'image/jpeg', url: '/media/ok.jpg',
       alt: null, sizeBytes: 2048, bar: null, createdAt: '2026-01-01T00:00:00Z',
     })
-    render(<MediaPage />)
+    renderPage()
     await screen.findByText('Upload image')
 
     pickFile(fileOfSize('ok.jpg', 2048))
@@ -87,12 +91,47 @@ describe('MediaPage uploads', () => {
 
   it('shows the message from a failed upload', async () => {
     mockUpload.mockRejectedValue(new Error('That file is too large. The maximum upload size is 10 MB.'))
-    render(<MediaPage />)
+    renderPage()
     await screen.findByText('Upload image')
 
     pickFile(fileOfSize('ok.jpg', 2048))
 
     expect(await screen.findByRole('alert'))
       .toHaveTextContent('That file is too large. The maximum upload size is 10 MB.')
+  })
+})
+
+describe('MediaPage deleting', () => {
+  const ASSET = {
+    id: 7, filename: 'quiz.jpg', contentType: 'image/jpeg', url: '/media/quiz.jpg', alt: 'Quiz night',
+    sizeBytes: 1000, bar: null, createdAt: '2026-09-28T12:00:00',
+  }
+
+  beforeEach(() => {
+    vi.resetAllMocks()
+    mockFetch.mockResolvedValue([ASSET] as never)
+    asEditor()
+    vi.spyOn(window, 'confirm').mockReturnValue(true)
+  })
+
+  it('shows why an image cannot be deleted and keeps it in the library', async () => {
+    vi.mocked(deleteMedia).mockRejectedValue(
+      new Error("This image is still used by the event 'Pub quiz'. Choose another image there first."))
+    renderPage()
+    fireEvent.click(await screen.findByTitle('Delete'))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      "This image is still used by the event 'Pub quiz'. Choose another image there first.")
+    expect(screen.getByText('quiz.jpg')).toBeInTheDocument()
+    expect(deleteMedia).toHaveBeenCalledWith(7)
+  })
+
+  it('removes a deleted image from the library', async () => {
+    vi.mocked(deleteMedia).mockResolvedValue(undefined)
+    renderPage()
+    fireEvent.click(await screen.findByTitle('Delete'))
+
+    await waitFor(() => expect(screen.queryByText('quiz.jpg')).not.toBeInTheDocument())
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })

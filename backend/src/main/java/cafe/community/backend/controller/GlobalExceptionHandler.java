@@ -1,6 +1,7 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.AuroraException;
+import cafe.community.backend.service.MediaInUseException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -33,6 +34,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AuroraException.class)
     public ResponseEntity<Map<String, Object>> handleAurora(AuroraException ex) {
         return body(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
+
+    /** Deleting something still in use, e.g. an image an event shows: the message says what uses it. */
+    @ExceptionHandler(MediaInUseException.class)
+    public ResponseEntity<Map<String, Object>> handleInUse(MediaInUseException ex) {
+        return body(HttpStatus.CONFLICT, ex.getMessage());
     }
 
     /** An unparseable path variable, for example an unknown scene name. */

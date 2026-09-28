@@ -33,7 +33,10 @@ export const meteor = {
   900: '#010b08',
   950: '#343436',
   accent: '#9b8d6f',
-  text: '#7a7a7a',
+  /** The accent as text: lighter on the dark footer, darker on white (both WCAG AA). */
+  accentOnDark: '#a99d83',
+  accentOnLight: '#807459',
+  text: '#757575',
 } as const
 
 export const fonts = {

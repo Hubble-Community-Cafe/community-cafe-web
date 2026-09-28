@@ -1,5 +1,6 @@
 import { useId, useState } from 'react'
 import type { MenuItem, MenuItemRequest } from '../../lib/api'
+import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 
 interface Props {
   initial?: MenuItem
@@ -31,6 +32,8 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
   const [dietaryTags, setDietaryTags] = useState(listToCsv(initial?.dietaryTags ?? []))
   const [allergens, setAllergens] = useState(listToCsv(initial?.allergens ?? []))
   const [active, setActive] = useState(initial?.active ?? true)
+  // Warn before leaving the page with unsaved input (UnsavedChangesProvider).
+  useUnsavedChangesGuard(useChangedSince({ name, description, regularPrice, studentPrice, sizeOptions, dietaryTags, allergens, active }))
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const nameId = useId()
@@ -86,7 +89,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         </div>
         <div className="sm:col-span-2">
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Description <span className="text-slate-400">(optional)</span>
+            Description <span className="text-slate-500">(optional)</span>
           </label>
           <textarea
             rows={2}
@@ -112,7 +115,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         </div>
         <div>
           <label htmlFor={studentId} className="mb-1 block text-xs font-medium text-slate-600">
-            TU/e student price (€) <span className="text-slate-400">(optional)</span>
+            TU/e student price (€) <span className="text-slate-500">(optional)</span>
           </label>
           <input
             id={studentId}
@@ -126,7 +129,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Size options <span className="text-slate-400">(comma-separated)</span>
+            Size options <span className="text-slate-500">(comma-separated)</span>
           </label>
           <input
             value={sizeOptions}
@@ -137,7 +140,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Dietary tags <span className="text-slate-400">(comma-separated)</span>
+            Dietary tags <span className="text-slate-500">(comma-separated)</span>
           </label>
           <input
             value={dietaryTags}
@@ -148,7 +151,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-slate-600">
-            Allergens <span className="text-slate-400">(comma-separated)</span>
+            Allergens <span className="text-slate-500">(comma-separated)</span>
           </label>
           <input
             value={allergens}

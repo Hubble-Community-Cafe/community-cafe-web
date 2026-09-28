@@ -6,6 +6,9 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
+    // The form tests type whole forms through userEvent, which can pass the 5 s default on a busy
+    // machine or CI runner; a real hang still fails, just later.
+    testTimeout: 15_000,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
     coverage: {

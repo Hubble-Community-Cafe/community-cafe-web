@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { getBoard, type BoardTerm, type BoardMember } from '@cafe/shared-web'
+import { getBoard, reportApiFailure, type BoardTerm, type BoardMember } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -7,13 +7,17 @@ import { usePageSeo } from '../lib/seo'
 function useBoard() {
   const [terms, setTerms] = useState<BoardTerm[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
   useEffect(() => {
     getBoard()
       .then(setTerms)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('board', err)
+        setError(true)
+      })
       .finally(() => setLoaded(true))
   }, [])
-  return { terms, loaded }
+  return { terms, loaded, error }
 }
 
 /** Placeholder grid mirroring the member cards while the board loads. */
@@ -67,7 +71,7 @@ function MemberCard({ member, index }: { member: BoardMember; index: number }) {
 
 export function CurrentBoardPage() {
   usePageSeo('Board', 'The current board of Hubble Community Cafe.')
-  const { terms, loaded } = useBoard()
+  const { terms, loaded, error } = useBoard()
   const term = terms.find((t) => t.type === 'EXECUTIVE' && t.current)
 
   return (
@@ -94,8 +98,9 @@ export function CurrentBoardPage() {
             </>
           )}
 
-          {(!term || term.members.length === 0) && (
-            <p className="mt-4 text-sm text-hubble-700/60">Board information coming soon.</p>
+          {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+          {!error && (!term || term.members.length === 0) && (
+            <p className="mt-4 text-sm text-hubble-700/70">Board information coming soon.</p>
           )}
         </>
       )}
@@ -107,7 +112,7 @@ export function CurrentBoardPage() {
 
 export function PreviousBoardsPage() {
   usePageSeo('Previous boards', 'Previous boards of Hubble Community Cafe.')
-  const { terms, loaded } = useBoard()
+  const { terms, loaded, error } = useBoard()
   const previous = terms.filter(
     (t) => t.type === 'EXECUTIVE' && !t.current && (t.bar === 'HUBBLE' || t.bar === null),
   )
@@ -115,8 +120,9 @@ export function PreviousBoardsPage() {
   return (
     <PageShell title="Previous boards">
       {!loaded && <BoardLinesSkeleton />}
-      {loaded && previous.length === 0 && (
-        <p className="text-sm text-hubble-700/60">No previous board information available.</p>
+      {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+      {loaded && !error && previous.length === 0 && (
+        <p className="text-sm text-hubble-700/70">No previous board information available.</p>
       )}
       {loaded && previous.map((term) => (
         <section key={term.id} className="mt-10 first:mt-6">
@@ -152,7 +158,7 @@ export function PreviousBoardsPage() {
 
 export function SupervisoryBoardPage() {
   usePageSeo('Supervisory Board', 'The supervisory board of Hubble Community Cafe.')
-  const { terms, loaded } = useBoard()
+  const { terms, loaded, error } = useBoard()
   const supervisory = terms.filter((t) => t.type === 'SUPERVISORY')
 
   return (
@@ -170,8 +176,9 @@ export function SupervisoryBoardPage() {
           </ul>
         </section>
       ))}
-      {loaded && supervisory.length === 0 && (
-        <p className="mt-4 text-sm text-hubble-700/60">Supervisory board information coming soon.</p>
+      {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+      {loaded && !error && supervisory.length === 0 && (
+        <p className="mt-4 text-sm text-hubble-700/70">Supervisory board information coming soon.</p>
       )}
     </PageShell>
   )

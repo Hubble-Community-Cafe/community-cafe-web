@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
-import { getUpcomingEvents, type CafeEvent } from '@cafe/shared-web'
+import { getUpcomingEvents, reportApiFailure, type CafeEvent } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { usePageSeo } from '../lib/seo'
 
@@ -24,7 +24,7 @@ function EventCard({ event }: { event: CafeEvent }) {
         />
       )}
       <div className="flex flex-1 flex-col p-5">
-        <p className="text-xs font-bold uppercase tracking-widest text-meteor-accent">
+        <p className="text-xs font-bold uppercase tracking-widest text-meteor-accent-on-light">
           {formatEventDate(event.date, event.startTime)}
         </p>
         <h3 className="mt-2 font-title text-lg font-bold uppercase text-meteor-700">{event.title}</h3>
@@ -53,20 +53,27 @@ export function EventsPage() {
   usePageSeo('Agenda', 'Upcoming events at Meteor Community Cafe.')
   const [events, setEvents] = useState<CafeEvent[]>([])
   const [loaded, setLoaded] = useState(false)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     getUpcomingEvents('METEOR')
       .then(setEvents)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('events', err)
+        setError(true)
+      })
       .finally(() => setLoaded(true))
   }, [])
 
   return (
     <PageShell title="Agenda">
       {!loaded && (
-        <p className="text-sm text-meteor-700/50">Loading…</p>
+        <p className="text-sm text-meteor-700/70">Loading…</p>
       )}
-      {loaded && events.length === 0 && (
+      {error && (
+        <p className="text-sm text-red-700">Could not load the events. Please try again later.</p>
+      )}
+      {loaded && !error && events.length === 0 && (
         <p className="text-sm text-meteor-700/70">No upcoming events at the moment. Check back soon!</p>
       )}
       {loaded && events.length > 0 && (

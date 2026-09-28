@@ -10,14 +10,18 @@ import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,16 +104,78 @@ public class MediaService {
         return MediaAssetDto.from(saved);
     }
 
+    /**
+     * Delete an image, but only when nothing shows it any more: an image still used by an event,
+     * menu item, board member and so on is refused with a message naming what uses it. The row is
+     * deleted first and the file only after the transaction commits, so a failed or rolled-back
+     * delete never leaves content pointing at a file that is gone.
+     */
     public void delete(Long id) {
         MediaAsset asset = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Media asset not found: " + id));
-        try {
-            Files.deleteIfExists(Paths.get(mediaDir, asset.getFilename()));
-        } catch (IOException e) {
-            log.warn("Could not delete media file: {}", asset.getFilename(), e);
+
+        List<String> usages = usagesOf(id);
+        if (!usages.isEmpty()) {
+            throw new MediaInUseException(inUseMessage(usages));
         }
-        repo.deleteById(id);
+
+        try {
+            repo.delete(asset);
+            repo.flush(); // surface a foreign-key failure here, not at commit
+        } catch (DataIntegrityViolationException e) {
+            // Someone chose this image between the check above and the delete.
+            throw new MediaInUseException(
+                    "This image was just chosen for something else, so it cannot be deleted.");
+        }
         auditService.recordDelete(AuditEntityType.MEDIA_ASSET, id, asset.getFilename(),
                 "Deleted image: " + asset.getFilename());
+        deleteFileAfterCommit(asset.getFilename());
+    }
+
+    /** Human descriptions of what still uses an image, e.g. "the event 'Pub quiz'". */
+    List<String> usagesOf(Long id) {
+        List<String> usages = new ArrayList<>();
+        repo.eventsUsing(id).forEach(n -> usages.add("the event '" + n + "'"));
+        repo.menuItemsUsing(id).forEach(n -> usages.add("the menu item '" + n + "'"));
+        repo.dailyDishesUsing(id).forEach(n -> usages.add("the daily dish '" + n + "'"));
+        repo.boardMembersUsing(id).forEach(n -> usages.add("the board member '" + n + "'"));
+        repo.boardTermsUsing(id).forEach(n -> usages.add("the group photo of '" + n + "'"));
+        repo.vacanciesUsing(id).forEach(n -> usages.add("the vacancy '" + n + "'"));
+        repo.associationsUsing(id).forEach(n -> usages.add("the logo of '" + n + "'"));
+        return usages;
+    }
+
+    static String inUseMessage(List<String> usages) {
+        List<String> shown = usages.size() > 3 ? usages.subList(0, 3) : usages;
+        String list = shown.size() == 1 ? shown.get(0)
+                : String.join(", ", shown.subList(0, shown.size() - 1)) + " and " + shown.get(shown.size() - 1);
+        if (usages.size() > 3) {
+            list = String.join(", ", shown) + " and " + (usages.size() - 3) + " more";
+        }
+        return "This image is still used by " + list + ". Choose another image there first.";
+    }
+
+    /**
+     * Remove the file once the row is gone for good. Without a transaction (unit tests) the row
+     * delete has already happened, so the file goes straight away.
+     */
+    private void deleteFileAfterCommit(String filename) {
+        Runnable removeFile = () -> {
+            try {
+                Files.deleteIfExists(Paths.get(mediaDir, filename));
+            } catch (IOException e) {
+                log.warn("Could not delete media file: {}", filename, e);
+            }
+        };
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    removeFile.run();
+                }
+            });
+        } else {
+            removeFile.run();
+        }
     }
 }

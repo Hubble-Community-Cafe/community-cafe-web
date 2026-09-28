@@ -127,7 +127,7 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
             type="button"
             onClick={() => { close(); onClear() }}
             aria-label="Clear selection"
-            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-200 hover:text-slate-700"
+            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-700"
           >
             <X className="h-4 w-4" />
           </button>
@@ -143,7 +143,7 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label htmlFor={regularId} className="mb-1 block text-xs font-medium text-slate-600">
-                Regular price (€) <span className="text-slate-400">(leave blank to keep)</span>
+                Regular price (€) <span className="text-slate-500">(leave blank to keep)</span>
               </label>
               <input
                 id={regularId}
@@ -157,7 +157,7 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
             </div>
             <div>
               <label htmlFor={studentId} className="mb-1 block text-xs font-medium text-slate-600">
-                TU/e student price (€) <span className="text-slate-400">(leave blank to keep)</span>
+                TU/e student price (€) <span className="text-slate-500">(leave blank to keep)</span>
               </label>
               <input
                 id={studentId}

@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
-import { getWeeklyHours, getUpcomingOverrides, type WeeklyHours, type HoursOverride } from '@cafe/shared-web'
+import {
+  getWeeklyHours, getUpcomingOverrides, reportApiFailure, type WeeklyHours, type HoursOverride,
+} from '@cafe/shared-web'
 import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
 
@@ -41,14 +43,19 @@ export function Home() {
   usePageSeo('', 'Meteor Community Cafe on the TU/e campus: a lively cafe and meeting space by day, a relaxed spot for events by night.')
   const [hours, setHours] = useState<WeeklyHours[]>([])
   const [hoursLoaded, setHoursLoaded] = useState(false)
+  const [hoursError, setHoursError] = useState(false)
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
 
   useEffect(() => {
     getWeeklyHours('METEOR')
       .then(setHours)
-      .catch(() => {})
+      .catch((err: unknown) => {
+        void reportApiFailure('opening-hours', err)
+        setHoursError(true)
+      })
       .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('METEOR').then(setOverrides).catch(() => {})
+    getUpcomingOverrides('METEOR').then(setOverrides)
+      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
   }, [])
 
   const closedDays = DAY_ORDER.filter((d) => !hours.find((h) => h.dayOfWeek === d))
@@ -80,7 +87,7 @@ export function Home() {
               href={EXTERNAL.reservations}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 bg-meteor-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-950 transition hover:brightness-110"
+              className="inline-flex items-center gap-2 bg-meteor-accent px-5 py-3 text-sm font-bold uppercase tracking-wide text-meteor-800 transition hover:brightness-110"
             >
               Reservations
               <ExternalLink className="h-4 w-4" />
@@ -108,9 +115,13 @@ export function Home() {
             Opening hours
           </h2>
           {!hoursLoaded && (
-            <p className="mt-6 text-sm text-meteor-700/50">Loading…</p>
+            <p className="mt-6 text-sm text-meteor-700/70">Loading…</p>
           )}
-          {hoursLoaded && (
+          {/* Without this, a failed load would list every day as closed. */}
+          {hoursError && (
+            <p className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
+          )}
+          {hoursLoaded && !hoursError && (
             <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">
               {grouped.map(({ label, open, close }) => (
                 <div key={label} className="flex items-center justify-between py-3">
@@ -194,7 +205,7 @@ export function Home() {
             className="order-2 aspect-[4/5] w-full rounded-2xl object-cover shadow-lg md:order-1"
           />
           <div className="order-1 md:order-2">
-            <p className="font-title text-xs font-bold uppercase tracking-widest text-meteor-accent">
+            <p className="font-title text-xs font-bold uppercase tracking-widest text-meteor-accent-on-light">
               A non-profit
             </p>
             <p className="mt-3 text-xl font-semibold leading-relaxed text-meteor-500 md:text-2xl">

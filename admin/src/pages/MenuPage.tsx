@@ -391,15 +391,15 @@ export function MenuPage() {
                         aria-expanded={expandedTabId === tab.id}
                       >
                         {expandedTabId === tab.id
-                          ? <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
-                          : <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" />}
+                          ? <ChevronDown className="h-4 w-4 shrink-0 text-slate-500" />
+                          : <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" />}
                         <span className="font-semibold text-slate-800">{tab.name}</span>
                         {kindBadge(tab.kind)}
                         {tab.availabilityNote && (
-                          <span className="text-xs text-slate-400">{tab.availabilityNote}</span>
+                          <span className="text-xs text-slate-500">{tab.availabilityNote}</span>
                         )}
                         {tab.bar === null && (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-500">both bars</span>
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-600">both bars</span>
                         )}
                         {!tab.active && (
                           <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
@@ -416,14 +416,14 @@ export function MenuPage() {
                           />
                           <button
                             onClick={() => { setEditingCategory(tab); setShowNewTab(false) }}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                            className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                             aria-label="Edit tab"
                           >
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button
                             onClick={() => handleDeleteCategory(tab.id)}
-                            className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                            className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                             aria-label="Delete tab"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -436,7 +436,7 @@ export function MenuPage() {
                     {expandedTabId === tab.id && (
                       <div className="border-t border-slate-100 bg-slate-50 px-4 py-3 space-y-2">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
                             Sub-categories
                           </span>
                           {canEditContent && (
@@ -461,7 +461,7 @@ export function MenuPage() {
                         )}
 
                         {subsForTab(tab.id).length === 0 && newSubForTab !== tab.id && (
-                          <p className="text-xs text-slate-400">No sub-categories yet.</p>
+                          <p className="text-xs text-slate-500">No sub-categories yet.</p>
                         )}
 
                         <SortableList
@@ -498,11 +498,11 @@ export function MenuPage() {
                                     aria-expanded={expandedCatId === cat.id}
                                   >
                                     {expandedCatId === cat.id
-                                      ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-400" />
-                                      : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-400" />}
+                                      ? <ChevronDown className="h-3.5 w-3.5 shrink-0 text-slate-500" />
+                                      : <ChevronRight className="h-3.5 w-3.5 shrink-0 text-slate-500" />}
                                     <span className="text-sm font-medium text-slate-700">{cat.name}</span>
                                     {cat.availabilityNote && (
-                                      <span className="text-xs text-slate-400">{cat.availabilityNote}</span>
+                                      <span className="text-xs text-slate-500">{cat.availabilityNote}</span>
                                     )}
                                     {!cat.active && (
                                       <span className="rounded bg-amber-50 px-1.5 py-0.5 text-xs font-medium text-amber-700">
@@ -519,14 +519,14 @@ export function MenuPage() {
                                       />
                                       <button
                                         onClick={() => { setEditingCategory(cat); setNewSubForTab(null) }}
-                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                        className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                                         aria-label="Edit sub-category"
                                       >
                                         <Pencil className="h-3.5 w-3.5" />
                                       </button>
                                       <button
                                         onClick={() => handleDeleteCategory(cat.id)}
-                                        className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                        className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                                         aria-label="Delete sub-category"
                                       >
                                         <Trash2 className="h-3.5 w-3.5" />
@@ -554,11 +554,11 @@ export function MenuPage() {
                                               aria-label={`Select all items in ${cat.name}`}
                                               className="h-4 w-4 rounded border-slate-300"
                                             />
-                                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Items</span>
+                                            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Items</span>
                                           </label>
                                         )}
                                         {!(canEditContent && (itemsByCategory[cat.id]?.length ?? 0) > 0) && (
-                                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-400">Items</span>
+                                          <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">Items</span>
                                         )}
                                       </div>
                                       {canEditContent && (
@@ -591,9 +591,9 @@ export function MenuPage() {
                                     )}
 
                                     {!itemsByCategory[cat.id] ? (
-                                      <p className="text-xs text-slate-400">Loading items…</p>
+                                      <p className="text-xs text-slate-500">Loading items…</p>
                                     ) : itemsByCategory[cat.id].length === 0 && newItemForCategory !== cat.id ? (
-                                      <p className="text-xs text-slate-400">No items yet.</p>
+                                      <p className="text-xs text-slate-500">No items yet.</p>
                                     ) : (
                                       <SortableList
                                         items={itemsByCategory[cat.id]}
@@ -643,7 +643,7 @@ export function MenuPage() {
                                                     {item.studentPrice != null && <> / €{item.studentPrice.toFixed(2)}</>}
                                                   </span>
                                                   {item.description && (
-                                                    <span className="hidden text-xs text-slate-400 sm:block">{item.description}</span>
+                                                    <span className="hidden text-xs text-slate-500 sm:block">{item.description}</span>
                                                   )}
                                                 </div>
                                                 {canEditContent && (
@@ -655,14 +655,14 @@ export function MenuPage() {
                                                     />
                                                     <button
                                                       onClick={() => { setEditingItem(item); setNewItemForCategory(null) }}
-                                                      className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                                                      className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700"
                                                       aria-label="Edit item"
                                                     >
                                                       <Pencil className="h-3.5 w-3.5" />
                                                     </button>
                                                     <button
                                                       onClick={() => handleDeleteItem(item)}
-                                                      className="rounded-lg p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600"
+                                                      className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                                                       aria-label="Delete item"
                                                     >
                                                       <Trash2 className="h-3.5 w-3.5" />

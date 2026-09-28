@@ -2,7 +2,9 @@ import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { FormError } from '@cafe/shared-web'
 import { DeclarationsPage } from '../pages/DeclarationsPage'
+import { expectHiddenHoneypot } from './formTestUtils'
 
 // The widget registers web workers and auto-fetches on mount; the page only needs its callback.
 vi.mock('altcha', () => ({}))
@@ -90,5 +92,23 @@ describe('Meteor DeclarationsPage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent(/attach the receipt/i)
     expect(submitDeclarationForm).not.toHaveBeenCalled()
+  })
+
+  it('shows the backend validation message, or a general one for other failures', async () => {
+    submitDeclarationForm.mockRejectedValueOnce(new FormError('iban is not a valid IBAN'))
+    const user = userEvent.setup()
+    renderPage()
+    await fillRequiredFields(user)
+    await user.upload(screen.getByLabelText('Receipt *'), file('receipt.pdf', 'application/pdf'))
+    await user.click(screen.getByRole('button', { name: 'Send' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('iban is not a valid IBAN')
+
+    submitDeclarationForm.mockRejectedValueOnce(new Error('boom'))
+    await user.click(screen.getByRole('button', { name: 'Send' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
+  })
+
+  it('has a hidden honeypot', () => {
+    expectHiddenHoneypot(renderPage().container)
   })
 })

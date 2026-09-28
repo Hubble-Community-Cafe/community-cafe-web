@@ -137,6 +137,37 @@ class RoleAuthorizationFilterTest {
         verify(filterChain).doFilter(request, response);
     }
 
+    @Test
+    void eachRoleGetsItsOwnAuthoritiesAndEverythingBelowIt() throws Exception {
+        Map<AdminRole, List<String>> expected = Map.of(
+                AdminRole.VIEWER, List.of("ROLE_VIEWER"),
+                AdminRole.DDD_POSTER, List.of("ROLE_VIEWER", "ROLE_DDD_POSTER"),
+                AdminRole.EDITOR, List.of("ROLE_VIEWER", "ROLE_DDD_POSTER", "ROLE_EDITOR"),
+                AdminRole.ADMIN, List.of("ROLE_VIEWER", "ROLE_DDD_POSTER", "ROLE_EDITOR", "ROLE_ADMIN"));
+        RoleAuthorizationFilter filter = new RoleAuthorizationFilter(adminUserService, "");
+        request.setRequestURI("/api/admin/menu");
+
+        for (Map.Entry<AdminRole, List<String>> role : expected.entrySet()) {
+            SecurityContextHolder.clearContext();
+            setupJwtAuth(role.getKey(), List.of());
+
+            filter.doFilter(request, response, filterChain);
+
+            assertThat(authorities()).as(role.getKey().name()).containsExactlyInAnyOrderElementsOf(role.getValue());
+        }
+    }
+
+    @Test
+    void onlyAdminApiPathsAreEnriched() throws Exception {
+        RoleAuthorizationFilter filter = new RoleAuthorizationFilter(adminUserService, "");
+        for (String uri : new String[]{"/media/a.jpg", "/api/forms/complaint", "/api/menu/HUBBLE", "/actuator/health"}) {
+            request.setRequestURI(uri);
+            filter.doFilter(request, response, filterChain);
+        }
+
+        verify(adminUserService, never()).getOrCreateUser(anyString(), anyString(), anyString());
+    }
+
     private void setupJwtAuth(AdminRole role, List<String> groups) {
         setJwt(Map.of("oid", OID, "preferred_username", "staff@hubble.cafe", "name", "Staff", "sub", OID,
                 "groups", groups));
@@ -154,6 +185,7 @@ class RoleAuthorizationFilterTest {
                 Map.of("alg", "RS256"), claims);
         SecurityContextHolder.getContext().setAuthentication(new JwtAuthenticationToken(jwt));
     }
+
 
     private List<String> authorities() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

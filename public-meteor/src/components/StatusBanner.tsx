@@ -13,7 +13,7 @@ export function StatusBanner({ status }: { status: BarStatus }) {
   const message = status.bannerMessage ?? (closed ? 'Sadly we are closed' : 'We are open')
 
   return (
-    <div role="status" className={closed ? 'bg-meteor-500 text-white' : 'bg-meteor-accent text-meteor-950'}>
+    <div role="status" className={closed ? 'bg-meteor-500 text-white' : 'bg-meteor-accent text-meteor-800'}>
       <div className="mx-auto flex max-w-6xl items-center justify-center gap-2 px-4 py-2 text-sm font-bold uppercase tracking-wide">
         <span
           aria-hidden="true"

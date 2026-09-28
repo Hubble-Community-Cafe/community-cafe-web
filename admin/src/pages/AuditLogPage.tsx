@@ -49,7 +49,7 @@ export function AuditLogPage() {
       <PageHeader title="Audit log" description="Every change made through the admin, newest first." />
       <Card>
         <div className="mb-4 flex flex-wrap items-end gap-3">
-          <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Entity
             <select
               aria-label="Filter by entity"
@@ -68,7 +68,7 @@ export function AuditLogPage() {
               ))}
             </select>
           </label>
-          <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-400">
+          <label className="flex flex-col gap-1 text-xs font-semibold uppercase tracking-wide text-slate-500">
             Action
             <select
               aria-label="Filter by action"
@@ -114,10 +114,11 @@ export function AuditLogPage() {
           </p>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Focusable, so keyboard users can scroll the table sideways on a narrow screen. */}
+            <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Audit log entries">
               <table className="w-full text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-400">
+                  <tr className="border-b border-slate-200 text-xs uppercase tracking-wide text-slate-500">
                     <th className="py-2 pr-4 font-semibold">When</th>
                     <th className="py-2 pr-4 font-semibold">Who</th>
                     <th className="py-2 pr-4 font-semibold">Action</th>
