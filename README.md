@@ -89,6 +89,8 @@ cd backend && ./mvnw spring-boot:run
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.
 
+CI measures unit-test coverage (JaCoCo for the backend, `npm run test:coverage` per frontend) and shows the line, branch and function totals on each run's summary page, with the full HTML reports as artifacts. It is report-only for now: no minimum fails the build. Run the same locally with `./mvnw test` (report in `backend/target/site/jacoco/`) or `npm run test:coverage --workspace @cafe/<app>` (report in `<app>/coverage/`).
+
 ## Content-Security-Policy
 
 All three frontends send an enforcing Content-Security-Policy, so the browser blocks any script, image, style or request from an origin that is not listed. The public sites set it in their `nginx.conf`; the admin keeps it in [`admin/nginx-csp.conf`](admin/nginx-csp.conf), rendered at container startup with the origin of `API_URL` filled in. When a feature needs another origin (an external API, image host or embed), add it to the right policy or the browser will block it. The admin allows `https://aurora-client.hubble.cafe` for Screens poster thumbnails, so a different `AURORA_POSTER_BASE_URL` on the backend also needs that entry changed. To try an admin policy change without blocking anything, set `CSP_REPORT_ONLY=true` on the admin container: violations are then only logged in the browser console. The e2e spec `admin/csp` fails on any violation.

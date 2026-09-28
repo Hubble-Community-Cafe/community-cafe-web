@@ -17,7 +17,7 @@ permissions:
 jobs:
   # ==================== TESTS ====================
   backend:
-    name: Backend (Maven · JDK 21)
+    name: Backend (Maven · JDK 25)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -33,6 +33,17 @@ jobs:
       - if: steps.check.outputs.present == 'true'
         working-directory: backend
         run: ./mvnw -B test
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles('backend/target/site/jacoco/jacoco.csv') != ''
+        run: python3 scripts/coverage-summary.py "Backend" jacoco backend/target/site/jacoco/jacoco.csv >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload coverage report
+        if: always() && hashFiles('backend/target/site/jacoco/jacoco.csv') != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: backend-coverage
+          path: backend/target/site/jacoco/
+          retention-days: 14
 
   frontend:
     name: Frontend (${{ matrix.app }})
@@ -59,7 +70,18 @@ jobs:
       - if: steps.check.outputs.present == 'true'
         run: npm run lint --workspace @cafe/${{ matrix.app }} --if-present
       - if: steps.check.outputs.present == 'true'
-        run: npm run test:run --workspace @cafe/${{ matrix.app }} --if-present
+        run: npm run test:coverage --workspace @cafe/${{ matrix.app }} --if-present
+      # Coverage is report-only for now (no minimum): totals on the run page, full report as artifact.
+      - name: Coverage summary
+        if: always() && hashFiles(format('{0}/coverage/coverage-summary.json', matrix.app)) != ''
+        run: python3 scripts/coverage-summary.py "${{ matrix.app }}" vitest ${{ matrix.app }}/coverage/coverage-summary.json >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload coverage report
+        if: always() && hashFiles(format('{0}/coverage/coverage-summary.json', matrix.app)) != ''
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: ${{ matrix.app }}-coverage
+          path: ${{ matrix.app }}/coverage/
+          retention-days: 14
       - if: steps.check.outputs.present == 'true'
         run: npm run build --workspace @cafe/${{ matrix.app }} --if-present
 
