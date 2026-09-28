@@ -1,0 +1,6 @@
+# Trivy configuration for the repository scan in .github/workflows/security.yml.
+# Java/Maven dependencies are covered by OWASP Dependency-Check (backend job); skipping them here
+# avoids Maven Central 429 rate-limit errors in CI.
+scan:
+  skip-dirs:
+    - backend

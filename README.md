@@ -30,7 +30,7 @@ Note that [star-wind](https://github.com/Hubble-Community-Cafe/star-wind) drives
 
 ## Tech stack
 
-React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 21 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
+React 19 + TypeScript + Vite + Tailwind (frontends), Spring Boot + Java 25 + JPA (backend), MariaDB, Azure AD / Entra auth, Sentry, Docker / Portainer. Cookieless, no third-party tracking.
 
 ## Getting started
 
@@ -89,6 +89,12 @@ cd backend && ./mvnw spring-boot:run
 
 See [`e2e/README.md`](e2e/README.md) for the end-to-end test suite and coverage map.
 
+CI measures unit-test coverage (JaCoCo for the backend, `npm run test:coverage` per frontend) and shows the line, branch and function totals on each run's summary page, with the full HTML reports as artifacts. It is report-only for now: no minimum fails the build. Run the same locally with `./mvnw test` (report in `backend/target/site/jacoco/`) or `npm run test:coverage --workspace @cafe/<app>` (report in `<app>/coverage/`).
+
+## Content-Security-Policy
+
+All three frontends send an enforcing Content-Security-Policy, so the browser blocks any script, image, style or request from an origin that is not listed. The public sites set it in their `nginx.conf`; the admin keeps it in [`admin/nginx-csp.conf`](admin/nginx-csp.conf), rendered at container startup with the origin of `API_URL` filled in. When a feature needs another origin (an external API, image host or embed), add it to the right policy or the browser will block it. The admin allows `https://aurora-client.hubble.cafe` for Screens poster thumbnails, so a different `AURORA_POSTER_BASE_URL` on the backend also needs that entry changed. To try an admin policy change without blocking anything, set `CSP_REPORT_ONLY=true` on the admin container: violations are then only logged in the browser console. The e2e spec `admin/csp` fails on any violation.
+
 ## Domains and certificates
 
 Each site has one **canonical host**, `hubble.cafe` and `meteor.cafe`. Everything else is an alias that resolves to the same container:
@@ -126,6 +132,10 @@ is usually the visitor's network.
 ## Status
 
 Feature-complete and running at `hubble.cafe` and `meteor.cafe`: all CMS modules, the on-site forms, the static pages, the admin, and the full e2e suite are in place.
+
+## Security checks
+
+[`.github/workflows/security.yml`](.github/workflows/security.yml) runs on every push and PR to `main` and `develop`, and weekly on Monday (so a new CVE in an unchanged dependency still surfaces): gitleaks (secrets in the git history), Semgrep (static analysis), `npm audit` (the frontend workspace and `e2e`), OWASP Dependency-Check (backend Maven dependencies) and Trivy (lockfiles, Dockerfiles and compose files; the backend is left to OWASP via [`.github/trivy.yaml`](.github/trivy.yaml)). Only critical findings fail the check: a leaked secret, OWASP CVSS 9 or higher, a critical npm advisory, or a critical Trivy finding with a fix available. Everything else is reported in the repository's Security tab (code scanning). The OWASP job needs an `NVD_API_KEY` repository secret ([request a key](https://nvd.nist.gov/developers/request-an-api-key)); without it the job is skipped with a warning. Confirmed false positives go in [`backend/.owasp-suppressions.xml`](backend/.owasp-suppressions.xml) with a reason, never in `continue-on-error`.
 
 ## Contributing
 

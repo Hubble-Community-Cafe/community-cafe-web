@@ -1,6 +1,7 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.dto.MediaAssetDto;
+import cafe.community.backend.media.ImageSanitizer;
 import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.model.MediaAsset;
@@ -64,23 +65,32 @@ public class MediaService {
                     + ". Allowed: JPEG, PNG, WebP, GIF.");
         }
 
-        String ext = EXTENSIONS.get(contentType);
+        // Verify the real type and strip EXIF/XMP (GPS position, camera, timestamps) before the
+        // image is stored, since everything in the media folder is served publicly.
+        ImageSanitizer.SanitizedImage image;
+        try {
+            image = ImageSanitizer.sanitize(file.getBytes(), contentType);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to read uploaded file", e);
+        }
+
+        String ext = EXTENSIONS.get(image.contentType());
         String filename = UUID.randomUUID() + "." + ext;
         Path dir = Paths.get(mediaDir);
 
         try {
             Files.createDirectories(dir);
-            file.transferTo(dir.resolve(filename));
+            Files.write(dir.resolve(filename), image.bytes());
         } catch (IOException e) {
             throw new RuntimeException("Failed to store uploaded file", e);
         }
 
         MediaAsset asset = new MediaAsset();
         asset.setFilename(filename);
-        asset.setContentType(contentType);
+        asset.setContentType(image.contentType());
         asset.setUrl(mediaBaseUrl + "/media/" + filename);
         asset.setAlt(alt);
-        asset.setSizeBytes(file.getSize());
+        asset.setSizeBytes((long) image.bytes().length);
         asset.setBar(bar);
 
         MediaAsset saved = repo.save(asset);

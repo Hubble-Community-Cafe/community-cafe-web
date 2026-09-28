@@ -29,6 +29,7 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 COPY admin/nginx.conf /etc/nginx/conf.d/default.conf
+COPY admin/nginx-csp.conf /etc/nginx/csp.conf.template
 COPY --from=build /app/admin/dist /usr/share/nginx/html
 
 # Runtime config injection: rewrite config.js from env at container startup.
@@ -48,7 +49,21 @@ RUN echo '#!/bin/sh' > /docker-entrypoint.d/40-inject-config.sh && \
     echo 'EOF' >> /docker-entrypoint.d/40-inject-config.sh && \
     chmod +x /docker-entrypoint.d/40-inject-config.sh
 
+# Render the CSP at container startup: fill in the API origin (scheme://host[:port] of API_URL, or
+# nothing when API_URL is relative or empty) and pick the header name. CSP_REPORT_ONLY=true sends
+# Content-Security-Policy-Report-Only, which only logs violations in the browser console; use it to
+# try a policy change without blocking anything.
+RUN mkdir -p /etc/nginx/snippets && \
+    printf '%s\n' \
+      '#!/bin/sh' \
+      'case "${API_URL:-}" in http://*|https://*) O=$(printf "%s" "$API_URL" | sed -E "s#^(https?://[^/]+).*#\\1#") ;; *) O="" ;; esac' \
+      'H="Content-Security-Policy"; [ "${CSP_REPORT_ONLY:-}" = "true" ] && H="Content-Security-Policy-Report-Only"' \
+      'sed -e "s#__API_ORIGIN__#${O}#g" -e "s#__CSP_HEADER__#${H}#g" /etc/nginx/csp.conf.template > /etc/nginx/snippets/csp.conf' \
+      > /docker-entrypoint.d/41-render-csp.sh && \
+    chmod +x /docker-entrypoint.d/41-render-csp.sh
+
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
+    chown -R nginx:nginx /etc/nginx/snippets && \
     chown -R nginx:nginx /var/cache/nginx && \
     touch /var/run/nginx.pid && \
     chown -R nginx:nginx /var/run/nginx.pid

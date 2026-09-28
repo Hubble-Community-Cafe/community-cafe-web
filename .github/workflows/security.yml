@@ -1,10 +1,23 @@
 name: Security
 
+# Blocking policy: a job fails only on CRITICAL findings (OWASP CVSS 9 or higher, npm audit
+# critical, Trivy CRITICAL with a fix available, and any leaked secret). Everything else is
+# reported in the Security tab (code scanning) or the job log without failing the check.
+
 on:
   push:
     branches: [main, develop]
   pull_request:
     branches: [main, develop]
+  schedule:
+    # Weekly, so a new CVE in an unchanged dependency surfaces without waiting for a push.
+    # Scheduled runs use the default branch (main).
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -17,7 +30,209 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
-      # Run the gitleaks CLI via its image directly. The gitleaks-action requires a
-      # paid license on organization repos; the CLI is free and needs no license.
+      # Run the gitleaks CLI via its image directly. The gitleaks-action requires a paid license
+      # on organization repos; the CLI is free and needs no license. Pinned by tag and digest;
+      # bump both together when updating.
       - name: Run gitleaks
-        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:latest detect --source=/repo --no-banner --redact
+        run: docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.30.1@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f detect --source=/repo --no-banner --redact
+
+  semgrep:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    # Dependabot PRs only touch dependency files.
+    if: github.actor != 'dependabot[bot]'
+    permissions:
+      contents: read
+      security-events: write
+    container:
+      image: semgrep/semgrep:1.178.0@sha256:32e459968daabe7ab86968184a29109b9564aa00392401156f9788452b42786b
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Report only. Explicit rule packs with metrics off, instead of `--config auto`, which
+      # requires sending usage metrics to Semgrep.
+      - name: Run Semgrep
+        run: >-
+          semgrep scan --metrics=off --sarif --output semgrep.sarif
+          --config p/java --config p/typescript --config p/react
+          --config p/nginx --config p/dockerfile --config p/github-actions
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
+        if: always() && hashFiles('semgrep.sarif') != ''
+        with:
+          sarif_file: semgrep.sarif
+          category: semgrep
+
+  npm-audit:
+    name: Dependency audit (npm)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version-file: .nvmrc
+
+      # npm audit reads the lockfile only, so no install is needed. The log lists every finding;
+      # only critical ones fail the step. One lockfile covers all workspaces; e2e has its own.
+      - name: Audit the frontend workspaces
+        run: npm audit --audit-level=critical
+
+      - name: Audit the e2e suite
+        if: always()
+        working-directory: e2e
+        run: npm audit --audit-level=critical
+
+  owasp-dependency-check:
+    name: Dependency audit (backend, OWASP)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    env:
+      NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Skip without an NVD API key
+        if: env.NVD_API_KEY == ''
+        working-directory: .
+        run: |
+          msg="OWASP Dependency-Check skipped: the NVD_API_KEY secret is not set. Request a key at https://nvd.nist.gov/developers/request-an-api-key and add it as a repository secret."
+          echo "::warning title=Dependency check skipped::$msg"
+          echo "### Dependency check skipped" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        if: env.NVD_API_KEY != ''
+
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v6.0.1
+        if: env.NVD_API_KEY != ''
+        with:
+          distribution: temurin
+          java-version: "25"
+          cache: maven
+
+      # The NVD database gets its own cache: inside ~/.m2 it would be wiped by every pom.xml change
+      # (setup-java keys the Maven cache on the pom hash), forcing a full download each time. A new
+      # entry is saved on every run and the newest restored, so each run only fetches the changes.
+      - name: Restore NVD database
+        if: env.NVD_API_KEY != ''
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.dependency-check-data
+          key: nvd-db-${{ github.run_id }}
+          restore-keys: nvd-db-
+
+      # Fails on any dependency with CVSS 9 or higher. False positives go in
+      # .owasp-suppressions.xml with a reason, not in continue-on-error.
+      - name: Run OWASP Dependency-Check
+        id: owasp
+        if: env.NVD_API_KEY != ''
+        run: |
+          ./mvnw -B org.owasp:dependency-check-maven:13.0.0:check \
+            -DfailBuildOnCVSS=9 \
+            -DsuppressionFile=.owasp-suppressions.xml \
+            -DdataDirectory="$HOME/.dependency-check-data" \
+            -Dformats=SARIF \
+            -DnvdApiKey="${NVD_API_KEY}"
+
+      # Save even when the check failed on a finding, so the next run stays incremental. Only when
+      # the analysis really ran: the report exists then, whereas the database file is created
+      # (empty) even when the NVD download fails, and caching that would only hide the failure.
+      - name: Check for a usable NVD database
+        id: nvd
+        if: always() && env.NVD_API_KEY != ''
+        run: |
+          if [ -f target/dependency-check-report.sarif ]; then echo "present=true" >> "$GITHUB_OUTPUT"; else echo "present=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Save NVD database
+        if: always() && steps.nvd.outputs.present == 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.dependency-check-data
+          key: nvd-db-${{ github.run_id }}
+
+      # A failure has two very different causes; say which one on the run page.
+      - name: Explain a failed dependency check
+        if: failure() && steps.owasp.outcome == 'failure'
+        run: |
+          if [ -f target/dependency-check-report.sarif ]; then
+            msg="OWASP Dependency-Check found a dependency with CVSS 9 or higher. See the Security tab (category owasp-dependency-check); fix it, or suppress a false positive in backend/.owasp-suppressions.xml with a reason."
+          else
+            msg="OWASP Dependency-Check could not run: no vulnerability data. The NVD download failed, most likely because the NVD_API_KEY secret is no longer valid (the NVD answers an unknown key with 404). Request a new key at https://nvd.nist.gov/developers/request-an-api-key and update the secret."
+          fi
+          echo "::error title=Dependency check::$msg"
+          echo "### Dependency check failed" >> "$GITHUB_STEP_SUMMARY"
+          echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+
+      # Code scanning rejects rule IDs over 255 characters, which Dependency-Check can produce.
+      - name: Truncate long SARIF rule IDs
+        if: always() && hashFiles('backend/target/dependency-check-report.sarif') != ''
+        run: |
+          python3 -c "
+          import json, hashlib
+          with open('target/dependency-check-report.sarif') as f:
+              sarif = json.load(f)
+          def short(rid):
+              return rid[:200] + '_' + hashlib.sha256(rid.encode()).hexdigest()[:54] if len(rid) > 255 else rid
+          for run in sarif.get('runs', []):
+              for rule in run.get('tool', {}).get('driver', {}).get('rules', []):
+                  rule['id'] = short(rule.get('id', ''))
+              for result in run.get('results', []):
+                  result['ruleId'] = short(result.get('ruleId', ''))
+          with open('target/dependency-check-report.sarif', 'w') as f:
+              json.dump(sarif, f)
+          "
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
+        if: always() && hashFiles('backend/target/dependency-check-report.sarif') != ''
+        with:
+          sarif_file: backend/target/dependency-check-report.sarif
+          category: owasp-dependency-check
+
+  trivy-repo:
+    name: Repository scan (Trivy)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      # Lockfile vulnerabilities, Dockerfile/compose misconfigurations and secrets in the working
+      # tree, HIGH and CRITICAL, into the Security tab. Maven is left to the OWASP job
+      # (.github/trivy.yaml), which avoids Maven Central rate limits here.
+      - name: Run Trivy (report)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: sarif
+          output: trivy-repo.sarif
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          trivy-config: .github/trivy.yaml
+
+      - name: Upload SARIF to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@1c5b675653bb5c22dbe9b12b556ec555138e09fd # v4
+        if: always() && hashFiles('trivy-repo.sarif') != ''
+        with:
+          sarif_file: trivy-repo.sarif
+          category: trivy-repo
+
+      # Fails the job on CRITICAL findings that have a fix, listed as a table in the log.
+      - name: Run Trivy (block on critical)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: fs
+          scan-ref: .
+          format: table
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: '1'
+          skip-setup-trivy: true
+          trivy-config: .github/trivy.yaml
