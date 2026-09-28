@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { ScreensPage } from '../pages/ScreensPage'
 import {
@@ -45,6 +46,9 @@ const asEditor = () => mockPermissions.mockReturnValue({
   canEditContent: true, canEditDailyDish: true, canManageUsers: false, canViewAuditLog: false,
 })
 
+/** The page title's Help button reads the route, so the page renders inside a router. */
+const renderPage = () => render(<MemoryRouter initialEntries={['/screens']}><ScreensPage /></MemoryRouter>)
+
 describe('ScreensPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
@@ -54,13 +58,13 @@ describe('ScreensPage', () => {
   })
 
   it('lists the screens with the handler each is on', async () => {
-    render(<ScreensPage />)
+    renderPage()
     expect(await screen.findByText('HubbleGeneralScreen')).toBeInTheDocument()
     expect(screen.getAllByText('CarouselPosterHandler')).toHaveLength(2)
   })
 
   it('lets a viewer switch the scene and refreshes afterwards', async () => {
-    render(<ScreensPage />)
+    renderPage()
     fireEvent.click(await screen.findByRole('button', { name: /Closed/ }))
 
     await waitFor(() => expect(mockApply).toHaveBeenCalledWith('CLOSED'))
@@ -69,7 +73,7 @@ describe('ScreensPage', () => {
 
   it('surfaces the Aurora message when a switch fails', async () => {
     mockApply.mockRejectedValue(new Error('Could not switch screen "PlazaScreen" to StaticPosterHandler'))
-    render(<ScreensPage />)
+    renderPage()
     fireEvent.click(await screen.findByRole('button', { name: /Last call/ }))
 
     expect(await screen.findByText(/Could not switch screen "PlazaScreen"/)).toBeInTheDocument()
@@ -79,7 +83,7 @@ describe('ScreensPage', () => {
     mockFetch.mockResolvedValue({
       ...status, available: false, unavailableReason: 'Aurora is not configured.',
     })
-    render(<ScreensPage />)
+    renderPage()
 
     expect(await screen.findByText('Aurora is not configured.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Closed/ })).not.toBeInTheDocument()
@@ -87,14 +91,14 @@ describe('ScreensPage', () => {
 
   it('flags a mixed state rather than guessing a scene', async () => {
     mockFetch.mockResolvedValue({ ...status, currentScene: 'MIXED' })
-    render(<ScreensPage />)
+    renderPage()
 
     expect(await screen.findByText('Mixed')).toBeInTheDocument()
     expect(screen.getByText(/not all showing the same thing/)).toBeInTheDocument()
   })
 
   it('hides the poster settings from a viewer', async () => {
-    render(<ScreensPage />)
+    renderPage()
     await screen.findByText('HubbleGeneralScreen')
 
     expect(screen.queryByLabelText('Closed')).not.toBeInTheDocument()
@@ -103,7 +107,7 @@ describe('ScreensPage', () => {
   it('lets an editor re-point a scene at another poster', async () => {
     asEditor()
     mockUpdate.mockResolvedValue({ ...status, closedPosterId: 4 })
-    render(<ScreensPage />)
+    renderPage()
 
     fireEvent.change(await screen.findByLabelText('Closed'), { target: { value: '4' } })
 

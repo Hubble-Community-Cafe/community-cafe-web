@@ -6,6 +6,7 @@ import {
   fetchOverrides, createOverride, deleteOverride,
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
+import { PageHelp } from '../components/HelpGuide'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
@@ -255,7 +256,10 @@ export function OpeningHoursPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Opening Hours</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold text-slate-900">Opening Hours</h1>
+          <PageHelp />
+        </div>
         <p className="mt-1 text-sm text-slate-600">
           Set the regular weekly schedule and add one-off date overrides for closures or special hours.
         </p>

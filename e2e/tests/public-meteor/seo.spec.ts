@@ -37,6 +37,9 @@ test.describe('Meteor SEO meta', () => {
     for (const route of ['/', '/menu', '/menu/discount-policy', '/agenda', '/community/board',
       '/community/board/previous', '/complaints', '/declarations', '/privacy']) {
       await page.goto(route)
+      // index.html already carries the site name as the title; pages load on demand and then set
+      // their own, so wait for that instead of reading the placeholder.
+      if (route !== '/') await expect(page).not.toHaveTitle('Meteor Community Cafe')
       await expect(page).toHaveTitle(/Meteor Community Cafe$/)
       titles.set(route, await page.title())
     }

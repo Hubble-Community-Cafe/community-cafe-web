@@ -5,6 +5,7 @@ import {
   fetchEvents, createEvent, updateEvent, deleteEvent,
   type BarLocation, type CafeEvent, type EventRequest,
 } from '../lib/api'
+import { PageHelp } from '../components/HelpGuide'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 
@@ -224,7 +225,10 @@ export function EventsPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Events</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold text-slate-900">Events</h1>
+          <PageHelp />
+        </div>
         <p className="mt-1 text-sm text-slate-600">
           Manage upcoming events for each bar. Published events appear on the public site.
         </p>

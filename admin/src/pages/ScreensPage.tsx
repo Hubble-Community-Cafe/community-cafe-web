@@ -5,6 +5,7 @@ import {
   fetchScreenScene, applyScreenScene, updateScreenSceneSettings,
   type CurrentScene, type ScreenScene, type ScreenScenePoster, type ScreenSceneStatus,
 } from '../lib/api'
+import { PageHelp } from '../components/HelpGuide'
 
 const SCENES: { scene: ScreenScene; label: string; hint: string; icon: typeof Monitor }[] = [
   { scene: 'OPEN', label: 'Open', hint: 'Back to the poster carousel', icon: PlayCircle },
@@ -122,7 +123,10 @@ export function ScreensPage() {
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Screens</h1>
+        <div className="flex items-start justify-between gap-3">
+          <h1 className="text-2xl font-bold text-slate-900">Screens</h1>
+          <PageHelp />
+        </div>
         <p className="mt-1 text-sm text-slate-600">
           Switch every Aurora screen between the poster carousel and the closed or last call slide.
         </p>

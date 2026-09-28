@@ -60,12 +60,19 @@ export async function seedA11yContent(request: APIRequestContext): Promise<void>
  * a11y-known-issues.ts are reported in the attachment but tolerated; any other violation fails the
  * test. Soft, so one test scanning several pages reports every page in a single run.
  */
-export async function expectNoNewA11yViolations(page: Page, testInfo: TestInfo, label: string): Promise<void> {
+export async function expectNoNewA11yViolations(
+  page: Page, testInfo: TestInfo, label: string,
+  // `include` limits the scan to part of the page, e.g. an open dialog: the page behind a modal
+  // backdrop is dimmed on purpose, and is scanned on its own already.
+  options: { include?: string } = {},
+): Promise<void> {
   // Scan the settled page: text measured mid-animation reports a lower contrast than users see.
   // Endless animations (a carousel, a ticker) never settle, so only finite ones are waited for.
   await page.waitForFunction(() => document.getAnimations().every(
     (a) => a.playState !== 'running' || a.effect?.getComputedTiming().iterations === Infinity))
-  const results = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+  const builder = new AxeBuilder({ page }).withTags(WCAG_TAGS)
+  if (options.include) builder.include(options.include)
+  const results = await builder.analyze()
   await attachJson(testInfo, `axe-${label.replace(/[^a-z0-9]+/gi, '-')}.json`, results.violations)
 
   const known = KNOWN_A11Y_ISSUES[`${testInfo.project.name} ${label}`] ?? []

@@ -26,6 +26,19 @@ export class AdminApp {
     return this.page.getByRole('button', { name: /edit/i })
   }
 
+  /** The "Help" button next to the page title, which opens that page's guide. */
+  helpButton(): Locator {
+    return this.page.getByRole('main').getByRole('button', { name: 'Help' })
+  }
+
+  /** Open the page's guide and return the dialog. */
+  async openHelp(): Promise<Locator> {
+    await this.helpButton().click()
+    const dialog = this.page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    return dialog
+  }
+
   async expectDashboardRole(role: string): Promise<void> {
     await this.page.goto('/')
     await expect(this.page.getByText(role, { exact: true })).toBeVisible()
