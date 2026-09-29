@@ -12,6 +12,7 @@ import com.microsoft.graph.serviceclient.GraphServiceClient;
 import com.microsoft.graph.users.item.sendmail.SendMailPostRequestBody;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
@@ -32,6 +33,8 @@ public class GraphFormMailService implements FormMailService {
 
     private final GraphServiceClient graph;
 
+    // @Autowired: with the test constructor below there are two, and Spring must know which to use.
+    @Autowired
     public GraphFormMailService(
             @Value("${app.mail.graph.tenant-id}") String tenantId,
             @Value("${app.mail.graph.client-id}") String clientId,
