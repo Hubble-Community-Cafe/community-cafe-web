@@ -53,4 +53,14 @@ describe('Hubble EventsPage', () => {
     expect(screen.queryByText(/No upcoming events/)).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('events', failure)
   })
+
+  it('keeps the line breaks the board typed in the description', async () => {
+    getUpcomingEvents.mockResolvedValue([
+      cafeEvent({ description: 'Board:\nChair\nSecretary' }),
+    ])
+    renderPage()
+    const description = await screen.findByText(/Board:/)
+    expect(description.textContent).toBe('Board:\nChair\nSecretary')
+    expect(description).toHaveClass('whitespace-pre-line')
+  })
 })

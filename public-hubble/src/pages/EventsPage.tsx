@@ -32,7 +32,7 @@ function EventCard({ event }: { event: CafeEvent }) {
           <p className="mt-1 text-sm font-medium text-hubble-600">{event.price}</p>
         )}
         {event.description && (
-          <p className="mt-2 text-sm leading-relaxed text-hubble-700/80">{event.description}</p>
+          <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-hubble-700/80">{event.description}</p>
         )}
         {event.subscribeLink && (
           <a
