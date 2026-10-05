@@ -13,8 +13,13 @@ RUN mvn -q -B clean package -DskipTests
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
 
+# Upgrade the base image's packages first so OS security fixes published after the
+# eclipse-temurin tag was built (for example libpng, flagged by the Trivy image scan) land on
+# every build rather than waiting for a new upstream tag. This only picks up fixes within the
+# base image's Alpine release, not ones shipped in a newer Alpine release only.
 # curl for the health check; run as a non-root user (busybox adduser/addgroup syntax)
-RUN apk add --no-cache curl \
+RUN apk upgrade --no-cache \
+    && apk add --no-cache curl \
     && addgroup -S appgroup && adduser -S -G appgroup appuser \
     && mkdir -p /data/media && chown appuser:appgroup /data/media
 
