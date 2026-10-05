@@ -60,6 +60,24 @@ jobs:
           --config p/java --config p/typescript --config p/react
           --config p/nginx --config p/dockerfile --config p/github-actions
 
+      # Semgrep keeps findings silenced by a nosemgrep comment in its SARIF output, only tagged
+      # with a suppression, and GitHub code scanning opens alerts for them anyway. Drop them so a
+      # reviewed nosemgrep marker (with its reason in a comment) actually closes the alert.
+      - name: Drop nosemgrep-suppressed results
+        if: always() && hashFiles('semgrep.sarif') != ''
+        run: |
+          python3 - <<'EOF'
+          import json
+          with open("semgrep.sarif") as f:
+              sarif = json.load(f)
+          for run in sarif["runs"]:
+              before = len(run["results"])
+              run["results"] = [r for r in run["results"] if not r.get("suppressions")]
+              print(f"Dropped {before - len(run['results'])} nosemgrep-suppressed result(s)")
+          with open("semgrep.sarif", "w") as f:
+              json.dump(sarif, f)
+          EOF
+
       - name: Upload SARIF to GitHub Security tab
         uses: github/codeql-action/upload-sarif@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
         if: always() && hashFiles('semgrep.sarif') != ''
