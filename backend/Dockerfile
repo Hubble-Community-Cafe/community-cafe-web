@@ -1,6 +1,6 @@
 # Stage 1: build
 # Build and runtime use the same Java LTS as pom.xml and CI (25), so tests run on the production JVM.
-FROM maven:3.9-eclipse-temurin-25 AS build
+FROM maven:3-eclipse-temurin-24 AS build
 WORKDIR /app
 COPY pom.xml .
 RUN mvn -q -B dependency:go-offline
