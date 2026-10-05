@@ -19,4 +19,14 @@
     <cve>CVE-2026-33117</cve>
   </suppress>
 
+  <suppress>
+    <notes>CVE-2020-29582 is the insecure temp-file permissions in kotlin.io createTempDir/createTempFile,
+    fixed in Kotlin 1.4.21. kotlin-stdlib-common arrives transitively (microsoft-graph, okhttp 4, okio
+    3.6.0) at 1.9.10, which is past the fix, and the jar holds only .kotlin_metadata descriptors with no
+    .class files, so it contains none of the affected JVM code. The match comes from the generic
+    JetBrains Kotlin CPE. Scoped to this one jar, so the other Kotlin jars still alert.</notes>
+    <packageUrl regex="true">^pkg:maven/org\.jetbrains\.kotlin/kotlin-stdlib-common@.*$</packageUrl>
+    <cve>CVE-2020-29582</cve>
+  </suppress>
+
 </suppressions>
