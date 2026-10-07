@@ -98,13 +98,16 @@ class FormServiceAnalyticsTest {
                 .containsExactly("APP_ANALYTICS event=form_submitted form=loan bar=NONE");
     }
 
+    /**
+     * Hubble and Meteor share the same screens, so the screen form has no bar dimension anymore,
+     * like the other Hubble-only forms.
+     */
     @Test
-    void screen_emitsOneLineWithBar() {
+    void screen_emitsOneLineWithoutBar() {
         ScreenRequest req = new ScreenRequest();
         req.setName("Eve");
         req.setAssociation("Doppio");
         req.setEmail("e@x.com");
-        req.setCafe("HUBBLE");
         req.setPermanent(true);
         req.setHexColor("#FFF200");
         req.setMessage("hi");
@@ -114,30 +117,7 @@ class FormServiceAnalyticsTest {
         service.submitScreen(req);
 
         assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=HUBBLE");
-    }
-
-    /**
-     * The screen form is the only place BOTH can reach the bar dimension (a poster shown on both
-     * screens). It is a real value in the shared vocabulary, so it is asserted rather than
-     * normalised away.
-     */
-    @Test
-    void screen_forBothCafes_emitsBothAsTheBar() {
-        ScreenRequest req = new ScreenRequest();
-        req.setName("Eve");
-        req.setAssociation("Doppio");
-        req.setEmail("e@x.com");
-        req.setCafe("BOTH");
-        req.setPermanent(true);
-        req.setMessage("hi");
-        req.setFile(new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3}));
-        req.setAltcha("ok");
-
-        service.submitScreen(req);
-
-        assertThat(analyticsLines())
-                .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=BOTH");
+                .containsExactly("APP_ANALYTICS event=form_submitted form=screen bar=NONE");
     }
 
     private DeclarationRequest declaration() {

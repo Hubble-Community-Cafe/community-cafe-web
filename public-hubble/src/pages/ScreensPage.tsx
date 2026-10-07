@@ -27,7 +27,7 @@ const REQUIREMENTS = [
 export function ScreensPage() {
   usePageSeo('Hubble Poster Screens', 'Request a poster slide on the screens throughout Hubble, with the requirements and guidelines.')
   const [form, setForm] = useState({
-    name: '', association: '', email: '', cafe: 'HUBBLE',
+    name: '', association: '', email: '',
     startDate: '', endDate: '', hexColor: '', message: '', honeypot: '',
   })
   const [permanent, setPermanent] = useState(false)
@@ -36,7 +36,7 @@ export function ScreensPage() {
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
   const [error, setError] = useState<string | null>(null)
 
-  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+  const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
   // A dated request longer than two weeks is allowed but normally won't be approved for an event.
@@ -120,14 +120,6 @@ export function ScreensPage() {
             <div>
               <label htmlFor="s-email" className={label}>Email *</label>
               <input id="s-email" type="email" required value={form.email} onChange={set('email')} className={field} />
-            </div>
-            <div>
-              <label htmlFor="s-cafe" className={label}>Which café? *</label>
-              <select id="s-cafe" value={form.cafe} onChange={set('cafe')} className={field}>
-                <option value="HUBBLE">Hubble</option>
-                <option value="METEOR">Meteor</option>
-                <option value="BOTH">Both</option>
-              </select>
             </div>
 
             <div className="sm:col-span-2">

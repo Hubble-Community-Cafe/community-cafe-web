@@ -62,7 +62,7 @@ pairs into Loki labels.
 
 ```
 APP_ANALYTICS event=page_view page=menu bar=HUBBLE
-APP_ANALYTICS event=form_submitted form=screen bar=BOTH
+APP_ANALYTICS event=form_submitted form=declaration bar=METEOR
 APP_ANALYTICS event=reservation_created bar=NO_PREFERENCE dow=7_Sun slot=2_afternoon guests=3_50_100 lead=3_wk3_4
 APP_ANALYTICS event=reservation_status_changed status=CONFIRMED bar=HUBBLE
 ```
@@ -77,7 +77,7 @@ index.
 | Value | Meaning |
 |-------|---------|
 | `HUBBLE` / `METEOR` | the event belongs to that bar |
-| `BOTH` | a poster shown on both screens (screen request form) |
+| `BOTH` | a poster shown on both screens (older screen request lines only; the form no longer asks for a cafe and now logs `NONE`) |
 | `NO_PREFERENCE` | the guest had no preference (reservations) |
 | `NONE` | the event has no bar dimension (most forms) |
 | `UNKNOWN` | the bar could not be determined (page view with no usable Origin) |

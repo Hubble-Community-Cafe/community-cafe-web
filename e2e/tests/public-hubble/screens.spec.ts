@@ -23,7 +23,6 @@ test.describe('Hubble poster screens form', () => {
     await page.locator('#s-name').fill('Anke Woldman')
     await page.locator('#s-assoc').fill('Doppio')
     await page.locator('#s-email').fill('anke@example.com')
-    await page.locator('#s-cafe').selectOption('BOTH')
     await page.locator('#s-start').fill(inDays(2))
     await page.locator('#s-end').fill(inDays(16))
     await page.locator('#s-hex').fill('#FFF200')
@@ -55,7 +54,6 @@ test.describe('Hubble poster screens form', () => {
     await page.locator('#s-name').fill('Anke Woldman')
     await page.locator('#s-assoc').fill('Doppio')
     await page.locator('#s-email').fill('anke@example.com')
-    await page.locator('#s-cafe').selectOption('BOTH')
     await page.getByRole('checkbox', { name: /permanent poster/i }).check()
     // Dates are now disabled; submit without them.
     await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
@@ -86,7 +84,6 @@ test.describe('Hubble poster screens form', () => {
     await page.locator('#s-name').fill('Bot')
     await page.locator('#s-assoc').fill('Spam')
     await page.locator('#s-email').fill('bot@example.com')
-    await page.locator('#s-cafe').selectOption('HUBBLE')
     await page.locator('#s-start').fill(inDays(2))
     await page.locator('#s-end').fill(inDays(4))
     await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })

@@ -150,7 +150,6 @@ public class FormService {
                 + "Name: " + req.getName() + "\n"
                 + "Association: " + req.getAssociation() + "\n"
                 + "Mail: " + req.getEmail() + "\n\n"
-                + "Cafe: " + cafeLabel(req.getCafe()) + "\n"
                 + period + "\n"
                 + "Hex: " + orDash(req.getHexColor()) + "\n\n"
                 + "Message:\n" + orDash(req.getMessage()) + "\n";
@@ -159,13 +158,12 @@ public class FormService {
         mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
                 "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                 body, List.of(poster)));
-        logSubmission("screen", req.getCafe());
+        logSubmission("screen", null);
 
         String confirmation = "Hi " + req.getName() + ",\n\n"
                 + "Thanks! We have received your poster screen request for " + req.getAssociation()
                 + " and the screens team will review it.\n\n"
                 + "For your records:\n\n"
-                + "Cafe: " + cafeLabel(req.getCafe()) + "\n"
                 + period + "\n\n"
                 + "Kind regards,\nHubble Community Cafe\n";
         sendConfirmation(hubbleFrom, req.getEmail(),
@@ -362,7 +360,7 @@ public class FormService {
 
     /**
      * Privacy-safe analytics: one line per successful submission, carrying only the form type and
-     * (for the screen form) the chosen bar. No name, email, message or attachment content is logged,
+     * (for the declaration form) the bar. No name, email, message or attachment content is logged,
      * matching the privacy statement's disclosed "minimal, non-identifying note".
      */
     private void logSubmission(String form, String bar) {
@@ -414,14 +412,6 @@ public class FormService {
 
     private String normalizeIban(String iban) {
         return iban.replace(" ", "").toUpperCase();
-    }
-
-    private String cafeLabel(String cafe) {
-        return switch (cafe) {
-            case "HUBBLE" -> "Hubble";
-            case "METEOR" -> "Meteor";
-            default -> "Both";
-        };
     }
 
     private boolean isBlank(String value) {

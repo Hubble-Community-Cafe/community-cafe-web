@@ -33,17 +33,18 @@ describe('Hubble ScreensPage', () => {
     submitScreenForm.mockResolvedValue(undefined)
   })
 
-  it('uploads the poster with its dates and the chosen cafe', async () => {
+  it('uploads the poster with its dates and no cafe', async () => {
     const user = userEvent.setup()
     renderPage()
+    // Hubble and Meteor share the same screens, so there is nothing to choose.
+    expect(screen.queryByLabelText(/Which café/)).not.toBeInTheDocument()
     await fillContact(user)
-    await user.selectOptions(screen.getByLabelText('Which café? *'), 'BOTH')
     await fillDates(user, '2030-10-01', '2030-10-14')
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
     await send(user)
 
     const data = submitScreenForm.mock.calls[0][0] as FormData
-    expect(data.get('cafe')).toBe('BOTH')
+    expect(data.has('cafe')).toBe(false)
     expect(data.get('startDate')).toBe('2030-10-01')
     expect(data.get('permanent')).toBe('false')
     expect((data.get('file') as File).name).toBe('poster.png')
