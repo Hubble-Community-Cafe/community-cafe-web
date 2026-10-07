@@ -234,6 +234,12 @@ Anyone signed in can switch the scene, because it is part of running a shift. Th
         title: 'Choosing the slides',
         content: `Editors choose which poster each scene shows. If a scene has no poster configured, switching to it is refused, rather than showing the wrong slide.`,
       },
+      {
+        title: 'Poster requests from the website',
+        content: `Associations request a poster with the form on the Hubble website. The request goes straight into **Aurora**, under **Poster requests**, where the screens team reviews, edits and approves or denies it. It is not handled on this page.
+
+The screens mailbox gets a short email for every request, as a reminder to review it in Aurora. If Aurora could not be reached, that email says the request is **not** in Aurora and has the poster attached: add it to Aurora yourself. Replying to the requester is done by email, Aurora does not do it for you.`,
+      },
     ],
   },
 

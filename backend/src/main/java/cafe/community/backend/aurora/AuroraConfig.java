@@ -27,7 +27,23 @@ public class AuroraConfig {
             @Value("${app.aurora.base-url:}") String baseUrl,
             @Value("${app.aurora.api-key:}") String apiKey,
             @Value("${app.aurora.timeout-ms:5000}") long timeoutMs) {
+        return build(baseUrl, apiKey, timeoutMs);
+    }
 
+    /**
+     * Same host and key, with a longer timeout for poster request uploads: Aurora decodes and
+     * re-encodes the whole image (or checks the video) before it answers. Timing out early would
+     * fall back to email while Aurora may still create the request, leaving staff a duplicate.
+     */
+    @Bean
+    RestClient auroraUploadRestClient(
+            @Value("${app.aurora.base-url:}") String baseUrl,
+            @Value("${app.aurora.api-key:}") String apiKey,
+            @Value("${app.aurora.poster-requests.timeout-ms:30000}") long timeoutMs) {
+        return build(baseUrl, apiKey, timeoutMs);
+    }
+
+    private static RestClient build(String baseUrl, String apiKey, long timeoutMs) {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(Duration.ofMillis(timeoutMs));
         requestFactory.setReadTimeout(Duration.ofMillis(timeoutMs));

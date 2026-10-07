@@ -11,6 +11,9 @@ import org.springframework.web.multipart.MultipartFile;
  * Hubble "Poster Screens" request. Multipart (the poster file is uploaded alongside the
  * fields). Cross-field rules (end date after start date, file type/size) are enforced in
  * the service; here we cover the per-field shape.
+ *
+ * <p>There is no cafe field: Hubble and Meteor share the same screens. A {@code cafe} value
+ * posted by an old cached frontend is simply not bound.
  */
 @Data
 public class ScreenRequest {
@@ -27,10 +30,6 @@ public class ScreenRequest {
     @Email
     @Size(max = 200)
     private String email;
-
-    @NotBlank
-    @Pattern(regexp = "HUBBLE|METEOR|BOTH", message = "must be HUBBLE, METEOR or BOTH")
-    private String cafe;
 
     /** Required unless {@link #permanent} is set; validated in the service. */
     @Size(max = 20)

@@ -131,7 +131,7 @@ class FormControllerTest {
     void screen_sendsToScreensListWithAttachment() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
-                        .param("cafe", "BOTH").param("startDate", "2026-07-01").param("endDate", "2026-07-15")
+                        .param("startDate", "2026-07-01").param("endDate", "2026-07-15")
                         .param("hexColor", "#FFF200").param("message", "Please post"))
                 .andExpect(status().isNoContent());
 
@@ -154,10 +154,23 @@ class FormControllerTest {
     }
 
     @Test
+    void screen_ignoresCafeFromAnOldCachedFrontend() throws Exception {
+        mockMvc.perform(multipart("/api/forms/screen").file(png())
+                        .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
+                        .param("cafe", "SOMEWHERE").param("permanent", "true"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+        assertThat(to(sent, "screens@hubble.cafe").body()).doesNotContain("Cafe:");
+        assertThat(to(sent, "anke@x.com").body()).doesNotContain("Cafe:");
+    }
+
+    @Test
     void screen_endBeforeStart_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
-                        .param("cafe", "HUBBLE").param("startDate", "2026-07-15").param("endDate", "2026-07-01"))
+                        .param("startDate", "2026-07-15").param("endDate", "2026-07-01"))
                 .andExpect(status().isBadRequest());
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
@@ -167,7 +180,7 @@ class FormControllerTest {
         MockMultipartFile txt = new MockMultipartFile("file", "x.txt", "text/plain", new byte[]{1});
         mockMvc.perform(multipart("/api/forms/screen").file(txt)
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
-                        .param("cafe", "HUBBLE").param("startDate", "2026-07-01").param("endDate", "2026-07-15"))
+                        .param("startDate", "2026-07-01").param("endDate", "2026-07-15"))
                 .andExpect(status().isBadRequest());
     }
 
@@ -175,7 +188,7 @@ class FormControllerTest {
     void screen_permanentPoster_needsNoDates() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
-                        .param("cafe", "BOTH").param("permanent", "true"))
+                        .param("permanent", "true"))
                 .andExpect(status().isNoContent());
 
         ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
@@ -187,8 +200,7 @@ class FormControllerTest {
     @Test
     void screen_missingDatesWithoutPermanent_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
-                        .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
-                        .param("cafe", "BOTH"))
+                        .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com"))
                 .andExpect(status().isBadRequest());
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
@@ -272,6 +284,21 @@ class FormControllerTest {
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "free").param("category", "Other"))
                 .andExpect(status().isBadRequest());
+    }
+
+    /** The multipart limit is 20 MB for posters, but a receipt keeps its own 10 MB limit. */
+    @Test
+    void declaration_receiptOver10Mb_isRejected() throws Exception {
+        MockMultipartFile big = new MockMultipartFile("file", "receipt.pdf", "application/pdf",
+                new byte[10 * 1024 * 1024 + 1]);
+        mockMvc.perform(multipart("/api/forms/declaration").file(big)
+                        .param("fullName", "Sven Rooijakkers").param("email", "sven@x.com")
+                        .param("iban", "NL70 TRIO 0338 5890 15").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "150,04").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("The file is too large (max 10 MB)."));
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
     @Test

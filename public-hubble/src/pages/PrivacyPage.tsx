@@ -30,6 +30,9 @@ export function PrivacyPage() {
             <strong>When you send us a message through a form.</strong> Our contact, tips and complaints, information, declaration and equipment-loan forms ask for the details you choose to enter, typically your name, your email address, and your message. We use these only to read and answer you: the form is sent straight to the relevant volunteers as an email through Microsoft 365. We do not store your message or your details on this website, the only copy is that email in our mailbox. (We keep a minimal, non-identifying note that a submission of a given type happened, for spam and volume monitoring; it contains no name, email or message.) Any file you attach is emailed only and never stored on the server. The forms are protected against spam by a proof-of-work check and a hidden honeypot field; neither tracks you nor sets a cookie.
           </p>
           <p className="mt-2">
+            <strong>When you request a poster for our screens.</strong> The poster screens form asks for your name, email address and association, the dates you want, an optional colour and message, and your poster file. We send the request to Aurora, the system that runs our poster screens, where a volunteer reviews it. Your name, email address and association are kept in Aurora only until the request is approved or denied, then they are deleted; the file is deleted too if the request is denied. An approved poster stays in Aurora until it is taken off the screens. The volunteers also get an email saying that a request was placed, with your details, dates and message but without the file. If Aurora cannot be reached, the request and the file are emailed to the volunteers instead. You also receive a confirmation email.
+          </p>
+          <p className="mt-2">
             <strong>When you visit the site.</strong> Our web server keeps standard access logs of each request, which include your IP address, the page requested, the date and time, the response status, and your browser and operating system. We use these logs, in aggregate, to see which pages are visited, to keep the site secure, and to fix problems, and we derive an approximate country and network operator from the IP address for statistics. We do not try to identify individual visitors. IP addresses in our analytics are kept for about 90 days and then dropped. There is no cookie, no tracking pixel and no third-party analytics service involved.
           </p>
           <p className="mt-2">
@@ -58,6 +61,9 @@ export function PrivacyPage() {
           <ul className="mt-2 list-disc space-y-1 pl-5">
             <li>
               Messages you send through a form: not stored on this website. The notification email in our staff mailbox is kept for up to two years, then deleted.
+            </li>
+            <li>
+              Poster requests: kept in Aurora until approved or denied, then your details are deleted. An approved poster stays until it is taken off the screens. The notification email is kept for up to two years, like other form messages.
             </li>
             <li>Server access logs and analytics: about 90 days.</li>
             <li>Error logs: according to our provider&rsquo;s retention settings.</li>

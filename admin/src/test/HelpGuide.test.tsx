@@ -23,6 +23,12 @@ describe('in-app help content', () => {
     }
   })
 
+  it('tells staff that poster requests are reviewed in Aurora, not on the Screens page', () => {
+    const section = GUIDES['/screens'].sections.find((s) => s.title === 'Poster requests from the website')
+    expect(section?.content).toContain('**Poster requests**')
+    expect(section?.content).toContain('not** in Aurora')
+  })
+
   it('follows the house style: no em dashes', () => {
     const text = JSON.stringify(GUIDES)
     expect(text).not.toContain('—')

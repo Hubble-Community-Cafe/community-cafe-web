@@ -18,7 +18,7 @@ Projects (see `playwright.config.ts`): `public-hubble`, `public-meteor`, `admin`
 
 `identity-refresh.spec.ts` is a concurrency regression and needs real MariaDB, so it lives here rather than in the backend suite: MariaDB 11.6+ enables `innodb_snapshot_isolation` by default, which H2 cannot imitate. It fires each burst from independent `APIRequestContext`s, since a single context pools connections and would serialise them.
 
-The screen scene panel talks to Aurora, which does not exist in the e2e stack. Under the `e2e` profile the backend swaps in `FakeAuroraClient`, an in-memory stand-in with three screens named after the live ones. `/test/reset` puts every screen back on the carousel and re-seeds the poster mapping, so specs cannot leak scene state into each other. The real HTTP contract with Aurora is covered separately by `AuroraClientTest` against `MockRestServiceServer`.
+The screen scene panel talks to Aurora, which does not exist in the e2e stack. Under the `e2e` profile the backend swaps in `FakeAuroraClient`, an in-memory stand-in with three screens named after the live ones. `/test/reset` puts every screen back on the carousel and re-seeds the poster mapping, so specs cannot leak scene state into each other. The fake also records poster requests from the Hubble screens form; `GET /test/aurora/poster-requests` lists them and `PUT /test/aurora/poster-requests/mode` makes it accept, accept slowly (`SLOW`, to see the waiting state), be down (`DOWN`, to see the email fallback) or refuse the file (`REJECT_FILE`). The real HTTP contract with Aurora is covered separately by `AuroraClientTest` and `AuroraClientPosterRequestTest` against `MockRestServiceServer`.
 
 ## Troubleshooting
 
@@ -64,7 +64,8 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
 | Forms: Meteor declarations | n/a | ✅ | n/a | ✅ |
-| Forms: Hubble screens / declarations | ✅ | n/a | n/a | ⬜ |
+| Forms: Hubble screens (Aurora poster request, email fallback, refused file, waiting state) | ✅ | n/a | n/a | ✅ |
+| Forms: Hubble declarations | ✅ | n/a | n/a | ⬜ |
 | Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ✅ |
 
 Legend: ⬜ not yet · 🟡 specs landed · ✅ green against the stack. Cells move to ✅ once the suite has been run against `docker-compose.e2e.yml`. Update this table as specs land.
@@ -79,19 +80,19 @@ the detour, because touch is exactly what native HTML5 drag and drop cannot do a
 
 The `accessibility` spec in each project runs axe (WCAG 2.2 A/AA) on every main page with seeded content, and on each public form after submitting it empty (validation errors), on desktop and mobile. Helpers live in `fixtures/a11y.ts`. Violations that are accepted for now go in `fixtures/a11y-known-issues.ts` per project and page; the list is empty, so any violation fails. When adding a page or form, add its route to the lists in `fixtures/a11y.ts`.
 
-Form specs assert both the staff notification (to the per-form team list, with any upload attached) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
+Form specs assert both the staff notification (to the per-form team list, with any upload attached, except the screens form, which sends the poster to the fake Aurora and only a notice to staff) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
 
 ## Next specs
 
 The backfill is essentially complete: every shipped module is green on its sites, in admin CRUD, and
 on mobile (via the `mobile-admin` project for admin-on-a-phone). The remaining `⬜`s are the Hubble
-file-upload forms (screens/declarations) on mobile, the desktop specs already cover the upload path,
+declaration form on mobile, the desktop spec already covers the upload path,
 so this is a low-priority responsive-layout check, the media library on mobile, and bulk menu editing
 on mobile. Bulk editing is a checkbox and a form rather than a gesture, so the phone case is a
 layout check rather than a new interaction, which is why it ranks below the reorder specs that are
 already there. The media spec
 checks that an oversize image is refused client-side with a readable message rather than reaching the
-backend and coming back as a bare 413; the limit itself is `spring.servlet.multipart.max-file-size`,
-mirrored in `admin/src/lib/upload.ts`. The rate-limit filter is disabled under the `e2e`
+backend and coming back as a bare 413; the admin limit is `admin/src/lib/upload.ts` (10 MB); the backend's
+`spring.servlet.multipart.max-file-size` is 20 MB, for poster requests. The rate-limit filter is disabled under the `e2e`
 profile (its per-IP counter would otherwise leak across form specs) and is covered directly by
 `RateLimitFilterTest` in the backend.
