@@ -167,10 +167,14 @@ public class FormService {
                 + "Hex: " + orDash(req.getHexColor()) + "\n";
         String message = "Message:\n" + orDash(req.getMessage()) + "\n";
 
-        record(FormType.SCREEN, true);
         if (inAurora) {
-            // The request is safe in Aurora, so a failed notice must not make the requester
-            // send it again (that would create a duplicate request).
+            // The request is safe in Aurora, so nothing after this may fail it: the requester
+            // would send it again and create a duplicate request.
+            try {
+                record(FormType.SCREEN, true);
+            } catch (RuntimeException e) {
+                log.warn("Poster request is in Aurora, but recording the submission failed: {}", e.getMessage());
+            }
             String body = "A new poster request was placed through the Hubble website.\n"
                     + "It is waiting for review in Aurora: open the backoffice, go to\n"
                     + "Poster requests, and approve, edit or deny it there.\n\n"
@@ -186,6 +190,7 @@ public class FormService {
                 log.warn("Poster request is in Aurora, but the staff notice failed: {}", e.getMessage());
             }
         } else {
+            record(FormType.SCREEN, true);
             String body = "Aurora could not be reached, so this request is NOT in\n"
                     + "Aurora. Please add the poster there yourself.\n\n"
                     + "Screen Request from " + req.getName() + " - " + req.getAssociation() + "\n\n"
