@@ -64,7 +64,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Admin dashboard (quick-nav + live widgets) | n/a | n/a | 🟡 | n/a |
 | Forms: Meteor complaints | n/a | ✅ | n/a | ✅ |
 | Forms: Meteor declarations | n/a | ✅ | n/a | ✅ |
-| Forms: Hubble screens (Aurora poster request, email fallback, refused file, waiting state) | ✅ | n/a | n/a | ✅ |
+| Forms: Hubble screens (Aurora poster request, email fallback, refused file, waiting state, colour picker) | ✅ | n/a | n/a | ✅ |
 | Forms: Hubble declarations | ✅ | n/a | n/a | ⬜ |
 | Forms: Hubble tips / information / loan | ✅ | n/a | n/a | ✅ |
 

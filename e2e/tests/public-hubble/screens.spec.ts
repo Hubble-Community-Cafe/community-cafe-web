@@ -66,6 +66,33 @@ test.describe('Hubble poster screens form', () => {
     expect(ack.attachments).toHaveLength(0)
   })
 
+  test('the clock colour is previewed and can be picked instead of typed', async ({ page, request }, testInfo) => {
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    // Nothing entered means the screens use white.
+    await expect(page.locator('#s-hex')).toHaveAttribute('placeholder', '#FFFFFF')
+    await expect(form.colourSwatch()).toHaveAttribute('data-colour', '#FFFFFF')
+
+    await page.locator('#s-hex').fill('#E4007C')
+    await expect(form.colourSwatch()).toHaveAttribute('data-colour', '#E4007C')
+
+    const picked = await form.pickColour(0.9, 0.2)
+    expect(picked).toMatch(/^#[0-9A-F]{6}$/)
+    expect(picked).not.toBe('#E4007C')
+    await expect(form.colourSwatch()).toHaveAttribute('data-colour', picked)
+    await captureScreenshot(testInfo, page, 'hubble-screen-colour-picker')
+
+    // A click elsewhere closes the picker and keeps the colour.
+    await page.getByRole('heading', { name: 'Hubble Poster Screens' }).click()
+    await expect(form.colourPicker()).toHaveCount(0)
+
+    await form.fill(ANKE)
+    await form.send()
+    await expect(form.sentHeading()).toBeVisible()
+    const [posterRequest] = await fakeAuroraPosterRequests(request)
+    expect(posterRequest.accentColor).toBe(picked)
+  })
+
   test('a permanent poster needs no dates and reaches Aurora without them', async ({ page, request }) => {
     const form = new HubbleScreensForm(page)
     await form.goto()

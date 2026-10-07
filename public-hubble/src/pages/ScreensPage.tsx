@@ -3,6 +3,7 @@ import { submitScreenForm, FormError, formsChallengeUrl, type UploadProgress } f
 import { PageShell } from '../components/PageShell'
 import { UploadProgressPanel } from '../components/UploadProgressPanel'
 import { AltchaWidget } from '../components/AltchaWidget'
+import { ColourField } from '../components/ColourField'
 import { usePageSeo } from '../lib/seo'
 
 const MAX_BYTES = 20 * 1024 * 1024
@@ -163,8 +164,8 @@ export function ScreensPage() {
             )}
             <div>
               <label htmlFor="s-hex" className={label}>Clock / progress colour <span className="font-normal text-hubble-800/70">(optional hex)</span></label>
-              <input id="s-hex" value={form.hexColor} onChange={set('hexColor')} className={field}
-                placeholder="#FFF200" pattern="^#?[0-9A-Fa-f]{6}$" />
+              <ColourField id="s-hex" value={form.hexColor} className={field}
+                onChange={(hexColor) => setForm((f) => ({ ...f, hexColor }))} />
             </div>
             <div>
               <label htmlFor="s-file" className={label}>Poster file *</label>
