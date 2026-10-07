@@ -3,6 +3,23 @@ import { getApiBaseUrl } from './client'
 /** A user-displayable error from a form submission (validation, rate limit, etc.). */
 export class FormError extends Error {}
 
+const NETWORK_ERROR = 'Could not reach the server. Please check your connection and try again.'
+
+/** The user-facing error for a non-204 answer, preferring the backend's own `message`. */
+function errorFor(status: number, body: string): FormError {
+  if (status === 429) {
+    return new FormError('Too many submissions from this network. Please wait a minute and try again.')
+  }
+  let message = 'Something went wrong. Please try again.'
+  try {
+    const data = JSON.parse(body) as { message?: string }
+    if (data?.message) message = data.message
+  } catch {
+    /* keep the default message */
+  }
+  return new FormError(message)
+}
+
 /**
  * POST a public form. Plain fetch (no retry: a form submit must not be replayed). On a
  * non-204 response the backend's `message` is surfaced so the user sees why it was rejected.
@@ -12,20 +29,49 @@ async function postForm(path: string, body: BodyInit, headers?: Record<string, s
   try {
     response = await fetch(`${getApiBaseUrl()}${path}`, { method: 'POST', body, headers })
   } catch {
-    throw new FormError('Could not reach the server. Please check your connection and try again.')
+    throw new FormError(NETWORK_ERROR)
   }
   if (response.status === 204) return
-  if (response.status === 429) {
-    throw new FormError('Too many submissions from this network. Please wait a minute and try again.')
-  }
-  let message = 'Something went wrong. Please try again.'
-  try {
-    const data = (await response.json()) as { message?: string }
-    if (data?.message) message = data.message
-  } catch {
-    /* keep the default message */
-  }
-  throw new FormError(message)
+  throw errorFor(response.status, await response.text().catch(() => ''))
+}
+
+/**
+ * Where a large upload is: still sending the file (with a percentage when the browser knows
+ * the size), or sent and waiting while the server checks it.
+ */
+export type UploadProgress =
+  | { phase: 'uploading'; percent: number | null }
+  | { phase: 'processing' }
+
+/**
+ * Like {@link postForm}, but reports upload progress. fetch cannot, so this uses
+ * XMLHttpRequest. Same error handling, and no retry either.
+ */
+function postFormWithProgress(
+  path: string,
+  body: FormData,
+  onProgress: (progress: UploadProgress) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest()
+    xhr.open('POST', `${getApiBaseUrl()}${path}`)
+    xhr.upload.onprogress = (e) => {
+      onProgress({
+        phase: 'uploading',
+        percent: e.lengthComputable && e.total > 0 ? Math.min(100, Math.round((e.loaded / e.total) * 100)) : null,
+      })
+    }
+    xhr.upload.onload = () => onProgress({ phase: 'processing' })
+    xhr.onload = () => {
+      if (xhr.status === 204) resolve()
+      else reject(errorFor(xhr.status, xhr.responseText))
+    }
+    xhr.onerror = () => reject(new FormError(NETWORK_ERROR))
+    xhr.ontimeout = xhr.onerror
+    xhr.onabort = xhr.onerror
+    onProgress({ phase: 'uploading', percent: 0 })
+    xhr.send(body)
+  })
 }
 
 export type ComplaintType = 'TIP' | 'COMPLAINT' | 'IDEA'
@@ -62,8 +108,16 @@ export function submitComplaint(input: ComplaintInput): Promise<void> {
   })
 }
 
-/** Submit the Hubble poster-screen request (multipart: fields + the poster file). */
-export function submitScreenForm(data: FormData): Promise<void> {
+/**
+ * Submit the Hubble poster-screen request (multipart: fields + the poster file). Posters can be
+ * up to 20 MB and the server checks them before it answers, so pass `onProgress` to show how far
+ * along it is.
+ */
+export function submitScreenForm(
+  data: FormData,
+  onProgress?: (progress: UploadProgress) => void,
+): Promise<void> {
+  if (onProgress) return postFormWithProgress('/api/forms/screen', data, onProgress)
   return postForm('/api/forms/screen', data)
 }
 

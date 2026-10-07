@@ -30,4 +30,12 @@ describe('Meteor PrivacyPage', () => {
     renderPrivacy()
     expect(screen.getByText(/do not store your message or your details on this website/i)).toBeInTheDocument()
   })
+
+  it('points to the Hubble privacy statement for poster requests', () => {
+    renderPrivacy()
+    expect(screen.getByRole('link', { name: 'Hubble privacy statement' })).toHaveAttribute(
+      'href',
+      'https://hubble.cafe/privacy',
+    )
+  })
 })

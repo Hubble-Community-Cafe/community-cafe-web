@@ -4,12 +4,9 @@ import {
   inDays, resetBackend, fakeAuroraPosterRequests, setFakeAuroraPosterMode,
 } from '../../fixtures/backend'
 import { captureScreenshot } from '../../fixtures/evidence'
+import { HubbleScreensForm, PNG } from '../../pages/HubbleScreensForm'
 
-// Minimal 1x1 PNG, enough for the content-type/size checks.
-const PNG = Buffer.from(
-  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+M8AAAMBAQDJ/QGyAAAAAElFTkSuQmCC',
-  'base64',
-)
+const ANKE = { name: 'Anke Woldman', association: 'Doppio', email: 'anke@example.com' }
 
 test.describe('Hubble poster screens form', () => {
   test.beforeEach(async ({ request }) => {
@@ -19,22 +16,20 @@ test.describe('Hubble poster screens form', () => {
   })
 
   test('a request goes to Aurora for review and screens get a notice', async ({ page, request }, testInfo) => {
-    await page.goto('/contact/screens')
-    await expect(page.getByRole('heading', { name: 'Hubble Poster Screens' })).toBeVisible()
+    const form = new HubbleScreensForm(page)
+    await form.goto()
     // The slide-guide example image from the original site is shown.
     await expect(page.locator('figure img')).toBeVisible()
+    await expect(page.getByText('Maximum file size: 20 MB')).toBeVisible()
+    // Hubble and Meteor share the same screens, so there is no cafe to choose.
+    await expect(page.locator('#s-cafe')).toHaveCount(0)
 
-    await page.locator('#s-name').fill('Anke Woldman')
-    await page.locator('#s-assoc').fill('Doppio')
-    await page.locator('#s-email').fill('anke@example.com')
-    await page.locator('#s-start').fill(inDays(2))
-    await page.locator('#s-end').fill(inDays(16))
-    await page.locator('#s-hex').fill('#FFF200')
-    await page.locator('#s-msg').fill('For our borrel')
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
-    await page.getByRole('button', { name: 'Send request' }).click()
+    await form.fill({
+      ...ANKE, dates: { start: inDays(2), end: inDays(16) }, hexColor: '#FFF200', message: 'For our borrel',
+    })
+    await form.send()
 
-    await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
+    await expect(form.sentHeading()).toBeVisible()
     await captureScreenshot(testInfo, page, 'hubble-screen-sent')
 
     const [posterRequest] = await fakeAuroraPosterRequests(request)
@@ -72,36 +67,44 @@ test.describe('Hubble poster screens form', () => {
   })
 
   test('a permanent poster needs no dates and reaches Aurora without them', async ({ page, request }) => {
-    await page.goto('/contact/screens')
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill(ANKE)
+    await form.send()
 
-    await page.locator('#s-name').fill('Anke Woldman')
-    await page.locator('#s-assoc').fill('Doppio')
-    await page.locator('#s-email').fill('anke@example.com')
-    await page.getByRole('checkbox', { name: /permanent poster/i }).check()
-    // Dates are now disabled; submit without them.
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
-    await page.getByRole('button', { name: 'Send request' }).click()
-
-    await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
+    await expect(form.sentHeading()).toBeVisible()
     const [posterRequest] = await fakeAuroraPosterRequests(request)
     expect(posterRequest).toMatchObject({ name: 'Doppio: permanent', startDate: null, expirationDate: null })
     const mail = await waitForMessageTo(request, 'screens@hubble.cafe')
     expect(mail.text).toContain('Permanent association poster')
   })
 
+  test('shows that the poster is being checked while Aurora takes its time', async ({ page, request }, testInfo) => {
+    await setFakeAuroraPosterMode(request, 'SLOW')
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill(ANKE)
+    await form.send()
+
+    await expect(page.getByRole('status').filter({ hasText: 'Checking your poster…' })).toBeVisible()
+    await expect(page.getByText('This can take up to half a minute.')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Sending…' })).toBeDisabled()
+    await captureScreenshot(testInfo, page, 'hubble-screen-checking')
+
+    await expect(form.sentHeading()).toBeVisible()
+    await expect(form.progressBar()).toHaveCount(0)
+    expect(await fakeAuroraPosterRequests(request)).toHaveLength(1)
+  })
+
   test('when Aurora is down the poster is emailed to screens instead', async ({ page, request }) => {
     await setFakeAuroraPosterMode(request, 'DOWN')
-    await page.goto('/contact/screens')
-
-    await page.locator('#s-name').fill('Anke Woldman')
-    await page.locator('#s-assoc').fill('Doppio')
-    await page.locator('#s-email').fill('anke@example.com')
-    await page.getByRole('checkbox', { name: /permanent poster/i }).check()
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
-    await page.getByRole('button', { name: 'Send request' }).click()
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill(ANKE)
+    await form.send()
 
     // The requester cannot tell the difference: the request still reached the team.
-    await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
+    await expect(form.sentHeading()).toBeVisible()
     expect(await fakeAuroraPosterRequests(request)).toHaveLength(0)
     const mail = await waitForMessageTo(request, 'screens@hubble.cafe')
     expect(mail.subject).toBe('Screen Request from Anke Woldman - Doppio')
@@ -113,43 +116,31 @@ test.describe('Hubble poster screens form', () => {
 
   test('a file Aurora cannot read is refused with a message the requester can act on', async ({ page, request }) => {
     await setFakeAuroraPosterMode(request, 'REJECT_FILE')
-    await page.goto('/contact/screens')
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill(ANKE)
+    await form.send()
 
-    await page.locator('#s-name').fill('Anke Woldman')
-    await page.locator('#s-assoc').fill('Doppio')
-    await page.locator('#s-email').fill('anke@example.com')
-    await page.getByRole('checkbox', { name: /permanent poster/i }).check()
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
-    await page.getByRole('button', { name: 'Send request' }).click()
-
-    await expect(page.getByText(/We could not read your poster/)).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Request received' })).toHaveCount(0)
+    await expect(form.error(/We could not read your poster/)).toBeVisible()
+    await expect(form.sentHeading()).toHaveCount(0)
+    await expect(page.getByRole('button', { name: 'Send request' })).toBeEnabled()
     await expectNoMessageTo(request, 'screens@hubble.cafe')
   })
 
   test('end date before start date is rejected with a message', async ({ page }) => {
-    await page.goto('/contact/screens')
-    await page.locator('#s-name').fill('Anke')
-    await page.locator('#s-assoc').fill('Doppio')
-    await page.locator('#s-email').fill('anke@example.com')
-    await page.locator('#s-start').fill(inDays(16))
-    await page.locator('#s-end').fill(inDays(2))
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
-    await page.getByRole('button', { name: 'Send request' }).click()
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill({ ...ANKE, dates: { start: inDays(16), end: inDays(2) } })
+    await form.send()
 
-    // Scope to our form error (the ALTCHA widget also renders a role="alert" popover).
-    await expect(page.getByText(/end date must be on or after/i)).toBeVisible()
-    await expect(page.getByRole('heading', { name: 'Request received' })).toHaveCount(0)
+    await expect(form.error(/end date must be on or after/i)).toBeVisible()
+    await expect(form.sentHeading()).toHaveCount(0)
   })
 
   test('a honeypot-filled submission is silently dropped (no email)', async ({ page, request }) => {
-    await page.goto('/contact/screens')
-    await page.locator('#s-name').fill('Bot')
-    await page.locator('#s-assoc').fill('Spam')
-    await page.locator('#s-email').fill('bot@example.com')
-    await page.locator('#s-start').fill(inDays(2))
-    await page.locator('#s-end').fill(inDays(4))
-    await page.locator('#s-file').setInputFiles({ name: 'poster.png', mimeType: 'image/png', buffer: PNG })
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.fill({ name: 'Bot', association: 'Spam', email: 'bot@example.com', dates: { start: inDays(2), end: inDays(4) } })
     // Fill the hidden, React-controlled honeypot the way a bot scripting the DOM would.
     await page.locator('input[name="website"]').evaluate((el) => {
       const input = el as HTMLInputElement
@@ -157,9 +148,9 @@ test.describe('Hubble poster screens form', () => {
       setter.call(input, 'http://spam.example')
       input.dispatchEvent(new Event('input', { bubbles: true }))
     })
-    await page.getByRole('button', { name: 'Send request' }).click()
+    await form.send()
 
-    await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
+    await expect(form.sentHeading()).toBeVisible()
     await expectNoMessageTo(request, 'screens@hubble.cafe')
     expect(await fakeAuroraPosterRequests(request)).toHaveLength(0)
   })

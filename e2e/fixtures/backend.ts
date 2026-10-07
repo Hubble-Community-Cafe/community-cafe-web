@@ -205,10 +205,13 @@ export async function fakeAuroraPosterRequests(request: APIRequestContext): Prom
   return res.json() as Promise<FakePosterRequest[]>
 }
 
-/** Make the fake Aurora accept, be down, or refuse the file. Reset puts it back to ACCEPT. */
+/**
+ * Make the fake Aurora accept, accept after two seconds (SLOW), be down, or refuse the file.
+ * Reset puts it back to ACCEPT.
+ */
 export async function setFakeAuroraPosterMode(
   request: APIRequestContext,
-  mode: 'ACCEPT' | 'DOWN' | 'REJECT_FILE',
+  mode: 'ACCEPT' | 'SLOW' | 'DOWN' | 'REJECT_FILE',
 ): Promise<void> {
   const res = await request.put(`${BACKEND_URL}/test/aurora/poster-requests/mode`, { data: { mode } })
   if (!res.ok()) throw new Error(`/test/aurora/poster-requests/mode failed: ${res.status()}`)

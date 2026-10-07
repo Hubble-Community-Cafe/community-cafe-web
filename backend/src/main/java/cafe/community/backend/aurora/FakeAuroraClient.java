@@ -37,11 +37,15 @@ public class FakeAuroraClient extends AuroraClient {
     public enum PosterRequestMode {
         /** Aurora accepts the request. */
         ACCEPT,
+        /** Aurora accepts the request after {@link #SLOW_MILLIS}, so specs can see the waiting state. */
+        SLOW,
         /** Aurora cannot be reached: the website falls back to email. */
         DOWN,
         /** Aurora refuses the file as damaged or unsupported (415). */
         REJECT_FILE
     }
+
+    static final long SLOW_MILLIS = 2000;
 
     private final List<Aurora.PosterRequest> posterRequests = Collections.synchronizedList(new ArrayList<>());
     private volatile PosterRequestMode posterRequestMode = PosterRequestMode.ACCEPT;
@@ -126,10 +130,26 @@ public class FakeAuroraClient extends AuroraClient {
             case DOWN -> throw new AuroraException("Could not reach Aurora (fake is down)");
             case REJECT_FILE -> throw new AuroraRejectedException(
                     AuroraRejectedException.Reason.UNSUPPORTED_FILE, "Aurora returned 415");
-            default -> {
-                posterRequests.add(request);
-                return new Aurora.CreatedPosterRequest(posterRequests.size(), Instant.now().toString());
+            case SLOW -> {
+                pause();
+                return accept(request);
             }
+            default -> {
+                return accept(request);
+            }
+        }
+    }
+
+    private Aurora.CreatedPosterRequest accept(Aurora.PosterRequest request) {
+        posterRequests.add(request);
+        return new Aurora.CreatedPosterRequest(posterRequests.size(), Instant.now().toString());
+    }
+
+    private static void pause() {
+        try {
+            Thread.sleep(SLOW_MILLIS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
     }
 

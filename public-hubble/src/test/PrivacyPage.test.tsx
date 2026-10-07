@@ -30,4 +30,11 @@ describe('Hubble PrivacyPage', () => {
     renderPrivacy()
     expect(screen.getByText(/do not store your message or your details on this website/i)).toBeInTheDocument()
   })
+
+  it('explains that poster requests are kept in Aurora until reviewed', () => {
+    renderPrivacy()
+    expect(screen.getByText(/When you request a poster for our screens/)).toBeInTheDocument()
+    expect(screen.getByText(/kept in Aurora only until the request is approved or denied/)).toBeInTheDocument()
+    expect(screen.getByText(/Poster requests: kept in Aurora until approved or denied/)).toBeInTheDocument()
+  })
 })

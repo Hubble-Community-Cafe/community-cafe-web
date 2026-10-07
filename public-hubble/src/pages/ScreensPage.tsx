@@ -1,10 +1,11 @@
 import { useState } from 'react'
-import { submitScreenForm, FormError, formsChallengeUrl } from '@cafe/shared-web'
+import { submitScreenForm, FormError, formsChallengeUrl, type UploadProgress } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { UploadProgressPanel } from '../components/UploadProgressPanel'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
 
-const MAX_BYTES = 10 * 1024 * 1024
+const MAX_BYTES = 20 * 1024 * 1024
 const ACCEPTED = ['image/jpeg', 'image/png', 'video/mp4']
 
 const field =
@@ -16,7 +17,7 @@ const REQUIREMENTS = [
   'Supported files: .jpg / .png / .mp4',
   'Dimensions: 16:9 (maximum 3840 × 2160 pixels)',
   'Maximum video duration: 30 seconds',
-  'Maximum file size: 10 MB',
+  'Maximum file size: 20 MB',
   'A clock is placed in the bottom-right corner; leave space and contrast there. You may choose its colour.',
   'Default maximum duration a slide is shown is 2 weeks.',
   'The board always has the right to deny your request. This can be because the slide is inappropriate / political / rude / etc.',
@@ -34,6 +35,7 @@ export function ScreensPage() {
   const [file, setFile] = useState<File | null>(null)
   const [altcha, setAltcha] = useState<string | null>(null)
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const [progress, setProgress] = useState<UploadProgress | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -50,7 +52,7 @@ export function ScreensPage() {
     setError(null)
     if (!file) { setError('Please choose a poster file (JPG, PNG or MP4).'); return }
     if (!ACCEPTED.includes(file.type)) { setError('Unsupported file type. Use JPG, PNG or MP4.'); return }
-    if (file.size > MAX_BYTES) { setError('That file is larger than 10 MB.'); return }
+    if (file.size > MAX_BYTES) { setError('That file is larger than 20 MB.'); return }
     if (!permanent) {
       if (!form.startDate || !form.endDate) {
         setError('Please choose a start and end date, or tick the permanent-poster box.'); return
@@ -65,11 +67,13 @@ export function ScreensPage() {
       data.append('permanent', String(permanent))
       data.append('altcha', altcha ?? '')
       data.append('file', file)
-      await submitScreenForm(data)
+      await submitScreenForm(data, setProgress)
       setStatus('sent')
     } catch (err) {
       setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
       setStatus('idle')
+    } finally {
+      setProgress(null)
     }
   }
 
@@ -102,7 +106,7 @@ export function ScreensPage() {
         <div className="mt-8 rounded-xl border border-hubble-100 bg-hubble-50 p-6">
           <h2 className="font-title text-xl font-bold text-hubble-700">Request received</h2>
           <p className="mt-2 text-sm text-hubble-800/80">
-            Thanks! Your screen request and poster have been sent to the screens team. A
+            Thanks! Your poster request has been sent to the screens team for review. A
             confirmation has been sent to your email address.
           </p>
         </div>
@@ -184,6 +188,8 @@ export function ScreensPage() {
           {error && (
             <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
+
+          {status === 'sending' && progress && <UploadProgressPanel progress={progress} />}
 
           <button type="submit" disabled={status === 'sending'}
             className="rounded-lg bg-hubble-700 px-6 py-3 text-sm font-bold uppercase tracking-wide text-white transition hover:bg-hubble-600 disabled:opacity-60">

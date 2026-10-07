@@ -44,6 +44,17 @@ class FakeAuroraClientPosterRequestTest {
     }
 
     @Test
+    void slowMode_acceptsAfterAPause() {
+        fake.setPosterRequestMode(FakeAuroraClient.PosterRequestMode.SLOW);
+
+        long started = System.nanoTime();
+        fake.createPosterRequest(request("x"));
+
+        assertThat((System.nanoTime() - started) / 1_000_000).isGreaterThanOrEqualTo(FakeAuroraClient.SLOW_MILLIS);
+        assertThat(fake.posterRequests()).hasSize(1);
+    }
+
+    @Test
     void reset_clearsRequestsAndAcceptsAgain() {
         fake.createPosterRequest(request("x"));
         fake.setPosterRequestMode(FakeAuroraClient.PosterRequestMode.DOWN);

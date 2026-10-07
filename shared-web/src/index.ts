@@ -13,7 +13,7 @@ export {
   FormError, submitComplaint, submitScreenForm, submitDeclarationForm, formsChallengeUrl,
   submitTip, submitInformation, submitLoan,
   type ComplaintInput, type ComplaintType,
-  type TipInput, type InformationInput, type LoanInput,
+  type TipInput, type InformationInput, type LoanInput, type UploadProgress,
 } from './api/forms'
 export { cn } from './lib/cn'
 export { installChunkReload } from './lib/chunkReload'
