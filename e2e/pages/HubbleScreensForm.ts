@@ -47,6 +47,31 @@ export class HubbleScreensForm {
     )
   }
 
+  /** The square next to the colour field that previews the colour and opens the picker. */
+  colourSwatch(): Locator {
+    return this.page.getByRole('button', { name: 'Pick a colour' })
+  }
+
+  colourPicker(): Locator {
+    return this.page.getByRole('dialog', { name: 'Colour picker' })
+  }
+
+  /**
+   * Opens the picker and clicks a spot in its colour area, as fractions of its width (white to
+   * full colour) and height (bright to dark). Returns the hex the field then holds.
+   */
+  async pickColour(x: number, y: number): Promise<string> {
+    const hex = this.page.locator('#s-hex')
+    const before = await hex.inputValue()
+    await this.colourSwatch().click()
+    const area = this.colourPicker().getByRole('slider', { name: 'Color' })
+    const box = (await area.boundingBox())!
+    await area.click({ position: { x: box.width * x, y: box.height * y } })
+    // The picker reports the new colour just after it redraws, so wait for the field to follow.
+    await expect(hex).not.toHaveValue(before)
+    return hex.inputValue()
+  }
+
   async send(): Promise<void> {
     await this.page.getByRole('button', { name: 'Send request' }).click()
   }

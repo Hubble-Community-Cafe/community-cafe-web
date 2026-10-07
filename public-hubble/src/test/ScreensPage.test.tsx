@@ -54,6 +54,19 @@ describe('Hubble ScreensPage', () => {
     expect(screen.getByText(/sent to the screens team for review/)).toBeInTheDocument()
   })
 
+  it('sends the clock colour, typed or picked', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await fillContact(user)
+    await user.click(screen.getByRole('checkbox', { name: /permanent poster/ }))
+    await user.type(screen.getByLabelText(/Clock \/ progress colour/), '#e4007c')
+    expect(screen.getByRole('button', { name: 'Pick a colour' })).toHaveAttribute('data-colour', '#E4007C')
+    await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
+    await send(user)
+
+    expect((submitScreenForm.mock.calls[0][0] as FormData).get('hexColor')).toBe('#e4007c')
+  })
+
   it('a permanent poster needs no dates', async () => {
     const user = userEvent.setup()
     renderPage()

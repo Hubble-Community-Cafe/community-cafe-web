@@ -35,6 +35,19 @@ test.describe('Hubble poster screens form on mobile', () => {
     expect(overflow).toBeLessThanOrEqual(0)
   })
 
+  test('the colour picker fits on a phone', async ({ page }, testInfo) => {
+    const form = new HubbleScreensForm(page)
+    await form.goto()
+    await form.colourSwatch().scrollIntoViewIfNeeded()
+    const picked = await form.pickColour(0.8, 0.3)
+    expect(picked).toMatch(/^#[0-9A-F]{6}$/)
+    await expect(form.colourPicker()).toBeInViewport({ ratio: 1 })
+    await captureScreenshot(testInfo, page, 'mobile-hubble-screen-colour-picker')
+
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)
+    expect(overflow).toBeLessThanOrEqual(0)
+  })
+
   test('shows why a poster was refused on a phone', async ({ page, request }) => {
     await setFakeAuroraPosterMode(request, 'REJECT_FILE')
     const form = new HubbleScreensForm(page)
