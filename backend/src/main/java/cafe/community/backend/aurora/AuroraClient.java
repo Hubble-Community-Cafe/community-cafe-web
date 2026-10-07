@@ -2,6 +2,8 @@ package cafe.community.backend.aurora;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpRequest;
@@ -26,8 +28,8 @@ import java.util.function.Supplier;
  *
  * <p>Authentication is an integration user's key in the {@code x-api-key} header. That key is
  * scoped in Aurora to exactly the operations used here: {@code getScreenHandlers},
- * {@code setScreenHandler} and {@code showStaticPoster}. The poster read endpoints come along with
- * the {@code integration-user} group.
+ * {@code setScreenHandler}, {@code showStaticPoster} and {@code createPosterRequest}. The poster
+ * read endpoints come along with the {@code integration-user} group.
  */
 @Component
 public class AuroraClient {
@@ -42,21 +44,30 @@ public class AuroraClient {
             };
 
     private final RestClient restClient;
+    private final RestClient uploadRestClient;
     private final boolean enabled;
     private final String baseUrl;
 
+    /** One client for every call, uploads included. */
+    public AuroraClient(RestClient auroraRestClient, boolean enabled, String baseUrl, String apiKey) {
+        this(auroraRestClient, auroraRestClient, enabled, baseUrl, apiKey);
+    }
+
+    @Autowired
     public AuroraClient(
-            RestClient auroraRestClient,
+            @Qualifier("auroraRestClient") RestClient auroraRestClient,
+            @Qualifier("auroraUploadRestClient") RestClient auroraUploadRestClient,
             @Value("${app.aurora.enabled:false}") boolean enabled,
             @Value("${app.aurora.base-url:}") String baseUrl,
             @Value("${app.aurora.api-key:}") String apiKey) {
         this.restClient = auroraRestClient;
+        this.uploadRestClient = auroraUploadRestClient;
         this.baseUrl = baseUrl;
         this.enabled = enabled && !baseUrl.isBlank() && !apiKey.isBlank();
 
         if (enabled && !this.enabled) {
             log.warn("Aurora is enabled but app.aurora.base-url or app.aurora.api-key is blank; "
-                    + "the screen scene panel will stay unavailable.");
+                    + "the screen scene panel and poster requests will stay unavailable.");
         } else if (this.enabled) {
             log.info("Aurora client configured for {}", baseUrl);
         }
@@ -155,6 +166,29 @@ public class AuroraClient {
                 .toBodilessEntity());
     }
 
+    /**
+     * Submit a poster request for review in the Aurora backoffice.
+     *
+     * @throws AuroraRejectedException when Aurora refuses the content (400, 413, 415); sending it
+     *         again will not help
+     * @throws AuroraException when Aurora is not configured, unreachable, or answers with any
+     *         other error, such as a bad key (401, 403), poster requests switched off (409) or 5xx
+     */
+    public Aurora.CreatedPosterRequest createPosterRequest(Aurora.PosterRequest request) {
+        Aurora.CreatedPosterRequest created = call("POST /handler/screen/poster/requests",
+                () -> uploadRestClient.post()
+                        .uri("/handler/screen/poster/requests")
+                        .contentType(MediaType.MULTIPART_FORM_DATA)
+                        .body(request.toMultipart().build())
+                        .retrieve()
+                        .onStatus(HttpStatusCode::isError, this::failPosterRequest)
+                        .body(Aurora.CreatedPosterRequest.class));
+        if (created == null) {
+            throw new AuroraException("Aurora returned an empty poster request response.");
+        }
+        return created;
+    }
+
     private <T> T call(String description, Supplier<T> request) {
         if (!enabled) {
             throw new AuroraException("Aurora is not configured.");
@@ -175,5 +209,26 @@ public class AuroraClient {
         String body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
         String detail = body.isBlank() ? "" : ": " + body;
         throw new AuroraException("Aurora returned " + status.value() + detail);
+    }
+
+    /**
+     * Like {@link #fail}, but separates content Aurora refused from Aurora being unusable. Aurora's
+     * validation messages name the field, never its value, so they are safe to log.
+     */
+    private void failPosterRequest(HttpRequest request, ClientHttpResponse response) throws IOException {
+        AuroraRejectedException.Reason reason = switch (response.getStatusCode().value()) {
+            case 400 -> AuroraRejectedException.Reason.INVALID;
+            case 413 -> AuroraRejectedException.Reason.TOO_LARGE;
+            case 415 -> AuroraRejectedException.Reason.UNSUPPORTED_FILE;
+            default -> null;
+        };
+        if (reason == null) {
+            fail(request, response);
+            return;
+        }
+        String body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+        String detail = body.isBlank() ? "" : ": " + body;
+        throw new AuroraRejectedException(reason,
+                "Aurora refused the poster request with " + response.getStatusCode().value() + detail);
     }
 }

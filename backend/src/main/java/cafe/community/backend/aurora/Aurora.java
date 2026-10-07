@@ -1,7 +1,10 @@
 package cafe.community.backend.aurora;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.springframework.http.MediaType;
+import org.springframework.http.client.MultipartBodyBuilder;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 /**
@@ -77,5 +80,61 @@ public final class Aurora {
     /** Current state of the static poster handler; {@code activePoster} is null when none is shown. */
     @JsonIgnoreProperties(ignoreUnknown = true)
     public record StaticPosterState(Poster activePoster, boolean clockVisible) {
+    }
+
+    /**
+     * A poster request for {@code POST /handler/screen/poster/requests}. A reviewer approves,
+     * edits or denies it in the Aurora backoffice. Optional fields are null when not sent, so
+     * Aurora's own defaults apply.
+     *
+     * <p>{@link #toMultipart()} is the single place that knows Aurora's field names and limits;
+     * keep it in line with Aurora's {@code PosterRequestController}.
+     */
+    public record PosterRequest(
+            String requesterName,
+            String requesterEmail,
+            String requesterAssociation,
+            String message,
+            String name,
+            String label,
+            OffsetDateTime startDate,
+            OffsetDateTime expirationDate,
+            String accentColor,
+            Integer defaultTimeout,
+            Upload file) {
+
+        /** The multipart body Aurora expects. Only a file is sent, never a {@code uri}. */
+        public MultipartBodyBuilder toMultipart() {
+            MultipartBodyBuilder body = new MultipartBodyBuilder();
+            body.part("requesterName", requesterName);
+            body.part("requesterEmail", requesterEmail);
+            body.part("name", name);
+            optional(body, "requesterAssociation", requesterAssociation);
+            optional(body, "message", message);
+            optional(body, "label", label);
+            optional(body, "startDate", startDate == null ? null : startDate.toString());
+            optional(body, "expirationDate", expirationDate == null ? null : expirationDate.toString());
+            optional(body, "accentColor", accentColor);
+            optional(body, "defaultTimeout", defaultTimeout == null ? null : defaultTimeout.toString());
+            body.part("file", file.data())
+                    .filename(file.filename())
+                    .contentType(MediaType.parseMediaType(file.contentType()));
+            return body;
+        }
+
+        private static void optional(MultipartBodyBuilder body, String field, String value) {
+            if (value != null && !value.isBlank()) {
+                body.part(field, value);
+            }
+        }
+    }
+
+    /** The poster file of a {@link PosterRequest}: a JPG, PNG or MP4 of at most 20 MB. */
+    public record Upload(String filename, String contentType, byte[] data) {
+    }
+
+    /** Aurora's answer to a created poster request. */
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public record CreatedPosterRequest(long id, String createdAt) {
     }
 }

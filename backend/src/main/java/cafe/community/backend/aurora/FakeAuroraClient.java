@@ -5,7 +5,9 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,6 +33,19 @@ public class FakeAuroraClient extends AuroraClient {
     private final Map<Long, String> screenNames = new LinkedHashMap<>();
     private Long activePosterId;
 
+    /** How {@link #createPosterRequest} answers, so specs can exercise the fallback paths. */
+    public enum PosterRequestMode {
+        /** Aurora accepts the request. */
+        ACCEPT,
+        /** Aurora cannot be reached: the website falls back to email. */
+        DOWN,
+        /** Aurora refuses the file as damaged or unsupported (415). */
+        REJECT_FILE
+    }
+
+    private final List<Aurora.PosterRequest> posterRequests = Collections.synchronizedList(new ArrayList<>());
+    private volatile PosterRequestMode posterRequestMode = PosterRequestMode.ACCEPT;
+
     public FakeAuroraClient() {
         super(RestClient.builder().build(), false, "", "");
         screenNames.put(1L, "HubbleGeneralScreen");
@@ -47,6 +62,8 @@ public class FakeAuroraClient extends AuroraClient {
         handlerByScreen.clear();
         screenNames.keySet().forEach(id -> handlerByScreen.put(id, CAROUSEL));
         activePosterId = null;
+        posterRequests.clear();
+        posterRequestMode = PosterRequestMode.ACCEPT;
     }
 
     @Override
@@ -101,5 +118,29 @@ public class FakeAuroraClient extends AuroraClient {
     @Override
     public void showStaticPoster(long posterId) {
         this.activePosterId = posterId;
+    }
+
+    @Override
+    public Aurora.CreatedPosterRequest createPosterRequest(Aurora.PosterRequest request) {
+        switch (posterRequestMode) {
+            case DOWN -> throw new AuroraException("Could not reach Aurora (fake is down)");
+            case REJECT_FILE -> throw new AuroraRejectedException(
+                    AuroraRejectedException.Reason.UNSUPPORTED_FILE, "Aurora returned 415");
+            default -> {
+                posterRequests.add(request);
+                return new Aurora.CreatedPosterRequest(posterRequests.size(), Instant.now().toString());
+            }
+        }
+    }
+
+    /** The poster requests accepted since the last {@link #reset()}, oldest first. */
+    public List<Aurora.PosterRequest> posterRequests() {
+        synchronized (posterRequests) {
+            return List.copyOf(posterRequests);
+        }
+    }
+
+    public void setPosterRequestMode(PosterRequestMode mode) {
+        this.posterRequestMode = mode;
     }
 }

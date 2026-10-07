@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.FakeAuroraClient;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
@@ -10,6 +11,8 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * E2E-only support endpoints, mounted under {@code /test} and active <strong>only</strong>
@@ -114,6 +117,36 @@ public class TestSupportController {
         user.setDisplayName(req.name() != null && !req.name().isBlank() ? req.name() : req.oid());
         user.setRole(AdminRole.valueOf(req.role()));
         adminUsers.save(user);
+    }
+
+    /** The poster requests the fake Aurora accepted, without the file bytes. */
+    @GetMapping("/aurora/poster-requests")
+    public List<PosterRequestView> posterRequests() {
+        return fakeAurora.posterRequests().stream().map(PosterRequestView::of).toList();
+    }
+
+    /** Make the fake Aurora accept, be down, or reject the file for the next poster requests. */
+    @PutMapping("/aurora/poster-requests/mode")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void posterRequestMode(@RequestBody PosterRequestModeRequest req) {
+        fakeAurora.setPosterRequestMode(req.mode());
+    }
+
+    public record PosterRequestModeRequest(FakeAuroraClient.PosterRequestMode mode) {}
+
+    public record PosterRequestView(
+            String requesterName, String requesterEmail, String requesterAssociation, String message,
+            String name, String label, String startDate, String expirationDate, String accentColor,
+            Integer defaultTimeout, String fileName, String contentType, int fileSize) {
+
+        static PosterRequestView of(Aurora.PosterRequest r) {
+            return new PosterRequestView(r.requesterName(), r.requesterEmail(), r.requesterAssociation(),
+                    r.message(), r.name(), r.label(),
+                    r.startDate() == null ? null : r.startDate().toString(),
+                    r.expirationDate() == null ? null : r.expirationDate().toString(),
+                    r.accentColor(), r.defaultTimeout(),
+                    r.file().filename(), r.file().contentType(), r.file().data().length);
+        }
     }
 
     public record SeedUserRequest(@NotBlank String oid, String email, String name, @NotBlank String role) {}
