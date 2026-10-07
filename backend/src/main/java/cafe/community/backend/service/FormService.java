@@ -1,6 +1,9 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.altcha.AltchaService;
+import cafe.community.backend.aurora.AuroraClient;
+import cafe.community.backend.aurora.AuroraException;
+import cafe.community.backend.aurora.AuroraRejectedException;
 import cafe.community.backend.dto.ComplaintRequest;
 import cafe.community.backend.dto.DeclarationRequest;
 import cafe.community.backend.dto.InformationRequest;
@@ -31,6 +34,9 @@ import java.util.Set;
  * a stored audit record (no file persisted), and a plain-text staff notification with the
  * uploaded file attached. Recipients are configured per form via {@code app.mail.forms.*}.
  * The submitter also receives a best-effort confirmation email (reply-to the relevant team).
+ *
+ * <p>Poster screen requests go to Aurora for review instead; staff only get a notice by email,
+ * unless Aurora is unavailable, in which case the request is emailed with the poster as before.
  */
 @Service
 public class FormService {
@@ -39,11 +45,14 @@ public class FormService {
     /** Dedicated, routable logger for privacy-safe usage analytics (no submitter data). */
     private static final Logger analytics = LoggerFactory.getLogger("APP_ANALYTICS");
     private static final long MAX_FILE_BYTES = 10L * 1024 * 1024; // 10 MB
+    /** Aurora's own limit for a poster file. */
+    private static final long MAX_POSTER_BYTES = 20L * 1024 * 1024; // 20 MB
     private static final Set<String> SCREEN_TYPES = Set.of("image/jpeg", "image/png", "video/mp4");
     private static final Set<String> RECEIPT_TYPES = Set.of("application/pdf", "image/jpeg", "image/png");
 
     private final FormMailService mail;
     private final AltchaService altcha;
+    private final AuroraClient aurora;
     private final FormSubmissionRepository repo;
     private final String complaintsTo;
     private final String screensTo;
@@ -59,6 +68,7 @@ public class FormService {
     public FormService(
             FormMailService mail,
             AltchaService altcha,
+            AuroraClient aurora,
             FormSubmissionRepository repo,
             @Value("${app.mail.forms.complaints:nuisance@hubble.cafe}") String complaintsTo,
             @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
@@ -72,6 +82,7 @@ public class FormService {
             @Value("${app.mail.from.meteor:noreply@meteor.cafe}") String meteorFrom) {
         this.mail = mail;
         this.altcha = altcha;
+        this.aurora = aurora;
         this.repo = repo;
         this.complaintsTo = complaintsTo;
         this.screensTo = screensTo;
@@ -127,6 +138,8 @@ public class FormService {
         if (isBot(req.getHoneypot())) return;
         requireCaptcha(req.getAltcha());
 
+        LocalDate start = null;
+        LocalDate end = null;
         String period;
         if (req.isPermanent()) {
             period = "Type: Permanent association poster (general, no fixed dates)";
@@ -135,29 +148,54 @@ public class FormService {
                 throw new IllegalArgumentException(
                         "Please provide a start and end date, or mark this as a permanent poster.");
             }
-            LocalDate start = parseDate(req.getStartDate(), "start date");
-            LocalDate end = parseDate(req.getEndDate(), "end date");
+            start = parseDate(req.getStartDate(), "start date");
+            end = parseDate(req.getEndDate(), "end date");
             if (end.isBefore(start)) {
                 throw new IllegalArgumentException("The end date must be on or after the start date.");
             }
             period = "Start Date: " + req.getStartDate() + "\nEnd Date: " + req.getEndDate();
         }
         FormEmail.Attachment poster = requireFile(req.getFile(), SCREEN_TYPES,
-                "a JPG, PNG or MP4 poster");
+                "a JPG, PNG or MP4 poster", MAX_POSTER_BYTES);
 
-        String body = "Screen Request from " + req.getName() + " - " + req.getAssociation() + "\n\n"
-                + "Personal Details:\n"
-                + "Name: " + req.getName() + "\n"
+        boolean inAurora = submitToAurora(req, start, end, poster);
+
+        String details = "Name: " + req.getName() + "\n"
                 + "Association: " + req.getAssociation() + "\n"
-                + "Mail: " + req.getEmail() + "\n\n"
+                + "Mail: " + req.getEmail() + "\n"
                 + period + "\n"
-                + "Hex: " + orDash(req.getHexColor()) + "\n\n"
-                + "Message:\n" + orDash(req.getMessage()) + "\n";
+                + "Hex: " + orDash(req.getHexColor()) + "\n";
+        String message = "Message:\n" + orDash(req.getMessage()) + "\n";
 
         record(FormType.SCREEN, true);
-        mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
-                "Screen Request from " + req.getName() + " - " + req.getAssociation(),
-                body, List.of(poster)));
+        if (inAurora) {
+            // The request is safe in Aurora, so a failed notice must not make the requester
+            // send it again (that would create a duplicate request).
+            String body = "A new poster request was placed through the Hubble website.\n"
+                    + "It is waiting for review in Aurora: open the backoffice, go to\n"
+                    + "Poster requests, and approve, edit or deny it there.\n\n"
+                    + details
+                    + "File: " + poster.filename() + "\n\n"
+                    + message;
+            try {
+                mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
+                        "Poster request from " + req.getName() + " - " + req.getAssociation()
+                                + ": review in Aurora",
+                        body, List.of()));
+            } catch (RuntimeException e) {
+                log.warn("Poster request is in Aurora, but the staff notice failed: {}", e.getMessage());
+            }
+        } else {
+            String body = "Aurora could not be reached, so this request is NOT in\n"
+                    + "Aurora. Please add the poster there yourself.\n\n"
+                    + "Screen Request from " + req.getName() + " - " + req.getAssociation() + "\n\n"
+                    + "Personal Details:\n"
+                    + details + "\n"
+                    + message;
+            mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
+                    "Screen Request from " + req.getName() + " - " + req.getAssociation(),
+                    body, List.of(poster)));
+        }
         logSubmission("screen", null);
 
         String confirmation = "Hi " + req.getName() + ",\n\n"
@@ -168,6 +206,29 @@ public class FormService {
                 + "Kind regards,\nHubble Community Cafe\n";
         sendConfirmation(hubbleFrom, req.getEmail(),
                 "We received your poster screen request", confirmation);
+    }
+
+    /**
+     * Hand the poster request to Aurora for review. Returns false when Aurora is not configured or
+     * unusable (down, timeout, bad key, requests switched off), so the caller emails it instead.
+     * A refused file or field is the requester's to fix, so it surfaces as a validation error.
+     * Only the outcome is logged, never the requester's details.
+     */
+    private boolean submitToAurora(ScreenRequest req, LocalDate start, LocalDate end,
+                                   FormEmail.Attachment poster) {
+        if (!aurora.isEnabled()) {
+            return false;
+        }
+        try {
+            aurora.createPosterRequest(PosterRequestMapper.toPosterRequest(req, start, end, poster));
+            return true;
+        } catch (AuroraRejectedException e) {
+            log.warn("Aurora refused a poster request ({}): {}", e.reason(), e.getMessage());
+            throw new IllegalArgumentException(PosterRequestMapper.rejectionMessage(e.reason()));
+        } catch (AuroraException e) {
+            log.warn("Aurora is unavailable for a poster request, emailing it instead: {}", e.getMessage());
+            return false;
+        }
     }
 
     // ── E-declaration (Hubble and Meteor) ────────────────────────────────────────
@@ -189,7 +250,7 @@ public class FormService {
 
         BigDecimal amount = parseAmount(req.getAmount());
         FormEmail.Attachment receipt = requireFile(req.getFile(), RECEIPT_TYPES,
-                "a PDF or image receipt");
+                "a PDF or image receipt", MAX_FILE_BYTES);
 
         String body = "New E-Declaration from the " + (meteor ? "Meteor" : "Hubble") + " website\n\n"
                 + "Full name: " + req.getFullName() + "\n"
@@ -370,12 +431,14 @@ public class FormService {
                 form, bar == null || bar.isBlank() ? "NONE" : bar);
     }
 
-    private FormEmail.Attachment requireFile(MultipartFile file, Set<String> allowedTypes, String what) {
+    private FormEmail.Attachment requireFile(MultipartFile file, Set<String> allowedTypes, String what,
+                                             long maxBytes) {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Please attach " + what + ".");
         }
-        if (file.getSize() > MAX_FILE_BYTES) {
-            throw new IllegalArgumentException("The file is too large (max 10 MB).");
+        if (file.getSize() > maxBytes) {
+            throw new IllegalArgumentException(
+                    "The file is too large (max " + maxBytes / (1024 * 1024) + " MB).");
         }
         String contentType = file.getContentType();
         if (contentType == null || !allowedTypes.contains(contentType)) {

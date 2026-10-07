@@ -1,6 +1,7 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.altcha.AltchaService;
+import cafe.community.backend.aurora.AuroraClient;
 import cafe.community.backend.dto.ComplaintRequest;
 import cafe.community.backend.dto.DeclarationRequest;
 import cafe.community.backend.dto.InformationRequest;
@@ -45,7 +46,7 @@ class FormServiceAnalyticsTest {
         when(altcha.verify(any())).thenReturn(true);
         FormSubmissionRepository repo = mock(FormSubmissionRepository.class);
 
-        service = new FormService(mail, altcha, repo,
+        service = new FormService(mail, altcha, mock(AuroraClient.class), repo,
                 "complaints@hubble.cafe", "screens@hubble.cafe", "finance@hubble.cafe", "",
                 "finance@meteor.cafe", "", "info@hubble.cafe", "loan@hubble.cafe",
                 "noreply@hubble.cafe", "noreply@meteor.cafe");

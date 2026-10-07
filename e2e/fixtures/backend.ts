@@ -180,3 +180,36 @@ export function seedAssociation(
 ): Promise<{ id: number }> {
   return adminPost(request, '/api/admin/associations', { logoId: null, bar: null, ...association })
 }
+
+/** A poster request as the fake Aurora recorded it (see TestSupportController), without the file. */
+export interface FakePosterRequest {
+  requesterName: string
+  requesterEmail: string
+  requesterAssociation: string | null
+  message: string | null
+  name: string
+  label: string | null
+  startDate: string | null
+  expirationDate: string | null
+  accentColor: string | null
+  defaultTimeout: number | null
+  fileName: string
+  contentType: string
+  fileSize: number
+}
+
+/** The poster requests the fake Aurora accepted since the last reset, oldest first. */
+export async function fakeAuroraPosterRequests(request: APIRequestContext): Promise<FakePosterRequest[]> {
+  const res = await request.get(`${BACKEND_URL}/test/aurora/poster-requests`)
+  if (!res.ok()) throw new Error(`/test/aurora/poster-requests failed: ${res.status()}`)
+  return res.json() as Promise<FakePosterRequest[]>
+}
+
+/** Make the fake Aurora accept, be down, or refuse the file. Reset puts it back to ACCEPT. */
+export async function setFakeAuroraPosterMode(
+  request: APIRequestContext,
+  mode: 'ACCEPT' | 'DOWN' | 'REJECT_FILE',
+): Promise<void> {
+  const res = await request.put(`${BACKEND_URL}/test/aurora/poster-requests/mode`, { data: { mode } })
+  if (!res.ok()) throw new Error(`/test/aurora/poster-requests/mode failed: ${res.status()}`)
+}

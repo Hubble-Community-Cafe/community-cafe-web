@@ -286,6 +286,21 @@ class FormControllerTest {
                 .andExpect(status().isBadRequest());
     }
 
+    /** The multipart limit is 20 MB for posters, but a receipt keeps its own 10 MB limit. */
+    @Test
+    void declaration_receiptOver10Mb_isRejected() throws Exception {
+        MockMultipartFile big = new MockMultipartFile("file", "receipt.pdf", "application/pdf",
+                new byte[10 * 1024 * 1024 + 1]);
+        mockMvc.perform(multipart("/api/forms/declaration").file(big)
+                        .param("fullName", "Sven Rooijakkers").param("email", "sven@x.com")
+                        .param("iban", "NL70 TRIO 0338 5890 15").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "150,04").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("The file is too large (max 10 MB)."));
+        verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
+    }
+
     @Test
     void declaration_missingReceipt_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/declaration")
