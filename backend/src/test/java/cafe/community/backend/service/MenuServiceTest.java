@@ -74,6 +74,43 @@ class MenuServiceTest {
     }
 
     @Test
+    void deleteCategory_subHeadingWithItemsRemovesItsItems() {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto sub = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
+        MenuItemDto item = menuService.createItem(sub.id(), basicItem(true));
+
+        menuService.deleteCategory(sub.id());
+        // Flush so the foreign keys are checked inside the test, not at rollback.
+        categoryRepo.flush();
+
+        assertThat(categoryRepo.existsById(sub.id())).isFalse();
+        assertThat(itemRepo.existsById(item.id())).isFalse();
+        assertThat(categoryRepo.existsById(tab.id())).isTrue();
+    }
+
+    @Test
+    void deleteCategory_tabRemovesItsSubHeadingsAndTheirItems() {
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Drinks", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto sub = menuService.createCategory(
+                new MenuCategoryRequest("Beers", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
+        MenuItemDto item = menuService.createItem(sub.id(), basicItem(true));
+        MenuCategoryDto otherTab = menuService.createCategory(
+                new MenuCategoryRequest("Food", MenuKind.FOOD, null, 2, BarLocation.HUBBLE, null));
+        MenuItemDto otherItem = menuService.createItem(otherTab.id(), basicItem(true));
+
+        menuService.deleteCategory(tab.id());
+        categoryRepo.flush();
+
+        assertThat(categoryRepo.existsById(tab.id())).isFalse();
+        assertThat(categoryRepo.existsById(sub.id())).isFalse();
+        assertThat(itemRepo.existsById(item.id())).isFalse();
+        assertThat(itemRepo.existsById(otherItem.id())).isTrue();
+    }
+
+    @Test
     void updateCategory_unknownIdThrows() {
         assertThatThrownBy(() -> menuService.updateCategory(999L, hubbleBeerCategory()))
                 .isInstanceOf(IllegalArgumentException.class);
