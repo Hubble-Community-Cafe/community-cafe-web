@@ -154,6 +154,14 @@ public class MenuService {
     public void deleteCategory(Long id) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+        // Items and sub-headings reference this category through foreign keys, so the
+        // database refuses the delete while they exist. Remove them first, as the admin
+        // confirm ("and all its items") promises.
+        for (MenuCategory sub : categoryRepo.findByParentOrderBySortOrderAsc(cat)) {
+            itemRepo.deleteAll(itemRepo.findByCategoryOrderBySortOrderAsc(sub));
+            categoryRepo.delete(sub);
+        }
+        itemRepo.deleteAll(itemRepo.findByCategoryOrderBySortOrderAsc(cat));
         categoryRepo.delete(cat);
         auditService.recordDelete(AuditEntityType.MENU_CATEGORY, id, cat.getName(),
                 "Deleted category: " + cat.getName());
