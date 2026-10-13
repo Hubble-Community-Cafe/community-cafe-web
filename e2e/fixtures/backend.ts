@@ -67,16 +67,24 @@ async function adminPut(request: APIRequestContext, path: string, data: unknown)
 
 export type Bar = 'HUBBLE' | 'METEOR'
 
-/** Today as YYYY-MM-DD (local). */
+/**
+ * The backend (TZ=Europe/Amsterdam) decides "today" in the bars' zone, while CI runs in UTC.
+ * Dates must follow the backend, or late-evening UTC runs seed content for "yesterday".
+ */
+function barDate(at: Date): string {
+  // en-CA formats as YYYY-MM-DD.
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Amsterdam' }).format(at)
+}
+
+/** Today at the bars as YYYY-MM-DD. */
 export function today(): string {
-  return new Date().toISOString().slice(0, 10)
+  return barDate(new Date())
 }
 
 /** A date `days` in the future as YYYY-MM-DD, for "upcoming" events. */
 export function inDays(days: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + days)
-  return d.toISOString().slice(0, 10)
+  const [y, m, d] = today().split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
 }
 
 // ── Content seeders (through the real admin endpoints) ─────────────────────────
