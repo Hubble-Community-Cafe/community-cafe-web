@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,6 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("test")
 @Transactional
 class OpeningHoursServiceTest {
+
+    /** The service decides "today" in the bars' zone; CI runs in UTC, so match it explicitly. */
+    private static final ZoneId TZ = ZoneId.of("Europe/Amsterdam");
 
     @Autowired OpeningHoursService service;
     @Autowired OpeningHoursRepository hoursRepo;
@@ -71,7 +75,7 @@ class OpeningHoursServiceTest {
 
     @Test
     void statusOpenWhenHoursExistForToday() {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        DayOfWeek today = LocalDate.now(TZ).getDayOfWeek();
         service.upsertDay(BarLocation.METEOR, today, new WeeklyHoursRequest("09:00", "23:00", null, null));
 
         BarStatusDto status = service.getStatus(BarLocation.METEOR);
@@ -88,11 +92,11 @@ class OpeningHoursServiceTest {
 
     @Test
     void overrideClosedTakesPrecedenceOverSchedule() {
-        DayOfWeek today = LocalDate.now().getDayOfWeek();
+        DayOfWeek today = LocalDate.now(TZ).getDayOfWeek();
         service.upsertDay(BarLocation.HUBBLE, today, new WeeklyHoursRequest("11:00", "02:00", null, null));
 
         service.createOverride(BarLocation.HUBBLE, new HoursOverrideRequest(
-                LocalDate.now(), true, null, null, "Public holiday"));
+                LocalDate.now(TZ), true, null, null, "Public holiday"));
 
         BarStatusDto status = service.getStatus(BarLocation.HUBBLE);
         assertThat(status.isOpen()).isFalse();
@@ -102,7 +106,7 @@ class OpeningHoursServiceTest {
     @Test
     void createAndDeleteOverride() {
         HoursOverrideDto dto = service.createOverride(BarLocation.METEOR,
-                new HoursOverrideRequest(LocalDate.now().plusDays(3), true, null, null, "Closed for event"));
+                new HoursOverrideRequest(LocalDate.now(TZ).plusDays(3), true, null, null, "Closed for event"));
 
         assertThat(service.getUpcomingOverrides(BarLocation.METEOR)).hasSize(1);
 

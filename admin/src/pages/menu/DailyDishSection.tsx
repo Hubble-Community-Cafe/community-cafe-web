@@ -9,6 +9,7 @@ import {
   type DailyDishRequest,
 } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { barToday } from '../../lib/barDate'
 
 function DishForm({
   initial,
@@ -19,7 +20,7 @@ function DishForm({
   onSave: (req: DailyDishRequest) => Promise<void>
   onCancel: () => void
 }) {
-  const [date, setDate] = useState(initial?.date ?? new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(initial?.date ?? barToday())
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [price, setPrice] = useState(initial?.price != null ? String(initial.price) : '')
