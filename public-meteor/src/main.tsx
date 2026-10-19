@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
-import { installChunkReload } from '@cafe/shared-web'
+import { initSentry, installChunkReload } from '@cafe/shared-web'
 import './index.css'
 import App from './App.tsx'
 
@@ -11,17 +11,13 @@ declare const __APP_VERSION__: string
 // Pages load on demand; recover a tab left open across a deploy (see installChunkReload).
 installChunkReload()
 
-const sentryDsn =
-  window.__RUNTIME_CONFIG__?.SENTRY_DSN ?? import.meta.env.VITE_PUBLIC_METEOR_SENTRY_DSN
-if (sentryDsn && !sentryDsn.startsWith('__')) {
-  Sentry.init({
-    dsn: sentryDsn,
-    environment: import.meta.env.MODE,
-    release: `community-cafe-public-meteor@${__APP_VERSION__}`,
-    integrations: [Sentry.browserTracingIntegration()],
-    tracesSampleRate: 0.1,
-  })
-}
+// Release name, extension-noise filters and the DSN placeholder check live in shared-web.
+initSentry(Sentry, {
+  project: 'community-cafe-public-meteor',
+  version: __APP_VERSION__,
+  dsn: window.__RUNTIME_CONFIG__?.SENTRY_DSN ?? import.meta.env.VITE_PUBLIC_METEOR_SENTRY_DSN,
+  environment: import.meta.env.MODE,
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
