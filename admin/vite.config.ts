@@ -2,7 +2,8 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
-import { version } from './package.json'
+// Versioned once, at the root (the workspace package.json files stay 0.0.0).
+import { version } from '../package.json'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -15,7 +16,7 @@ export default defineConfig({
     sentryVitePlugin({
       org: process.env.SENTRY_ORG,
       project: 'community-cafe-admin',
-      release: { name: version },
+      release: { name: `community-cafe-admin@${version}` },
       sourcemaps: { filesToDeleteAfterUpload: ['./dist/**/*.map'] },
       disable: !process.env.SENTRY_AUTH_TOKEN || !process.env.SENTRY_ORG,
     }),

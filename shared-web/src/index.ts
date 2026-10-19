@@ -17,6 +17,7 @@ export {
 } from './api/forms'
 export { cn } from './lib/cn'
 export { installChunkReload } from './lib/chunkReload'
+export { initSentry, sentryRelease } from './lib/sentry'
 export { applyPageMeta, type PageMeta } from './lib/seo'
 export {
   groupWeeklyHours, groupKitchenHours, DAY_LABELS, DAY_ORDER, type HoursGroup,

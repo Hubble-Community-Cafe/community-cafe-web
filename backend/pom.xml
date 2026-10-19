@@ -10,12 +10,15 @@
 	</parent>
 	<groupId>cafe.community</groupId>
 	<artifactId>community-cafe-backend</artifactId>
-	<version>1.4.4</version>
+	<version>1.4.5</version>
 	<name>community-cafe-backend</name>
 	<description>Backend for the Hubble and Meteor community cafes: shared staff/board CMS.</description>
 
 	<properties>
 		<java.version>25</java.version>
+		<!-- Single clean @token@ for resource filtering: `name@@project.version@` collides with the
+		     @ delimiter and ships the literal text instead of the version (same fix as the-harry-list). -->
+		<sentry.release>community-cafe-backend@${project.version}</sentry.release>
 		<!--
 			Override the Tomcat version managed by spring-boot-starter-parent to pick up the
 			fixes for CVE-2026-65182, CVE-2026-65905 and CVE-2026-68525 (all critical, all
