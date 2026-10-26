@@ -81,6 +81,18 @@ describe('Layout footer', () => {
   })
 })
 
+describe('Layout brand link', () => {
+  it('names the home link after its visible text (WCAG 2.5.3 label in name)', () => {
+    renderLayoutAs('VIEWER')
+    // The brand renders twice (desktop sidebar and mobile top bar).
+    const links = screen.getAllByRole('link', { name: 'Staff & board admin home' })
+    for (const link of links) {
+      expect(link).toHaveAttribute('href', '/')
+      expect(link.getAttribute('aria-label')).toContain(link.textContent)
+    }
+  })
+})
+
 describe('Layout skip link and focus on navigation', () => {
   function renderAdmin() {
     mockUseRole.mockReturnValue({
