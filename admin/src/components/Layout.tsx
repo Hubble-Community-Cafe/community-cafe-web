@@ -119,7 +119,7 @@ export function Layout() {
     <Link
       to="/"
       className="flex flex-col gap-1.5 px-4 py-4"
-      aria-label="Community Cafe admin home"
+      aria-label="Staff & board admin home"
     >
       <BrandLogos className="flex-row items-center gap-2" size={30} />
       <span className="text-xs font-normal text-slate-500">Staff &amp; board admin</span>
