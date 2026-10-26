@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { inboundFiltersIntegration } from '@sentry/browser'
+import { eventFiltersIntegration } from '@sentry/browser'
 import type { Event } from '@sentry/browser'
 import { initSentry, sentryRelease, SENTRY_DENY_URLS, SENTRY_IGNORE_ERRORS } from './sentry'
 
@@ -11,7 +11,7 @@ const base = { project: 'community-cafe-public-meteor', version: '1.4.5', enviro
 
 /** Run an event through Sentry's own inbound filter with our lists, as the SDK does before sending. */
 function isDropped(event: Event): boolean {
-  const filter = inboundFiltersIntegration({ denyUrls: SENTRY_DENY_URLS, ignoreErrors: SENTRY_IGNORE_ERRORS })
+  const filter = eventFiltersIntegration({ denyUrls: SENTRY_DENY_URLS, ignoreErrors: SENTRY_IGNORE_ERRORS })
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return (filter as any).processEvent(event, {}, { getOptions: () => ({}) }) === null
 }
