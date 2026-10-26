@@ -21,7 +21,7 @@
     "@dnd-kit/modifiers": "^9.0.0",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@sentry/react": "^10.76.2",
+    "@sentry/react": "^11.0.0",
     "lucide-react": "^1.55.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
