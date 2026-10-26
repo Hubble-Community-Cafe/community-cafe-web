@@ -16,8 +16,8 @@
   "dependencies": {
     "@cafe/shared-web": "*",
     "@sentry/react": "^10.76.2",
-    "altcha": "^3.3.0",
-    "lucide-react": "^1.55.0",
+    "altcha": "^3.4.1",
+    "lucide-react": "^1.59.0",
     "react": "^19.3.1",
     "react-colorful": "^5.8.1",
     "react-dom": "^19.3.1",
@@ -35,7 +35,7 @@
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
     "@vitest/coverage-v8": "^5.0.0",
-    "eslint": "^10.12.0",
+    "eslint": "^10.13.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.7",
     "globals": "^17.13.0",
@@ -43,7 +43,7 @@
     "tailwindcss": "^4.3.1",
     "typescript": "~6.0.3",
     "typescript-eslint": "^8.71.2",
-    "vite": "^8.3.4",
+    "vite": "^8.3.5",
     "vitest": "^5.0.5"
   }
 }
