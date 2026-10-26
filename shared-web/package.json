@@ -25,7 +25,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@sentry/browser": "^10.76.2",
+    "@sentry/browser": "^11.0.0",
     "clsx": "^2.1.1",
     "tailwind-merge": "^3.7.0"
   },
