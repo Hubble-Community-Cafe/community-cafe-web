@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Admin CRUD for associations. Reads open to any signed-in staff; writes require EDITOR. */
+/** Admin CRUD for associations. Reads need Associations view; writes need Associations edit. */
 @RestController
+@PreAuthorize("hasAuthority('ASSOCIATIONS_VIEW')")
 @RequestMapping("/api/admin/associations")
 public class AdminAssociationController {
 
@@ -28,20 +29,20 @@ public class AdminAssociationController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('ASSOCIATIONS_EDIT')")
     public AssociationDto create(@RequestBody @Valid AssociationRequest req) {
         return service.create(req);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('ASSOCIATIONS_EDIT')")
     public AssociationDto update(@PathVariable Long id, @RequestBody @Valid AssociationRequest req) {
         return service.update(id, req);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('ASSOCIATIONS_EDIT')")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

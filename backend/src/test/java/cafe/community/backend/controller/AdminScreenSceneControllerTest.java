@@ -1,6 +1,9 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.AuroraClient;
+import cafe.community.backend.model.AccessLevel;
+import cafe.community.backend.model.AccessPresets;
+import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.ScreenScene;
@@ -18,6 +21,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -29,8 +34,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Authorization for the scene panel: switching a scene is open to any signed-in staff, but
- * choosing which poster a scene shows stays with editors.
+ * Authorization for the scene panel: switching a scene needs Screens edit (every old role has
+ * it), choosing which poster a scene shows needs Screen posters (old editors).
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -59,8 +64,56 @@ class AdminScreenSceneControllerTest {
         u.setEmail(oid + "@test.invalid");
         u.setDisplayName(oid);
         u.setRole(role);
-        userRepo.save(u);
+        AccessPresets.applyTo(u, role);
+        userRepo.saveAndFlush(u);
         return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
+    }
+
+    /** Seed a user with exactly these permissions and no old-role extras. */
+    private RequestPostProcessor withAccess(String oid, Map<AdminModule, AccessLevel> permissions) {
+        AdminUser u = new AdminUser();
+        u.setAzureOid(oid);
+        u.setEmail(oid + "@test.invalid");
+        u.setRole(AdminRole.VIEWER);
+        u.getPermissions().putAll(permissions);
+        // Flushed: the filter's last-seen update clears the persistence context, which would drop
+        // permission rows still waiting to be written.
+        userRepo.saveAndFlush(u);
+        return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
+    }
+
+    @Test
+    void screensView_readsTheStateButCannotSwitch() throws Exception {
+        RequestPostProcessor looker = withAccess("looker", Map.of(AdminModule.SCREENS, AccessLevel.VIEW));
+
+        mockMvc.perform(get("/api/admin/screens/scene").with(looker)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(looker)).andExpect(status().isForbidden());
+        verify(sceneService, never()).apply(any());
+    }
+
+    @Test
+    void withoutScreensAccess_theStateIsHidden() throws Exception {
+        mockMvc.perform(get("/api/admin/screens/scene").with(withAccess("nobody", Map.of())))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void screenPostersAlone_setsPostersAndReadsTheStateButCannotSwitch() throws Exception {
+        RequestPostProcessor setup = withAccess("setup", Map.of(AdminModule.SCREEN_POSTERS, AccessLevel.EDIT));
+
+        mockMvc.perform(put("/api/admin/screens/settings").with(setup)
+                        .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/admin/screens/scene").with(setup)).andExpect(status().isOk());
+        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(setup)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void screensEdit_cannotSetPosters() throws Exception {
+        mockMvc.perform(put("/api/admin/screens/settings")
+                        .with(withAccess("shift", Map.of(AdminModule.SCREENS, AccessLevel.EDIT)))
+                        .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
+                .andExpect(status().isForbidden());
     }
 
     @Test
