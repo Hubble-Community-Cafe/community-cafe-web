@@ -33,7 +33,9 @@ function LevelChoice({ id, module, value, disabled, onChange }: {
         {levels.map((level) => (
           <label key={level}
             className={cn(
-              'px-3 py-1.5 text-sm font-medium focus-within:outline focus-within:outline-2 focus-within:outline-hubble-600',
+              // relative: keeps the visually hidden radio inside its button. Without it the input is
+              // placed against the page, and focusing it on click scrolls the whole window there.
+              'relative px-3 py-1.5 text-sm font-medium focus-within:outline focus-within:outline-2 focus-within:outline-hubble-600',
               value === level ? 'bg-hubble-700 text-white' : 'bg-white text-slate-700',
               disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer',
               !disabled && value !== level && 'hover:bg-slate-50',

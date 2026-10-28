@@ -46,6 +46,23 @@ test.describe('Admin users and per-tab access', () => {
     expect(JSON.stringify(await audit.json())).toContain(STAFF.email)
   })
 
+  test('choosing a level keeps the page where it is', async ({ page }) => {
+    // Short enough that the lower tabs are below the fold, which is where the window used to jump.
+    await page.setViewportSize({ width: 1440, height: 700 })
+    const users = new UsersAdminPage(page)
+    await users.goto()
+    await users.changeAccessButton(STAFF.name).click()
+
+    await users.form(STAFF.name).getByRole('radiogroup', { name: 'Media' }).scrollIntoViewIfNeeded()
+    const contentScroll = await page.evaluate(() => document.querySelector('main')!.scrollTop)
+    await users.level(STAFF.name, 'Media', 'Edit').click()
+
+    await expect(users.form(STAFF.name).getByRole('radiogroup', { name: 'Media' }).getByRole('radio', { name: 'Edit' }))
+      .toBeChecked()
+    expect(await page.evaluate(() => window.scrollY)).toBe(0)
+    expect(await page.evaluate(() => document.querySelector('main')!.scrollTop)).toBe(contentScroll)
+  })
+
   test('a preset fills every tab in one click', async ({ page, request }) => {
     const users = new UsersAdminPage(page)
     await users.goto()
