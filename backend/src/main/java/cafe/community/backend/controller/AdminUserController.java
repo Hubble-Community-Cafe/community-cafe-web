@@ -1,6 +1,7 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.dto.AdminUserDto;
+import cafe.community.backend.dto.UpdateAccessRequest;
 import cafe.community.backend.dto.UpdateRoleRequest;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.service.AdminUserService;
@@ -23,7 +24,7 @@ public class AdminUserController {
         this.adminUserService = adminUserService;
     }
 
-    /** The signed-in user's own profile and role. */
+    /** The signed-in user's own profile, role and access. */
     @GetMapping("/me")
     public ResponseEntity<AdminUserDto> me() {
         String oid = AuditActorResolver.resolveCurrentActor().oid();
@@ -47,5 +48,14 @@ public class AdminUserController {
     public AdminUserDto updateRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleRequest request) {
         String requesterOid = AuditActorResolver.resolveCurrentActor().oid();
         return AdminUserDto.from(adminUserService.updateRole(id, request.role(), requesterOid));
+    }
+
+    /** Set a user's admin switch and per-tab access (admin only). */
+    @PutMapping("/{id}/access")
+    @PreAuthorize("hasRole('ADMIN')")
+    public AdminUserDto updateAccess(@PathVariable Long id, @Valid @RequestBody UpdateAccessRequest request) {
+        String requesterOid = AuditActorResolver.resolveCurrentActor().oid();
+        return AdminUserDto.from(
+                adminUserService.updateAccess(id, request.admin(), request.permissions(), requesterOid));
     }
 }

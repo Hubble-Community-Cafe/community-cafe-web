@@ -41,6 +41,16 @@ describe('AuditLogPage filtering', () => {
     )
   })
 
+  it('can filter on access changes', async () => {
+    renderPage()
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    expect(screen.getByRole('option', { name: 'Permissions changed' })).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Filter by action'), { target: { value: 'PERMISSIONS_CHANGED' } })
+    await waitFor(() =>
+      expect(mockFetch).toHaveBeenCalledWith(0, 50, { entityType: undefined, action: 'PERMISSIONS_CHANGED' }),
+    )
+  })
+
   it('shows a filter-specific empty message', async () => {
     renderPage()
     fireEvent.change(await screen.findByLabelText('Filter by action'), {

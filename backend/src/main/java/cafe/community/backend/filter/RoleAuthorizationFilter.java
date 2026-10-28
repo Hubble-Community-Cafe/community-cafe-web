@@ -26,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Enriches the SecurityContext with role-based authorities for admin endpoints.
@@ -131,10 +132,9 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
         if (role == AdminRole.ADMIN) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
         }
-        for (AdminModule module : AdminModule.values()) {
-            AccessLevel held = role == AdminRole.ADMIN
-                    ? AccessLevel.EDIT
-                    : user.getPermissions().getOrDefault(module, AccessLevel.HIDDEN);
+        for (Map.Entry<AdminModule, AccessLevel> permission : user.effectivePermissions().entrySet()) {
+            AdminModule module = permission.getKey();
+            AccessLevel held = permission.getValue();
             for (AccessLevel level : new AccessLevel[]{AccessLevel.VIEW, AccessLevel.EDIT}) {
                 if (held.includes(level)) {
                     authorities.add(new SimpleGrantedAuthority(module.authority(level)));

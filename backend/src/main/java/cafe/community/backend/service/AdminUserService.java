@@ -1,7 +1,9 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.dto.FieldChange;
+import cafe.community.backend.model.AccessLevel;
 import cafe.community.backend.model.AccessPresets;
+import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -14,7 +16,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -78,6 +83,58 @@ public class AdminUserService {
                 List.of(new FieldChange("role", String.valueOf(oldRole), String.valueOf(newRole))),
                 "Role changed for " + saved.getEmail());
 
+        return saved;
+    }
+
+    /**
+     * Set a user's admin switch and per-module access. An admin stores no permissions (they hold
+     * every module); anyone else becomes STAFF with exactly the given levels, hidden ones left out.
+     * Refuses changing your own access, so there is always another admin involved, and a view-only
+     * level on Screen posters, which is a yes/no setting.
+     */
+    public AdminUser updateAccess(Long userId, boolean admin, Map<AdminModule, AccessLevel> permissions,
+                                  String requestingUserOid) {
+        AdminUser target = adminUserRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        if (target.getAzureOid().equals(requestingUserOid)) {
+            throw new IllegalArgumentException("Cannot change your own access");
+        }
+        if (permissions.get(AdminModule.SCREEN_POSTERS) == AccessLevel.VIEW) {
+            throw new IllegalArgumentException("Screen posters can only be hidden or editable");
+        }
+
+        Map<AdminModule, AccessLevel> granted = new EnumMap<>(AdminModule.class);
+        if (!admin) {
+            permissions.forEach((module, level) -> {
+                if (module != null && level != null && level != AccessLevel.HIDDEN) {
+                    granted.put(module, level);
+                }
+            });
+        }
+
+        boolean wasAdmin = target.getRole() == AdminRole.ADMIN;
+        Map<AdminModule, AccessLevel> before = target.effectivePermissions();
+        target.setRole(admin ? AdminRole.ADMIN : AdminRole.STAFF);
+        target.getPermissions().clear();
+        target.getPermissions().putAll(granted);
+        Map<AdminModule, AccessLevel> after = target.effectivePermissions();
+
+        List<FieldChange> changes = new ArrayList<>();
+        if (wasAdmin != admin) {
+            changes.add(new FieldChange("admin", String.valueOf(wasAdmin), String.valueOf(admin)));
+        }
+        for (AdminModule module : AdminModule.values()) {
+            if (before.get(module) != after.get(module)) {
+                changes.add(new FieldChange(module.name(), before.get(module).name(), after.get(module).name()));
+            }
+        }
+
+        AdminUser saved = adminUserRepository.save(target);
+        if (!changes.isEmpty()) {
+            auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
+                    AuditAction.PERMISSIONS_CHANGED, changes, "Access changed for " + saved.getEmail());
+        }
         return saved;
     }
 

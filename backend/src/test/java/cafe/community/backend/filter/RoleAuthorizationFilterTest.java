@@ -143,6 +143,7 @@ class RoleAuthorizationFilterTest {
     @Test
     void eachRoleGetsItsOwnAuthoritiesAndEverythingBelowIt() throws Exception {
         Map<AdminRole, List<String>> expected = Map.of(
+                AdminRole.STAFF, List.of("ROLE_VIEWER"),
                 AdminRole.VIEWER, List.of("ROLE_VIEWER"),
                 AdminRole.DDD_POSTER, List.of("ROLE_VIEWER", "ROLE_DDD_POSTER"),
                 AdminRole.EDITOR, List.of("ROLE_VIEWER", "ROLE_DDD_POSTER", "ROLE_EDITOR"),

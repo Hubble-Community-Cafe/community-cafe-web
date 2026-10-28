@@ -1,6 +1,8 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.model.AccessLevel;
 import cafe.community.backend.model.AccessPresets;
+import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -15,6 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -80,6 +83,84 @@ class AdminUserServiceTest {
         entityManager.clear();
 
         assertThat(adminUserService.getCurrentUser("u4").getPermissions()).isEmpty();
+    }
+
+    @Test
+    void updateAccess_storesOnlyGrantedModulesAndMakesTheUserStaff() {
+        AdminUser target = adminUserService.getOrCreateUser("u5", "u5@hubble.cafe", "Five");
+
+        AdminUser updated = adminUserService.updateAccess(target.getId(), false, Map.of(
+                AdminModule.EVENTS, AccessLevel.EDIT,
+                AdminModule.MENU, AccessLevel.VIEW,
+                AdminModule.BOARD, AccessLevel.HIDDEN), "admin-oid");
+
+        assertThat(updated.getRole()).isEqualTo(AdminRole.STAFF);
+        assertThat(updated.getPermissions()).containsOnly(
+                Map.entry(AdminModule.EVENTS, AccessLevel.EDIT),
+                Map.entry(AdminModule.MENU, AccessLevel.VIEW));
+    }
+
+    @Test
+    void updateAccess_auditsEachChangedModule() {
+        AdminUser target = adminUserService.getOrCreateUser("u6", "u6@hubble.cafe", "Six");
+        auditLogRepository.deleteAll();
+        Map<AdminModule, AccessLevel> viewer = AccessPresets.forRole(AdminRole.VIEWER);
+        Map<AdminModule, AccessLevel> changed = new java.util.EnumMap<>(viewer);
+        changed.put(AdminModule.EVENTS, AccessLevel.EDIT);
+        changed.remove(AdminModule.MEDIA);
+
+        adminUserService.updateAccess(target.getId(), false, changed, "admin-oid");
+
+        assertThat(auditLogRepository.findAll()).singleElement().satisfies(entry -> {
+            assertThat(entry.getAction()).isEqualTo(AuditAction.PERMISSIONS_CHANGED);
+            assertThat(entry.getChanges())
+                    .contains("\"field\":\"EVENTS\",\"oldValue\":\"VIEW\",\"newValue\":\"EDIT\"")
+                    .contains("\"field\":\"MEDIA\",\"oldValue\":\"VIEW\",\"newValue\":\"HIDDEN\"")
+                    .doesNotContain("MENU");
+        });
+    }
+
+    @Test
+    void updateAccess_withoutAnyChangeWritesNoAudit() {
+        AdminUser target = adminUserService.getOrCreateUser("u7", "u7@hubble.cafe", "Seven");
+        auditLogRepository.deleteAll();
+
+        adminUserService.updateAccess(target.getId(), false, AccessPresets.forRole(AdminRole.VIEWER), "admin-oid");
+
+        assertThat(auditLogRepository.findAll()).isEmpty();
+    }
+
+    @Test
+    void updateAccess_adminDropsStoredPermissionsAndAuditsTheSwitch() {
+        AdminUser target = adminUserService.getOrCreateUser("u8", "u8@hubble.cafe", "Eight");
+        auditLogRepository.deleteAll();
+
+        AdminUser updated = adminUserService.updateAccess(target.getId(), true,
+                Map.of(AdminModule.MENU, AccessLevel.VIEW), "admin-oid");
+
+        assertThat(updated.getRole()).isEqualTo(AdminRole.ADMIN);
+        assertThat(updated.getPermissions()).isEmpty();
+        assertThat(updated.effectivePermissions()).containsValue(AccessLevel.EDIT).doesNotContainValue(AccessLevel.VIEW);
+        assertThat(auditLogRepository.findAll()).singleElement()
+                .satisfies(entry -> assertThat(entry.getChanges())
+                        .contains("\"field\":\"admin\",\"oldValue\":\"false\",\"newValue\":\"true\""));
+    }
+
+    @Test
+    void updateAccess_rejectsChangingYourOwnAccess() {
+        AdminUser self = adminUserService.getOrCreateUser("self-2", "self2@hubble.cafe", "Self");
+        assertThatThrownBy(() -> adminUserService.updateAccess(self.getId(), true, Map.of(), "self-2"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("own access");
+    }
+
+    @Test
+    void updateAccess_rejectsViewOnlyScreenPosters() {
+        AdminUser target = adminUserService.getOrCreateUser("u9", "u9@hubble.cafe", "Nine");
+        assertThatThrownBy(() -> adminUserService.updateAccess(target.getId(), false,
+                Map.of(AdminModule.SCREEN_POSTERS, AccessLevel.VIEW), "admin-oid"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Screen posters");
     }
 
     @Test

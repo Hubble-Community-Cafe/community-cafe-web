@@ -18,10 +18,14 @@ public final class AccessPresets {
     private AccessPresets() {
     }
 
-    /** The permissions of a role. Admins hold every module through the admin switch, so none are stored. */
+    /**
+     * The permissions of a role. Admins hold every module through the admin switch, so none are
+     * stored; STAFF starts with none.
+     */
     public static Map<AdminModule, AccessLevel> forRole(AdminRole role) {
         Map<AdminModule, AccessLevel> permissions = new EnumMap<>(AdminModule.class);
-        if (role == AdminRole.ADMIN) {
+        if (role == AdminRole.ADMIN || role == AdminRole.STAFF) {
+            // STAFF has no preset: its access is set tab by tab.
             return permissions;
         }
         AccessLevel content = role == AdminRole.EDITOR ? AccessLevel.EDIT : AccessLevel.VIEW;

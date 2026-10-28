@@ -9,6 +9,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,6 +67,17 @@ public class AdminUser {
     /** Last time this account used the admin (at most a day off); drives inactive-account removal. */
     @Column(name = "last_seen_at")
     private LocalDateTime lastSeenAt;
+
+    /** Every module with the level this user effectively holds: EDIT everywhere for an admin. */
+    public Map<AdminModule, AccessLevel> effectivePermissions() {
+        Map<AdminModule, AccessLevel> effective = new EnumMap<>(AdminModule.class);
+        for (AdminModule module : AdminModule.values()) {
+            effective.put(module, role == AdminRole.ADMIN
+                    ? AccessLevel.EDIT
+                    : permissions.getOrDefault(module, AccessLevel.HIDDEN));
+        }
+        return effective;
+    }
 
     @PrePersist
     protected void onCreate() {

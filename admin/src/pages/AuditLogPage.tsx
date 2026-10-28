@@ -8,7 +8,7 @@ const ENTITY_TYPES = [
   'OPENING_HOURS', 'HOURS_OVERRIDE', 'EVENT', 'BOARD_TERM', 'BOARD_MEMBER',
   'VACANCY', 'ASSOCIATION',
 ]
-const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'TOGGLE']
+const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'PERMISSIONS_CHANGED', 'TOGGLE']
 
 /** ADMIN_USER -> "Admin user" for the dropdown labels. */
 const humanize = (value: string) =>

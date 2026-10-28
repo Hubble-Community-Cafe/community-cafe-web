@@ -45,6 +45,11 @@ class AccessPresetsTest {
     }
 
     @Test
+    void staffHasNoPresetBecauseItsAccessIsSetPerTab() {
+        assertThat(AccessPresets.forRole(AdminRole.STAFF)).isEmpty();
+    }
+
+    @Test
     void editIncludesViewButNotTheOtherWayRound() {
         assertThat(AccessLevel.EDIT.includes(AccessLevel.VIEW)).isTrue();
         assertThat(AccessLevel.VIEW.includes(AccessLevel.EDIT)).isFalse();
