@@ -54,6 +54,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Media library (upload, size limit, real file type) | n/a | n/a | ✅ | ⬜ |
 | Access per tab (hidden / view / edit, new account without access, old-role presets, Screens split) | n/a | n/a | ✅ | ✅ |
+| Users: set access per tab (editor, presets, own row locked, audited) | n/a | n/a | ✅ | ✅ |
 | Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Admin Content-Security-Policy (every page, no violations, security headers) | n/a | n/a | ✅ | n/a |
 | Accessibility (axe, WCAG 2.2 AA: every page, forms with validation errors) | ✅ | ✅ | ✅ | ✅ |

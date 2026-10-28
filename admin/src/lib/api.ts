@@ -167,6 +167,16 @@ export const updateUserRole = (userId: number, role: AdminRole) =>
     body: JSON.stringify({ role }),
   })
 
+/** Set someone's admin switch and per-tab access. Tabs left out are hidden. */
+export const updateUserAccess = (
+  userId: number,
+  access: { admin: boolean; permissions: Partial<Record<AdminModule, AccessLevel>> },
+) =>
+  getJson<AdminUser>(`/api/admin/users/${userId}/access`, {
+    method: 'PUT',
+    body: JSON.stringify(access),
+  })
+
 export interface AuditLogFilters {
   entityType?: string
   action?: string

@@ -41,3 +41,40 @@ export function preset(name: PresetName): Access {
   if (name === 'EDITOR') access.SCREEN_POSTERS = 'EDIT'
   return access
 }
+
+export const PRESET_LABELS: Record<PresetName, string> = {
+  VIEWER: 'Viewer',
+  DDD_POSTER: 'DDD poster',
+  EDITOR: 'Editor',
+}
+
+/** One line per tab explaining what the levels mean, for non-technical admins. */
+export const MODULE_HINTS: Record<AdminModule, string> = {
+  MENU: 'The drinks and food menus of both bars.',
+  DAILY_DISH: 'The daily dinner dish at Hubble.',
+  OPENING_HOURS: 'Weekly opening hours and special dates.',
+  EVENTS: 'Events at both bars.',
+  BOARD: 'Current, previous and supervisory boards. Edit includes uploading their photos.',
+  VACANCIES: 'Open positions. Edit includes uploading their images.',
+  ASSOCIATIONS: 'Associations and their logos. Edit includes uploading logos.',
+  MEDIA: 'The image library. Edit includes deleting images.',
+  SCREENS: 'View shows what the screens show; Edit switches them between open, last call and closed.',
+  SCREEN_POSTERS: 'Which slide the closed and last call scenes show.',
+}
+
+/** Tabs that are only on or off: there is nothing to look at without changing it. */
+export const ON_OFF_MODULES: AdminModule[] = ['SCREEN_POSTERS']
+
+/** A short summary of someone's access, for the users list. */
+export function accessSummary(admin: boolean, access: Access): string {
+  if (admin) return 'Admin: full access'
+  const edits = MODULES.filter((m) => access[m] === 'EDIT').length
+  const views = MODULES.filter((m) => access[m] === 'VIEW').length
+  if (edits === 0 && views === 0) return 'No access yet'
+  const tabs = (n: number) => `${n} ${n === 1 ? 'tab' : 'tabs'}`
+  const parts: string[] = []
+  if (edits > 0) parts.push(`edits ${tabs(edits)}`)
+  if (views > 0) parts.push(`views ${tabs(views)}`)
+  const summary = parts.join(', ')
+  return summary.charAt(0).toUpperCase() + summary.slice(1)
+}
