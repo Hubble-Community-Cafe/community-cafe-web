@@ -3,6 +3,8 @@ package cafe.community.backend.service;
 import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.*;
+import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Snapshot;
 import cafe.community.backend.util.SortOrders;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -92,17 +94,18 @@ public class MenuService {
         }
         MenuCategory saved = categoryRepo.save(cat);
         auditService.recordCreate(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
-                List.of(), "Created category: " + saved.getName());
+                AuditSnapshots.of(saved).asCreated(), "Created category: " + saved.getName());
         return MenuCategoryDto.from(saved);
     }
 
     public MenuCategoryDto updateCategory(Long id, MenuCategoryRequest req) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+        Snapshot before = AuditSnapshots.of(cat);
         applyCategory(cat, req);
         MenuCategory saved = categoryRepo.save(cat);
-        auditService.recordAction(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
-                AuditAction.UPDATE, List.of(), "Updated category: " + saved.getName());
+        auditService.recordUpdate(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
+                before.changesTo(AuditSnapshots.of(saved)), "Updated category: " + saved.getName());
         return MenuCategoryDto.from(saved);
     }
 
@@ -154,6 +157,7 @@ public class MenuService {
     public void deleteCategory(Long id) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+        Snapshot lastValues = AuditSnapshots.of(cat);
         // Items and sub-headings reference this category through foreign keys, so the
         // database refuses the delete while they exist. Remove them first, as the admin
         // confirm ("and all its items") promises.
@@ -164,7 +168,7 @@ public class MenuService {
         itemRepo.deleteAll(itemRepo.findByCategoryOrderBySortOrderAsc(cat));
         categoryRepo.delete(cat);
         auditService.recordDelete(AuditEntityType.MENU_CATEGORY, id, cat.getName(),
-                "Deleted category: " + cat.getName());
+                lastValues.asDeleted(), "Deleted category: " + cat.getName());
     }
 
     // ===== Admin: items =====
@@ -186,17 +190,18 @@ public class MenuService {
         }
         MenuItem saved = itemRepo.save(item);
         auditService.recordCreate(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
-                List.of(), "Created item: " + saved.getName());
+                AuditSnapshots.of(saved).asCreated(), "Created item: " + saved.getName());
         return MenuItemDto.from(saved);
     }
 
     public MenuItemDto updateItem(Long id, MenuItemRequest req) {
         MenuItem item = itemRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+        Snapshot before = AuditSnapshots.of(item);
         applyItem(item, req);
         MenuItem saved = itemRepo.save(item);
-        auditService.recordAction(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
-                AuditAction.UPDATE, List.of(), "Updated item: " + saved.getName());
+        auditService.recordUpdate(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
+                before.changesTo(AuditSnapshots.of(saved)), "Updated item: " + saved.getName());
         return MenuItemDto.from(saved);
     }
 
@@ -329,9 +334,10 @@ public class MenuService {
     public void deleteItem(Long id) {
         MenuItem item = itemRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+        Snapshot lastValues = AuditSnapshots.of(item);
         itemRepo.delete(item);
         auditService.recordDelete(AuditEntityType.MENU_ITEM, id, item.getName(),
-                "Deleted item: " + item.getName());
+                lastValues.asDeleted(), "Deleted item: " + item.getName());
     }
 
     // ===== Admin: daily dish =====
@@ -347,26 +353,28 @@ public class MenuService {
         applyDish(dish, req);
         DailyDish saved = dishRepo.save(dish);
         auditService.recordCreate(AuditEntityType.DAILY_DISH, saved.getId(), saved.getName(),
-                List.of(), "Created daily dish: " + saved.getName());
+                AuditSnapshots.of(saved).asCreated(), "Created daily dish: " + saved.getName());
         return DailyDishDto.from(saved);
     }
 
     public DailyDishDto updateDish(Long id, DailyDishRequest req) {
         DailyDish dish = dishRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Daily dish not found: " + id));
+        Snapshot before = AuditSnapshots.of(dish);
         applyDish(dish, req);
         DailyDish saved = dishRepo.save(dish);
-        auditService.recordAction(AuditEntityType.DAILY_DISH, saved.getId(), saved.getName(),
-                AuditAction.UPDATE, List.of(), "Updated daily dish: " + saved.getName());
+        auditService.recordUpdate(AuditEntityType.DAILY_DISH, saved.getId(), saved.getName(),
+                before.changesTo(AuditSnapshots.of(saved)), "Updated daily dish: " + saved.getName());
         return DailyDishDto.from(saved);
     }
 
     public void deleteDish(Long id) {
         DailyDish dish = dishRepo.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Daily dish not found: " + id));
+        Snapshot lastValues = AuditSnapshots.of(dish);
         dishRepo.delete(dish);
         auditService.recordDelete(AuditEntityType.DAILY_DISH, id, dish.getName(),
-                "Deleted daily dish: " + dish.getName());
+                lastValues.asDeleted(), "Deleted daily dish: " + dish.getName());
     }
 
     // ===== Helpers =====

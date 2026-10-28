@@ -6,6 +6,8 @@ import cafe.community.backend.model.*;
 import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.repository.VacancyRepository;
 import cafe.community.backend.util.SortOrders;
+import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,17 +46,18 @@ public class VacancyService {
         }
         Vacancy saved = repo.save(v);
         auditService.recordCreate(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
-                List.of(), "Created vacancy: " + saved.getTitle());
+                AuditSnapshots.of(saved).asCreated(), "Created vacancy: " + saved.getTitle());
         return VacancyDto.from(saved);
     }
 
     public VacancyDto update(Long id, VacancyRequest req) {
         Vacancy v = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Vacancy not found: " + id));
+        Snapshot before = AuditSnapshots.of(v);
         apply(v, req);
         Vacancy saved = repo.save(v);
-        auditService.recordAction(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
-                AuditAction.UPDATE, List.of(), "Updated vacancy: " + saved.getTitle());
+        auditService.recordUpdate(AuditEntityType.VACANCY, saved.getId(), saved.getTitle(),
+                before.changesTo(AuditSnapshots.of(saved)), "Updated vacancy: " + saved.getTitle());
         return VacancyDto.from(saved);
     }
 
@@ -74,8 +77,10 @@ public class VacancyService {
         Vacancy v = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Vacancy not found: " + id));
         String title = v.getTitle();
+        Snapshot lastValues = AuditSnapshots.of(v);
         repo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.VACANCY, id, title, "Deleted vacancy: " + title);
+        auditService.recordDelete(AuditEntityType.VACANCY, id, title, lastValues.asDeleted(),
+                "Deleted vacancy: " + title);
     }
 
     /** Where a new vacancy lands: after the last one. */

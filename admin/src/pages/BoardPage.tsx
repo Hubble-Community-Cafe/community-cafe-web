@@ -444,7 +444,7 @@ function TermCard({
 // ── Page ─────────────────────────────────────────────────────────────────────
 
 export function BoardPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('BOARD')
   const [terms, setTerms] = useState<BoardTerm[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

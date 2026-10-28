@@ -44,7 +44,7 @@ class AdminUserIdentityRefreshTest {
         stored.setAzureOid("oid-1");
         stored.setEmail("old@hubble.cafe");
         stored.setDisplayName("Old Name");
-        stored.setRole(AdminRole.EDITOR);
+        stored.setRole(AdminRole.STAFF);
         when(repository.findByAzureOid("oid-1")).thenReturn(Optional.of(stored));
     }
 
@@ -82,7 +82,7 @@ class AdminUserIdentityRefreshTest {
 
         // The request still gets a usable user, so authorization proceeds normally.
         assertThat(user).isNotNull();
-        assertThat(user.getRole()).isEqualTo(AdminRole.EDITOR);
+        assertThat(user.getRole()).isEqualTo(AdminRole.STAFF);
     }
 
     @Test

@@ -5,18 +5,12 @@ import { Card, PageHeader } from '../components/PageHeader'
 import { useRole } from '../lib/RoleContext'
 import { usePermissions } from '../lib/usePermissions'
 import { NAV, canSee } from '../navigation'
+import { MODULES, MODULE_LABELS } from '../lib/access'
 import {
   fetchDailyDishes, fetchEvents, fetchOverrides, fetchAuditLog,
-  type AdminRole, type BarLocation, type DailyDish, type CafeEvent,
+  type BarLocation, type DailyDish, type CafeEvent,
   type HoursOverride, type AuditLogEntry,
 } from '../lib/api'
-
-const ROLE_LABELS: Record<AdminRole, string> = {
-  VIEWER: 'Viewer',
-  DDD_POSTER: 'DDD poster',
-  EDITOR: 'Editor',
-  ADMIN: 'Admin',
-}
 
 // ── Date / format helpers ──────────────────────────────────────────────────────
 
@@ -223,12 +217,53 @@ function AuditWidget() {
 
 // ── Page ─────────────────────────────────────────────────────────────────────────
 
+/** "Menu, Events and Board" */
+function listLabels(labels: string[]): string {
+  return labels.length <= 1 ? labels.join('') : `${labels.slice(0, -1).join(', ')} and ${labels.at(-1)}`
+}
+
+/** A plain-language summary of what the signed-in user may do. */
+function AccessCard() {
+  const { isLoading } = useRole()
+  const { isAdmin, canView, canEdit } = usePermissions()
+  const editable = MODULES.filter((m) => canEdit(m)).map((m) => MODULE_LABELS[m])
+  const viewOnly = MODULES.filter((m) => canView(m) && !canEdit(m)).map((m) => MODULE_LABELS[m])
+
+  return (
+    <Card>
+      <CardLabel>Your access</CardLabel>
+      <p className="mt-2 font-title text-2xl font-bold text-slate-800">
+        {isLoading ? '…' : isAdmin ? 'Admin' : 'Staff'}
+      </p>
+      {!isLoading && (
+        isAdmin ? (
+          <p className="mt-1 text-sm text-slate-600">Full access, including users and the audit log.</p>
+        ) : editable.length === 0 && viewOnly.length === 0 ? (
+          <p className="mt-1 text-sm text-slate-600">
+            You do not have access to any part of the admin yet. Ask an admin to give you access.
+          </p>
+        ) : (
+          <>
+            {editable.length > 0 && (
+              <p className="mt-1 text-sm text-slate-600">You can edit {listLabels(editable)}.</p>
+            )}
+            {viewOnly.length > 0 && (
+              <p className="mt-1 text-sm text-slate-600">You can view {listLabels(viewOnly)}.</p>
+            )}
+          </>
+        )
+      )}
+    </Card>
+  )
+}
+
 export function DashboardPage() {
-  const { user, role, isLoading } = useRole()
-  const { isViewer, isEditor, isAdmin, isDddPoster } = usePermissions()
+  const { user } = useRole()
+  const permissions = usePermissions()
+  const { isAdmin, canView, canEdit } = permissions
 
   const tiles = (NAV.find((s) => s.title === 'Content')?.items ?? [])
-    .filter((item) => canSee(item, { isViewer, isEditor, isAdmin }))
+    .filter((item) => canSee(item, permissions))
 
   return (
     <>
@@ -254,25 +289,11 @@ export function DashboardPage() {
       )}
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
-          <CardLabel>Your role</CardLabel>
-          <p className="mt-2 font-title text-2xl font-bold text-slate-800">
-            {isLoading ? '…' : role ? ROLE_LABELS[role] : 'Unknown'}
-          </p>
-          <p className="mt-1 text-sm text-slate-600">
-            {isAdmin
-              ? 'Full access, including users and the audit log.'
-              : isEditor
-                ? 'You can edit the content modules.'
-                : isDddPoster
-                  ? 'You can view all content and edit the Daily Dinner Dish.'
-                  : 'Read-only access. Ask an admin for edit rights.'}
-          </p>
-        </Card>
+        <AccessCard />
 
-        {isDddPoster && <DailyDishWidget />}
-        <EventsWidget />
-        <OverridesWidget />
+        {canEdit('DAILY_DISH') && <DailyDishWidget />}
+        {canView('EVENTS') && <EventsWidget />}
+        {canView('OPENING_HOURS') && <OverridesWidget />}
         {isAdmin && <AuditWidget />}
 
         <Card>

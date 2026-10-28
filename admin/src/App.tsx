@@ -10,6 +10,7 @@ import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
 import { isE2E } from './lib/e2eAuth'
+import { canAccess, type NavRequirement } from './navigation'
 
 // The layout, sign-in and dashboard are in the main bundle; each editor downloads when it is first
 // opened (the menu editor brings the drag-and-drop library). The Suspense is in Layout.
@@ -82,11 +83,11 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/** Gates a route on the database-backed role. Content pages use 'viewer' (read-only
- *  for viewers; editing is gated inside each page by capability). */
-function RequireRole({ need, children }: { need: 'viewer' | 'editor' | 'admin'; children: ReactNode }) {
+/** Gates a route on the database-backed access, with the same rule as its nav item. Editing is
+ *  gated inside each page. */
+function RequireAccess({ requires, children }: { requires: NavRequirement; children: ReactNode }) {
   const { isLoading } = useRole()
-  const { isViewer, isEditor, isAdmin } = usePermissions()
+  const permissions = usePermissions()
 
   if (isLoading) {
     return (
@@ -95,8 +96,7 @@ function RequireRole({ need, children }: { need: 'viewer' | 'editor' | 'admin'; 
       </FullScreen>
     )
   }
-  const allowed = need === 'admin' ? isAdmin : need === 'editor' ? isEditor : isViewer
-  return allowed ? <>{children}</> : <Navigate to="/" replace />
+  return canAccess(requires, permissions) ? <>{children}</> : <Navigate to="/" replace />
 }
 
 function App() {
@@ -117,83 +117,89 @@ function App() {
             <Route
               path="menu"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['MENU']}>
                   <MenuPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="daily-dish"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['DAILY_DISH']}>
                   <DailyDishPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="hours"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['OPENING_HOURS']}>
                   <OpeningHoursPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="events"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['EVENTS']}>
                   <EventsPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="board"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['BOARD']}>
                   <BoardPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="vacancies"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['VACANCIES']}>
                   <VacanciesPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="associations"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['ASSOCIATIONS']}>
                   <AssociationsPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="media"
               element={
-                <RequireRole need="viewer">
+                <RequireAccess requires={['MEDIA']}>
                   <MediaPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
-            {/* Switching the screens is a bar-shift action, open to any signed-in staff. */}
-            <Route path="screens" element={<ScreensPage />} />
+            <Route
+              path="screens"
+              element={
+                <RequireAccess requires={['SCREENS', 'SCREEN_POSTERS']}>
+                  <ScreensPage />
+                </RequireAccess>
+              }
+            />
             <Route
               path="users"
               element={
-                <RequireRole need="admin">
+                <RequireAccess requires="admin">
                   <UsersPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
             <Route
               path="audit"
               element={
-                <RequireRole need="admin">
+                <RequireAccess requires="admin">
                   <AuditLogPage />
-                </RequireRole>
+                </RequireAccess>
               }
             />
           </Route>

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAuditLog, type AuditLogEntry } from '../lib/api'
+import { parseChanges } from '../lib/auditChanges'
+import { AuditChanges } from './audit/AuditChanges'
 
 /** Filter options mirror the backend AuditEntityType / AuditAction enums. */
 const ENTITY_TYPES = [
@@ -8,7 +10,7 @@ const ENTITY_TYPES = [
   'OPENING_HOURS', 'HOURS_OVERRIDE', 'EVENT', 'BOARD_TERM', 'BOARD_MEMBER',
   'VACANCY', 'ASSOCIATION',
 ]
-const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'TOGGLE']
+const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'PERMISSIONS_CHANGED', 'TOGGLE']
 
 /** ADMIN_USER -> "Admin user" for the dropdown labels. */
 const humanize = (value: string) =>
@@ -142,7 +144,11 @@ export function AuditLogPage() {
                         {e.entityType}
                         {e.entityLabel ? `: ${e.entityLabel}` : ''}
                       </td>
-                      <td className="py-3 text-slate-600">{e.summary || '–'}</td>
+                      {/* A minimum width, so the change list stays readable when the table scrolls on a phone. */}
+                      <td className="min-w-72 py-3 text-slate-600">
+                        {e.summary || '–'}
+                        <AuditChanges changes={parseChanges(e.changes)} action={e.action} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

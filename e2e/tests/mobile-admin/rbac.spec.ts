@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { resetBackend, setUiRole, seedAssociation } from '../../fixtures/backend'
+import { resetBackend, setUiAccess, setUiRole, seedAssociation } from '../../fixtures/backend'
 import { AdminApp } from '../../pages/AdminApp'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -26,5 +26,14 @@ test.describe('Admin on mobile', () => {
 
     await admin.goto('/associations')
     await expect(admin.addButton(/Add association/)).toBeVisible()
+  })
+
+  test('a new account is told on a phone to ask an admin for access', async ({ page, request }, testInfo) => {
+    await setUiAccess(request, {})
+    const admin = new AdminApp(page)
+
+    await admin.goto('/')
+    await expect(page.getByText(/do not have access to any part of the admin yet/)).toBeVisible()
+    await captureScreenshot(testInfo, page, 'mobile-admin-new-account')
   })
 })

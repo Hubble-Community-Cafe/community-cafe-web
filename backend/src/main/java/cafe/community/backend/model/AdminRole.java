@@ -1,14 +1,11 @@
 package cafe.community.backend.model;
 
 /**
- * Hierarchical admin roles: ADMIN implies EDITOR implies DDD_POSTER implies VIEWER.
- * DDD_POSTER is a narrow tier just above VIEWER: read-only everywhere, plus the
- * ability to edit the Daily Dinner Dish.
+ * Admin roles. What a staff member may do is decided by their per-module permissions
+ * ({@link AdminUser#getPermissions()}); an admin holds every module plus users and the audit log.
  */
 public enum AdminRole {
-    VIEWER("Viewer"),
-    DDD_POSTER("DDD poster"),
-    EDITOR("Editor"),
+    STAFF("Staff"),
     ADMIN("Admin");
 
     private final String displayName;

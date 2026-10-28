@@ -20,9 +20,13 @@ Self-maintained rebuild of **[hubble.cafe](https://hubble.cafe)** and **[meteor.
 
 Menu (incl. TU/e dual pricing), daily dinner dish, opening hours (plus the Meteor closed-banner), events (both bars), board (current shared, previous per-bar, supervisory), vacancies, and associations. All other page copy (forms, static pages, the plaza screen) is part of each site's code.
 
+### Who can do what
+
+Access is set per person and per tab on the admin's **Users** page: each tab (menu, daily dish, opening hours, events, board, vacancies, associations, media, screens, screen posters) is **Hidden**, **View** or **Edit**. **Admins** have every tab plus users and the audit log. A first sign-in has no access until an admin grants it. **Viewer**, **DDD poster** and **Editor** are one-click presets that give the access the old roles of those names had. Edit on board, vacancies or associations also allows uploading images for them; deleting from the media library needs Edit on media. The backend enforces the same rules on every admin endpoint, and every change of access is in the audit log.
+
 ### Screens (Aurora)
 
-The admin also has a **Screens** panel that switches every Aurora narrowcasting screen between three scenes: **Open** (the poster carousel), **Last call** and **Closed** (a static slide). Any signed-in staff member can switch the scene, since that is a bar-shift action; editors additionally choose which Aurora poster each scene shows.
+The admin also has a **Screens** panel that switches every Aurora narrowcasting screen between three scenes: **Open** (the poster carousel), **Last call** and **Closed** (a static slide). Switching the scene needs Edit on **Screens** (View only shows the current state); choosing which Aurora poster each scene shows is its own **Screen posters** access.
 
 Aurora is called server to server from the backend, never from the browser: Aurora's CORS hardcodes `allowedHeaders: ['Cookie', 'Cookies']` and sets no `Allow-Credentials`, so a browser preflight carrying `content-type` or `x-api-key` is refused no matter what its `CORS_ORIGINS` says. Configure with `AURORA_ENABLED`, `AURORA_BASE_URL`, `AURORA_POSTER_BASE_URL` (the Aurora *client* host, which serves the poster images) and `AURORA_API_KEY`. The key belongs to an Aurora integration user scoped to `getScreenHandlers`, `setScreenHandler`, `showStaticPoster` and `createPosterRequest`. Left unset, the panel shows a "not configured" state rather than failing.
 
@@ -63,7 +67,7 @@ docker compose up --build
 Real Microsoft (Entra) login works locally once `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, `INITIAL_ADMIN_OID`, and `VITE_ALLOWED_GROUP_ID` are set in `.env`. The admin is served on `http://localhost:5173`, which is registered as an Entra redirect URI; your first sign-in is provisioned as ADMIN (via `INITIAL_ADMIN_OID`). For Portainer/test deployment, copy [`docker-compose.portainer.template.yml`](docker-compose.portainer.template.yml) and fill it in.
 
 > **`INITIAL_ADMIN_OID` only applies when your user row is first created.** If you have already
-> signed in once and were provisioned as VIEWER, setting it afterwards changes nothing. Promote
+> signed in once and were provisioned as staff without access, setting it afterwards changes nothing. Promote
 > the account directly instead, which `npm run dev:doctor` prints the exact command for.
 
 **Staff group in the backend.** `ALLOWED_GROUP_ID` on the admin container only hides the admin UI from people outside the staff group. Set the same group id as `ALLOWED_GROUP_ID` on the backend to also refuse their API calls: tokens without the group get a 403 and no user row is created for them. The backend reads the group from the `groups` claim of the access token, so first enable it in the app registration (Token configuration > Add groups claim > "Security groups", ticked for the Access token), then set the variable, or every staff member is refused. Entra leaves the claim out for users in more than 200 groups; the backend then refuses them too. Where the Entra plan allows it, also set "Assignment required?" to Yes on the enterprise application and assign only the staff group. The local dev stack leaves the backend check off.
@@ -118,7 +122,7 @@ The backend removes personal data it no longer needs, every night at 03:30 (`Dat
 | Form submission records (form type, date, attachment flag; no personal data) | deleted after 2 years | `DATA_RETENTION_FORM_SUBMISSION_DAYS` (730) |
 | Staff/board accounts without a sign-in | deleted after 1 year, **never ADMIN accounts** | `DATA_RETENTION_INACTIVE_ADMIN_USER_DAYS` (365) |
 
-A removed account that signs in again (still gated by the staff group) comes back as VIEWER, so an admin has to give the role back. The last sign-in is tracked from the release that added this; existing accounts start counting from that deploy. Each run logs one line such as `event=data_retention audit_anonymised=2 audit_deleted=1 form_submissions_deleted=0 admin_users_deleted=1`, with counts only. The schedule is `DATA_RETENTION_CRON` (Spring cron, default `0 30 3 * * *`); it is off in the e2e stack.
+A removed account that signs in again (still gated by the staff group) comes back without access, so an admin has to set its access again. The last sign-in is tracked from the release that added this; existing accounts start counting from that deploy. Each run logs one line such as `event=data_retention audit_anonymised=2 audit_deleted=1 form_submissions_deleted=0 admin_users_deleted=1`, with counts only. The schedule is `DATA_RETENTION_CRON` (Spring cron, default `0 30 3 * * *`); it is off in the e2e stack.
 
 ## Content-Security-Policy
 

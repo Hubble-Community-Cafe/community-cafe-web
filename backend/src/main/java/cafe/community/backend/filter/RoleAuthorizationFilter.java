@@ -1,5 +1,7 @@
 package cafe.community.backend.filter;
 
+import cafe.community.backend.model.AccessLevel;
+import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.service.AdminUserService;
@@ -24,11 +26,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * Enriches the SecurityContext with role-based authorities for admin endpoints.
+ * Enriches the SecurityContext with database-backed authorities for admin endpoints.
  * Runs after JWT authentication: looks up the user in the database (auto-creating
- * on first login), then adds hierarchical {@code ROLE_} authorities.
+ * on first login), then adds {@code ROLE_ADMIN} for admins and per-module authorities.
  *
  * <p>When {@code azure.allowed-group-id} is set, the token must also carry that Entra security
  * group in its {@code groups} claim. Tokens without it get a 403 before any user row is created,
@@ -79,7 +82,7 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
 
             if (oid != null) {
                 AdminUser user = adminUserService.getOrCreateUser(oid, email, name);
-                List<GrantedAuthority> authorities = buildAuthorities(user.getRole());
+                List<GrantedAuthority> authorities = buildAuthorities(user);
 
                 AbstractAuthenticationToken enriched =
                         new JwtAuthenticationToken(jwt, authorities, jwtAuth.getName());
@@ -111,20 +114,22 @@ public class RoleAuthorizationFilter extends OncePerRequestFilter {
     }
 
     /**
-     * Hierarchical authorities: every role is at least a VIEWER; DDD_POSTER adds
-     * the daily-dish authority; EDITOR adds DDD_POSTER + EDITOR; ADMIN adds all.
+     * The user's authorities: {@code ROLE_ADMIN} for an admin, plus one {@code <MODULE>_<LEVEL>}
+     * authority per module and level held (EDIT includes VIEW; admins hold every module).
      */
-    List<GrantedAuthority> buildAuthorities(AdminRole role) {
+    List<GrantedAuthority> buildAuthorities(AdminUser user) {
         List<GrantedAuthority> authorities = new ArrayList<>();
-        authorities.add(new SimpleGrantedAuthority("ROLE_VIEWER"));
-        if (role == AdminRole.DDD_POSTER || role == AdminRole.EDITOR || role == AdminRole.ADMIN) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_DDD_POSTER"));
-        }
-        if (role == AdminRole.EDITOR || role == AdminRole.ADMIN) {
-            authorities.add(new SimpleGrantedAuthority("ROLE_EDITOR"));
-        }
-        if (role == AdminRole.ADMIN) {
+        if (user.getRole() == AdminRole.ADMIN) {
             authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+        }
+        for (Map.Entry<AdminModule, AccessLevel> permission : user.effectivePermissions().entrySet()) {
+            AdminModule module = permission.getKey();
+            AccessLevel held = permission.getValue();
+            for (AccessLevel level : new AccessLevel[]{AccessLevel.VIEW, AccessLevel.EDIT}) {
+                if (held.includes(level)) {
+                    authorities.add(new SimpleGrantedAuthority(module.authority(level)));
+                }
+            }
         }
         return authorities;
     }

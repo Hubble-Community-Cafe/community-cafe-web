@@ -14,8 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.time.DayOfWeek;
 import java.util.List;
 
-/** Opening hours and date overrides. Reads open to any signed-in staff; writes require EDITOR. */
+/** Opening hours and date overrides. Reads need Opening hours view; writes need Opening hours edit. */
 @RestController
+@PreAuthorize("hasAuthority('OPENING_HOURS_VIEW')")
 @RequestMapping("/api/admin/opening-hours")
 public class AdminOpeningHoursController {
 
@@ -27,7 +28,7 @@ public class AdminOpeningHoursController {
 
     /** Upsert standing hours for one day of the week. */
     @PutMapping("/{bar}/{day}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('OPENING_HOURS_EDIT')")
     public WeeklyHoursDto upsertDay(
             @PathVariable BarLocation bar,
             @PathVariable DayOfWeek day,
@@ -39,7 +40,7 @@ public class AdminOpeningHoursController {
     /** Mark a day as closed (removes the standing-hours row for that day). */
     @DeleteMapping("/{bar}/{day}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('OPENING_HOURS_EDIT')")
     public void closeDay(@PathVariable BarLocation bar, @PathVariable DayOfWeek day) {
         service.closeDay(bar, day);
     }
@@ -53,7 +54,7 @@ public class AdminOpeningHoursController {
     /** Add a one-off date override. */
     @PostMapping("/{bar}/overrides")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('OPENING_HOURS_EDIT')")
     public HoursOverrideDto createOverride(
             @PathVariable BarLocation bar,
             @Valid @RequestBody HoursOverrideRequest req
@@ -63,7 +64,7 @@ public class AdminOpeningHoursController {
 
     /** Change a date override (date, status, times, note). */
     @PutMapping("/overrides/{id}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('OPENING_HOURS_EDIT')")
     public HoursOverrideDto updateOverride(@PathVariable Long id, @Valid @RequestBody HoursOverrideRequest req) {
         return service.updateOverride(id, req);
     }
@@ -71,7 +72,7 @@ public class AdminOpeningHoursController {
     /** Remove a date override. */
     @DeleteMapping("/overrides/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('OPENING_HOURS_EDIT')")
     public void deleteOverride(@PathVariable Long id) {
         service.deleteOverride(id);
     }

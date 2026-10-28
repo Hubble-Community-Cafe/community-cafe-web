@@ -12,9 +12,8 @@ import org.springframework.web.bind.annotation.*;
 /**
  * The Aurora screen scene panel.
  *
- * <p>Switching the scene is a bar-shift action, so any signed-in staff member may do it;
- * {@code /api/admin/**} already requires a valid staff token. Choosing which poster a scene shows
- * is setup, so that stays with editors.
+ * <p>Switching the scene is a bar-shift action (Screens edit). Choosing which poster a scene
+ * shows is setup, so it is its own permission (Screen posters), which may also read the state.
  */
 @RestController
 @RequestMapping("/api/admin/screens")
@@ -31,6 +30,7 @@ public class AdminScreenSceneController {
 
     /** Live screen state, the derived scene, and the posters available to pick from. */
     @GetMapping("/scene")
+    @PreAuthorize("hasAnyAuthority('SCREENS_VIEW', 'SCREEN_POSTERS_EDIT')")
     public ScreenSceneStatusDto status() {
         return sceneService.status();
     }
@@ -38,13 +38,14 @@ public class AdminScreenSceneController {
     /** Put every screen into the given scene. */
     @PostMapping("/scene/{scene}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasAuthority('SCREENS_EDIT')")
     public void apply(@PathVariable ScreenScene scene) {
         sceneService.apply(scene);
     }
 
     /** Point the closed and last-call scenes at Aurora posters. */
     @PutMapping("/settings")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('SCREEN_POSTERS_EDIT')")
     public ScreenSceneStatusDto updateSettings(@RequestBody ScreenSceneSettingsRequest req) {
         settingsService.update(req.closedPosterId(), req.lastCallPosterId());
         return sceneService.status();

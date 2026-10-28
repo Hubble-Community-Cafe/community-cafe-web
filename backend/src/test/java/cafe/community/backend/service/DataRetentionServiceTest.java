@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -76,12 +77,12 @@ class DataRetentionServiceTest {
 
     @Test
     void inactiveAccountsAreRemovedButNeverAdminsOrAccountsWithoutALastSeenTime() {
-        long activeViewer = adminUser("active", AdminRole.VIEWER, now.minusDays(10));
-        long inactiveViewer = adminUser("gone-viewer", AdminRole.VIEWER, now.minusDays(400));
-        long inactiveEditor = adminUser("gone-editor", AdminRole.EDITOR, now.minusDays(400));
-        long inactivePoster = adminUser("gone-poster", AdminRole.DDD_POSTER, now.minusDays(400));
-        long inactiveAdmin = adminUser("gone-admin", AdminRole.ADMIN, now.minusDays(400));
-        long neverSeen = adminUser("never-seen", AdminRole.VIEWER, null);
+        long activeViewer = adminUser("active", AccessPreset.VIEWER, now.minusDays(10));
+        long inactiveViewer = adminUser("gone-viewer", AccessPreset.VIEWER, now.minusDays(400));
+        long inactiveEditor = adminUser("gone-editor", AccessPreset.EDITOR, now.minusDays(400));
+        long inactivePoster = adminUser("gone-poster", AccessPreset.DDD_POSTER, now.minusDays(400));
+        long inactiveAdmin = adminUser("gone-admin", null, now.minusDays(400));
+        long neverSeen = adminUser("never-seen", AccessPreset.VIEWER, null);
 
         DataRetentionService.RetentionResult result = dataRetentionService.purge();
 
@@ -89,6 +90,9 @@ class DataRetentionServiceTest {
                 .contains(activeViewer, inactiveAdmin, neverSeen)
                 .doesNotContain(inactiveViewer, inactiveEditor, inactivePoster);
         assertThat(result.adminUsersDeleted()).isEqualTo(3);
+        assertThat(jdbc.queryForList("SELECT DISTINCT admin_user_id FROM admin_user_permission", Long.class))
+                .as("permissions go with the removed accounts")
+                .containsExactlyInAnyOrder(activeViewer, neverSeen);
     }
 
     private long audit(LocalDateTime createdAt) {
@@ -116,11 +120,16 @@ class DataRetentionServiceTest {
         return id;
     }
 
-    private long adminUser(String oid, AdminRole role, LocalDateTime lastSeenAt) {
+    /** A staff member with the preset's access, or an admin when {@code preset} is null. */
+    private long adminUser(String oid, AccessPreset preset, LocalDateTime lastSeenAt) {
         AdminUser user = new AdminUser();
         user.setAzureOid(oid);
         user.setEmail(oid + "@hubble.cafe");
-        user.setRole(role);
+        if (preset == null) {
+            user.setRole(AdminRole.ADMIN);
+        } else {
+            preset.applyTo(user);
+        }
         long id = adminUserRepository.saveAndFlush(user).getId();
         jdbc.update("UPDATE admin_user SET last_seen_at = ? WHERE id = ?", lastSeenAt, id);
         return id;

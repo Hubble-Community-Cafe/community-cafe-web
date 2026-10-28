@@ -7,6 +7,7 @@ import {
   createOverride, fetchOverrides, fetchWeeklyHours, updateOverride, type HoursOverride,
 } from '../lib/api'
 import { usePermissions } from '../lib/usePermissions'
+import { permissionsFor, staffUser } from './access'
 
 vi.mock('../lib/api', () => ({
   fetchWeeklyHours: vi.fn(),
@@ -19,10 +20,9 @@ vi.mock('../lib/api', () => ({
 }))
 vi.mock('../lib/usePermissions', () => ({ usePermissions: vi.fn() }))
 
-const permissions = (canEditContent: boolean) => vi.mocked(usePermissions).mockReturnValue({
-  isViewer: true, isDddPoster: canEditContent, isEditor: canEditContent, isAdmin: false,
-  canEditContent, canEditDailyDish: canEditContent, canManageUsers: false, canViewAuditLog: false,
-})
+const permissions = (canEditContent: boolean) => vi.mocked(usePermissions).mockReturnValue(
+  permissionsFor(staffUser({ OPENING_HOURS: canEditContent ? 'EDIT' : 'VIEW' })),
+)
 
 const override = (o: Partial<HoursOverride>): HoursOverride => ({
   id: 1, bar: 'HUBBLE', date: '2030-12-24', closed: true, open: null, close: null, note: null, ...o,

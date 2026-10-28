@@ -11,6 +11,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
@@ -40,6 +41,27 @@ class E2eTestSupportTest {
     void reset_isPermittedWithoutAuth() throws Exception {
         mockMvc.perform(post("/test/reset"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void seedUser_acceptsAPresetAsAStaffMemberWithThatAccess() throws Exception {
+        mockMvc.perform(post("/test/users").contentType("application/json")
+                .content("{\"oid\":\"poster\",\"role\":\"DDD_POSTER\"}")).andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/admin/users/me").header("X-Test-Oid", "poster"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.role").value("STAFF"))
+                .andExpect(jsonPath("$.permissions.DAILY_DISH").value("EDIT"))
+                .andExpect(jsonPath("$.permissions.MENU").value("VIEW"));
+    }
+
+    @Test
+    void seedUser_asStaffGivesNoAccess() throws Exception {
+        mockMvc.perform(post("/test/users").contentType("application/json")
+                .content("{\"oid\":\"newbie\",\"role\":\"STAFF\"}")).andExpect(status().isNoContent());
+
+        mockMvc.perform(get("/api/admin/users/me").header("X-Test-Oid", "newbie"))
+                .andExpect(jsonPath("$.permissions.MENU").value("HIDDEN"));
     }
 
     @Test

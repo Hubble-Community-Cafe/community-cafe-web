@@ -15,18 +15,11 @@ import { isE2E } from '../lib/e2eAuth'
 /** External link to the self-hosted analytics dashboard. */
 const STATS_URL = 'https://stats.hubble.cafe'
 
-/** Badge colour per role (keys match the uppercase AdminRole values). */
-const ROLE_BADGE: Record<string, string> = {
-  ADMIN: 'bg-hubble-100 text-hubble-700',
-  EDITOR: 'bg-emerald-100 text-emerald-700',
-  DDD_POSTER: 'bg-amber-100 text-amber-700',
-  VIEWER: 'bg-slate-100 text-slate-600',
-}
 
 export function Layout() {
   const { instance } = useMsal()
-  const { user, role } = useRole()
-  const { isViewer, isEditor, isAdmin } = usePermissions()
+  const { user } = useRole()
+  const permissions = usePermissions()
   const [mobileOpen, setMobileOpen] = useState(false)
   // The admin scrolls inside <main>, not the window.
   useFocusMainOnNavigate('main')
@@ -38,7 +31,7 @@ export function Layout() {
 
   const sections = NAV.map((section) => ({
     ...section,
-    items: section.items.filter((item) => canSee(item, { isViewer, isEditor, isAdmin })),
+    items: section.items.filter((item) => canSee(item, permissions)),
   })).filter((section) => section.items.length > 0)
 
   const nav = (
@@ -83,14 +76,14 @@ export function Layout() {
         <p className="truncate text-sm font-semibold text-slate-800">
           {user?.displayName || user?.email || 'Signed in'}
         </p>
-        {role && (
+        {user && (
           <span
             className={cn(
               'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
-              ROLE_BADGE[role] ?? 'bg-slate-100 text-slate-600',
+              user.admin ? 'bg-hubble-100 text-hubble-700' : 'bg-slate-100 text-slate-600',
             )}
           >
-            {role.replace('_', ' ')}
+            {user.admin ? 'Admin' : 'Staff'}
           </span>
         )}
       </div>

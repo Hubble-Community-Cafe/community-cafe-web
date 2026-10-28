@@ -12,10 +12,10 @@ import java.util.List;
 
 /**
  * Admin CRUD for the Daily Dinner Dish (Hubble only). Its own module so it can be
- * delegated narrowly: reads are open to any signed-in staff (VIEWER and up), and
- * writes require the DDD_POSTER role (which EDITOR and ADMIN also satisfy).
+ * delegated narrowly: reads need Daily dish view, writes need Daily dish edit.
  */
 @RestController
+@PreAuthorize("hasAuthority('DAILY_DISH_VIEW')")
 @RequestMapping("/api/admin/daily-dish")
 public class AdminDailyDishController {
 
@@ -32,13 +32,13 @@ public class AdminDailyDishController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('DDD_POSTER')")
+    @PreAuthorize("hasAuthority('DAILY_DISH_EDIT')")
     public DailyDishDto createDish(@Valid @RequestBody DailyDishRequest req) {
         return menuService.createDish(req);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('DDD_POSTER')")
+    @PreAuthorize("hasAuthority('DAILY_DISH_EDIT')")
     public DailyDishDto updateDish(@PathVariable Long id,
                                    @Valid @RequestBody DailyDishRequest req) {
         return menuService.updateDish(id, req);
@@ -46,7 +46,7 @@ public class AdminDailyDishController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('DDD_POSTER')")
+    @PreAuthorize("hasAuthority('DAILY_DISH_EDIT')")
     public void deleteDish(@PathVariable Long id) {
         menuService.deleteDish(id);
     }

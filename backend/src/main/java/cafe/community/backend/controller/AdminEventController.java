@@ -11,8 +11,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Admin CRUD for events. Reads open to any signed-in staff; writes require EDITOR. */
+/** Admin CRUD for events. Reads need Events view; writes need Events edit. */
 @RestController
+@PreAuthorize("hasAuthority('EVENTS_VIEW')")
 @RequestMapping("/api/admin/events")
 public class AdminEventController {
 
@@ -30,20 +31,20 @@ public class AdminEventController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('EVENTS_EDIT')")
     public EventDto create(@Valid @RequestBody EventRequest req) {
         return service.create(req);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('EVENTS_EDIT')")
     public EventDto update(@PathVariable Long id, @Valid @RequestBody EventRequest req) {
         return service.update(id, req);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('EVENTS_EDIT')")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

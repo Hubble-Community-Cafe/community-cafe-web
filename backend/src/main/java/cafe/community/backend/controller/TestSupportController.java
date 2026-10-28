@@ -2,6 +2,7 @@ package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.FakeAuroraClient;
+import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.ScreenSceneSettings;
@@ -106,7 +107,7 @@ public class TestSupportController {
         fakeAurora.reset();
     }
 
-    /** Create or update an admin user with a fixed role, for RBAC scenarios. */
+    /** Create or update an admin user as ADMIN, STAFF without access, or a preset, for access scenarios. */
     @PostMapping("/users")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Transactional
@@ -115,7 +116,13 @@ public class TestSupportController {
         user.setAzureOid(req.oid());
         user.setEmail(req.email() != null && !req.email().isBlank() ? req.email() : req.oid() + "@e2e.test");
         user.setDisplayName(req.name() != null && !req.name().isBlank() ? req.name() : req.oid());
-        user.setRole(AdminRole.valueOf(req.role()));
+        // ADMIN, STAFF (no access) or a preset name, which seeds a staff member with that access.
+        if (req.role().equals("ADMIN") || req.role().equals("STAFF")) {
+            user.setRole(AdminRole.valueOf(req.role()));
+            user.getPermissions().clear();
+        } else {
+            AccessPreset.valueOf(req.role()).applyTo(user);
+        }
         adminUsers.save(user);
     }
 

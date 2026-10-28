@@ -1,6 +1,8 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.dto.FieldChange;
+import cafe.community.backend.model.AccessLevel;
+import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -13,13 +15,16 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Manages staff/board users. Users are auto-provisioned on first login (gated by
- * the Entra security group at the edge): VIEWER by default, or ADMIN when their
- * Azure OID matches {@code app.initial-admin-oid} to bootstrap the first admin.
+ * the Entra security group at the edge): STAFF without access to any tab by default, or ADMIN
+ * when their Azure OID matches {@code app.initial-admin-oid} to bootstrap the first admin.
  */
 @Service
 public class AdminUserService {
@@ -39,7 +44,7 @@ public class AdminUserService {
         this.initialAdminOid = initialAdminOid;
     }
 
-    /** Find by Azure OID or create a new user (VIEWER, or ADMIN for the initial admin). */
+    /** Find by Azure OID or create a new user (STAFF without access, or ADMIN for the initial admin). */
     public AdminUser getOrCreateUser(String azureOid, String email, String displayName) {
         return adminUserRepository.findByAzureOid(azureOid)
                 .map(existing -> {
@@ -58,24 +63,55 @@ public class AdminUserService {
         return adminUserRepository.findAll();
     }
 
-    /** Update a user's role. Prevents an admin from changing their own role. */
-    public AdminUser updateRole(Long userId, AdminRole newRole, String requestingUserOid) {
+    /**
+     * Set a user's admin switch and per-module access. An admin stores no permissions (they hold
+     * every module); anyone else becomes STAFF with exactly the given levels, hidden ones left out.
+     * Refuses changing your own access, so there is always another admin involved, and a view-only
+     * level on Screen posters, which is a yes/no setting.
+     */
+    public AdminUser updateAccess(Long userId, boolean admin, Map<AdminModule, AccessLevel> permissions,
+                                  String requestingUserOid) {
         AdminUser target = adminUserRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
         if (target.getAzureOid().equals(requestingUserOid)) {
-            throw new IllegalArgumentException("Cannot change your own role");
+            throw new IllegalArgumentException("Cannot change your own access");
+        }
+        if (permissions.get(AdminModule.SCREEN_POSTERS) == AccessLevel.VIEW) {
+            throw new IllegalArgumentException("Screen posters can only be hidden or editable");
         }
 
-        AdminRole oldRole = target.getRole();
-        target.setRole(newRole);
+        Map<AdminModule, AccessLevel> granted = new EnumMap<>(AdminModule.class);
+        if (!admin) {
+            permissions.forEach((module, level) -> {
+                if (module != null && level != null && level != AccessLevel.HIDDEN) {
+                    granted.put(module, level);
+                }
+            });
+        }
+
+        boolean wasAdmin = target.getRole() == AdminRole.ADMIN;
+        Map<AdminModule, AccessLevel> before = target.effectivePermissions();
+        target.setRole(admin ? AdminRole.ADMIN : AdminRole.STAFF);
+        target.getPermissions().clear();
+        target.getPermissions().putAll(granted);
+        Map<AdminModule, AccessLevel> after = target.effectivePermissions();
+
+        List<FieldChange> changes = new ArrayList<>();
+        if (wasAdmin != admin) {
+            changes.add(new FieldChange("admin", String.valueOf(wasAdmin), String.valueOf(admin)));
+        }
+        for (AdminModule module : AdminModule.values()) {
+            if (before.get(module) != after.get(module)) {
+                changes.add(new FieldChange(module.name(), before.get(module).name(), after.get(module).name()));
+            }
+        }
+
         AdminUser saved = adminUserRepository.save(target);
-
-        auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
-                AuditAction.ROLE_CHANGED,
-                List.of(new FieldChange("role", String.valueOf(oldRole), String.valueOf(newRole))),
-                "Role changed for " + saved.getEmail());
-
+        if (!changes.isEmpty()) {
+            auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
+                    AuditAction.PERMISSIONS_CHANGED, changes, "Access changed for " + saved.getEmail());
+        }
         return saved;
     }
 
@@ -88,7 +124,8 @@ public class AdminUserService {
 
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
-        user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.VIEWER);
+        // Everyone else starts without access to any tab until an admin grants it.
+        user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.STAFF);
 
         AdminUser saved = adminUserRepository.save(user);
         log.info("Provisioned admin user email='{}' role={}", email, saved.getRole());

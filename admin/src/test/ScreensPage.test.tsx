@@ -6,6 +6,7 @@ import {
   applyScreenScene, fetchScreenScene, updateScreenSceneSettings, type ScreenSceneStatus,
 } from '../lib/api'
 import { usePermissions } from '../lib/usePermissions'
+import { permissionsFor, presetUser, staffUser } from './access'
 
 vi.mock('../lib/api', () => ({
   fetchScreenScene: vi.fn(),
@@ -36,15 +37,8 @@ const status: ScreenSceneStatus = {
   ],
 }
 
-const asViewer = () => mockPermissions.mockReturnValue({
-  isViewer: true, isDddPoster: false, isEditor: false, isAdmin: false,
-  canEditContent: false, canEditDailyDish: false, canManageUsers: false, canViewAuditLog: false,
-})
-
-const asEditor = () => mockPermissions.mockReturnValue({
-  isViewer: true, isDddPoster: true, isEditor: true, isAdmin: false,
-  canEditContent: true, canEditDailyDish: true, canManageUsers: false, canViewAuditLog: false,
-})
+const asViewer = () => mockPermissions.mockReturnValue(permissionsFor(presetUser('VIEWER')))
+const asEditor = () => mockPermissions.mockReturnValue(permissionsFor(presetUser('EDITOR')))
 
 /** The page title's Help button reads the route, so the page renders inside a router. */
 const renderPage = () => render(<MemoryRouter initialEntries={['/screens']}><ScreensPage /></MemoryRouter>)
@@ -102,6 +96,26 @@ describe('ScreensPage', () => {
     await screen.findByText('HubbleGeneralScreen')
 
     expect(screen.queryByLabelText('Closed')).not.toBeInTheDocument()
+  })
+
+  it('shows the scene to someone with view access but offers no switch', async () => {
+    mockPermissions.mockReturnValue(permissionsFor(staffUser({ SCREENS: 'VIEW' })))
+    mockFetch.mockResolvedValue({ ...status, currentScene: 'MIXED' })
+    renderPage()
+
+    expect(await screen.findByText('Mixed')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Closed/ })).not.toBeInTheDocument()
+    expect(screen.getByText(/can see what the screens show, but not switch them/)).toBeInTheDocument()
+    expect(screen.queryByText(/Pick a scene below/)).not.toBeInTheDocument()
+    expect(screen.queryByLabelText('Closed')).not.toBeInTheDocument()
+  })
+
+  it('lets someone with only Screen posters pick posters but not switch', async () => {
+    mockPermissions.mockReturnValue(permissionsFor(staffUser({ SCREEN_POSTERS: 'EDIT' })))
+    renderPage()
+
+    expect(await screen.findByLabelText('Closed')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Last call/ })).not.toBeInTheDocument()
   })
 
   it('lets an editor re-point a scene at another poster', async () => {

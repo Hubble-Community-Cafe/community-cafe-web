@@ -11,10 +11,17 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-/** Media assets. Reads open to any signed-in staff; uploads and deletes require EDITOR. */
+/**
+ * Media assets. Editing Board, Vacancies or Associations includes picking and uploading their
+ * images through the media picker, so those may list and upload too; deleting needs Media edit.
+ */
 @RestController
 @RequestMapping("/api/admin/media")
 public class MediaController {
+
+    /** The tabs whose edit forms embed the media picker. */
+    private static final String PICKER_EDITORS =
+            "hasAnyAuthority('BOARD_EDIT', 'VACANCIES_EDIT', 'ASSOCIATIONS_EDIT')";
 
     private final MediaService service;
 
@@ -23,13 +30,14 @@ public class MediaController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('MEDIA_VIEW') or " + PICKER_EDITORS)
     public List<MediaAssetDto> list() {
         return service.getAll();
     }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('MEDIA_EDIT') or " + PICKER_EDITORS)
     public MediaAssetDto upload(
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String alt,
@@ -40,7 +48,7 @@ public class MediaController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('MEDIA_EDIT')")
     public void delete(@PathVariable Long id) {
         service.delete(id);
     }

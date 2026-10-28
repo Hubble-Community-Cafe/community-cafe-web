@@ -13,8 +13,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/** Admin CRUD for the board. Reads open to any signed-in staff; writes require EDITOR. */
+/** Admin CRUD for the board. Reads need Board view; writes need Board edit. */
 @RestController
+@PreAuthorize("hasAuthority('BOARD_VIEW')")
 @RequestMapping("/api/admin/board")
 public class AdminBoardController {
 
@@ -31,13 +32,13 @@ public class AdminBoardController {
 
     @PostMapping("/terms")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public BoardTermDto createTerm(@Valid @RequestBody BoardTermRequest req) {
         return service.createTerm(req);
     }
 
     @PutMapping("/terms/{id}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public BoardTermDto updateTerm(@PathVariable Long id, @Valid @RequestBody BoardTermRequest req) {
         return service.updateTerm(id, req);
     }
@@ -45,27 +46,27 @@ public class AdminBoardController {
     /** Apply a dragged order to the board terms. */
     @PatchMapping("/terms/reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public void reorderTerms(@Valid @RequestBody ReorderRequest req) {
         service.reorderTerms(req.orderedIds());
     }
 
     @DeleteMapping("/terms/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public void deleteTerm(@PathVariable Long id) {
         service.deleteTerm(id);
     }
 
     @PostMapping("/terms/{termId}/members")
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public BoardMemberDto createMember(@PathVariable Long termId, @Valid @RequestBody BoardMemberRequest req) {
         return service.createMember(termId, req);
     }
 
     @PutMapping("/members/{id}")
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public BoardMemberDto updateMember(@PathVariable Long id, @Valid @RequestBody BoardMemberRequest req) {
         return service.updateMember(id, req);
     }
@@ -73,14 +74,14 @@ public class AdminBoardController {
     /** Apply a dragged order to the members of one term. */
     @PatchMapping("/terms/{termId}/members/reorder")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public void reorderMembers(@PathVariable Long termId, @Valid @RequestBody ReorderRequest req) {
         service.reorderMembers(termId, req.orderedIds());
     }
 
     @DeleteMapping("/members/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('EDITOR')")
+    @PreAuthorize("hasAuthority('BOARD_EDIT')")
     public void deleteMember(@PathVariable Long id) {
         service.deleteMember(id);
     }
