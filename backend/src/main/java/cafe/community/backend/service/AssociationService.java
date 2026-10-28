@@ -5,6 +5,8 @@ import cafe.community.backend.dto.AssociationRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.AssociationRepository;
 import cafe.community.backend.repository.MediaAssetRepository;
+import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,17 +42,18 @@ public class AssociationService {
         apply(a, req);
         Association saved = repo.save(a);
         auditService.recordCreate(AuditEntityType.ASSOCIATION, saved.getId(), saved.getName(),
-                List.of(), "Created association: " + saved.getName());
+                AuditSnapshots.of(saved).asCreated(), "Created association: " + saved.getName());
         return AssociationDto.from(saved);
     }
 
     public AssociationDto update(Long id, AssociationRequest req) {
         Association a = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Association not found: " + id));
+        Snapshot before = AuditSnapshots.of(a);
         apply(a, req);
         Association saved = repo.save(a);
-        auditService.recordAction(AuditEntityType.ASSOCIATION, saved.getId(), saved.getName(),
-                AuditAction.UPDATE, List.of(), "Updated association: " + saved.getName());
+        auditService.recordUpdate(AuditEntityType.ASSOCIATION, saved.getId(), saved.getName(),
+                before.changesTo(AuditSnapshots.of(saved)), "Updated association: " + saved.getName());
         return AssociationDto.from(saved);
     }
 
@@ -58,8 +61,10 @@ public class AssociationService {
         Association a = repo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Association not found: " + id));
         String name = a.getName();
+        Snapshot lastValues = AuditSnapshots.of(a);
         repo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.ASSOCIATION, id, name, "Deleted association: " + name);
+        auditService.recordDelete(AuditEntityType.ASSOCIATION, id, name, lastValues.asDeleted(),
+                "Deleted association: " + name);
     }
 
     private void apply(Association a, AssociationRequest req) {

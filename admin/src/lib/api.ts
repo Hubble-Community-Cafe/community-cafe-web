@@ -115,7 +115,7 @@ async function sendNoContent(url: string, options: RequestInit): Promise<void> {
 }
 
 // ── Types (mirror the backend DTOs) ────────────────────────────────────────────
-export type AdminRole = 'STAFF' | 'VIEWER' | 'DDD_POSTER' | 'EDITOR' | 'ADMIN'
+export type AdminRole = 'STAFF' | 'ADMIN'
 
 /** An admin tab (or part of one) access is granted on; mirrors the backend AdminModule enum. */
 export type AdminModule =
@@ -160,12 +160,6 @@ export interface Page<T> {
 export const fetchCurrentUser = () => getJson<AdminUser>('/api/admin/users/me')
 
 export const fetchAllUsers = () => getJson<AdminUser[]>('/api/admin/users')
-
-export const updateUserRole = (userId: number, role: AdminRole) =>
-  getJson<AdminUser>(`/api/admin/users/${userId}/role`, {
-    method: 'PATCH',
-    body: JSON.stringify({ role }),
-  })
 
 /** Set someone's admin switch and per-tab access. Tabs left out are hidden. */
 export const updateUserAccess = (

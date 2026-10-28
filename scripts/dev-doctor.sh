@@ -100,27 +100,34 @@ if db_exec 'SELECT 1' >/dev/null 2>&1; then
     || fail 'no vacancies' 'npm run dev:seed'
 fi
 
-# ── Your admin role ───────────────────────────────────────────────────────────
+# ── Admin users and their access ──────────────────────────────────────────────
 heading 'Admin users'
 
 if db_exec 'SELECT 1' >/dev/null 2>&1; then
-  users="$(db_exec 'SELECT email, role FROM admin_user ORDER BY id;')"
+  # Staff access is stored per tab in admin_user_permission (one row per tab they may open).
+  users="$(db_exec 'SELECT u.email, u.role, COUNT(p.module) FROM admin_user u
+    LEFT JOIN admin_user_permission p ON p.admin_user_id = u.id GROUP BY u.id, u.email, u.role ORDER BY u.id;')"
   if [ -z "$users" ]; then
     info 'No admin users yet. Sign in once at the admin; that first sign-in is provisioned as'
     info 'ADMIN only when INITIAL_ADMIN_OID in .env matches your Entra object id.'
   else
-    # VIEWER and DDD_POSTER are legitimate roles, not faults, so list everyone and only complain
-    # when nobody can edit content at all, which is the state that actually blocks you.
-    while IFS=$'\t' read -r email role; do
-      [ -n "$email" ] && info "$email: $role"
+    # Staff with few or no tabs are legitimate, not faults, so list everyone and only complain
+    # when there is no admin, because then nobody can give anyone access.
+    while IFS=$'\t' read -r email role tabs; do
+      [ -z "$email" ] && continue
+      if [ "$role" = 'ADMIN' ]; then
+        info "$email: admin (full access)"
+      else
+        info "$email: staff, may open $tabs of the tabs"
+      fi
     done <<<"$users"
 
-    if echo "$users" | grep -qE '\b(ADMIN|EDITOR)$'; then
-      pass 'at least one account can edit content'
+    if echo "$users" | cut -f2 | grep -qx 'ADMIN'; then
+      pass 'at least one admin can give others access'
     else
       first_email="$(echo "$users" | head -1 | cut -f1)"
-      fail 'no account has ADMIN or EDITOR, so the whole CMS is read-only' \
-           "docker compose exec db mariadb -u$DB_USER -p$DB_PASSWORD $DB_NAME -e \"UPDATE admin_user SET role='ADMIN' WHERE email='$first_email';\""
+      fail 'no account is admin, so nobody can give anyone access' \
+           "docker compose exec db mariadb -u$DB_USER -p$DB_PASSWORD $DB_NAME -e \"UPDATE admin_user SET role='ADMIN' WHERE email='$first_email'; DELETE FROM admin_user_permission WHERE admin_user_id = (SELECT id FROM admin_user WHERE email='$first_email');\""
       info 'INITIAL_ADMIN_OID only applies when a user row is first created, so setting it now'
       info 'does not promote an account that has already signed in. Use the fix above.'
     fi

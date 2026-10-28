@@ -2,7 +2,7 @@ package cafe.community.backend.controller;
 
 import cafe.community.backend.media.TestImages;
 import cafe.community.backend.model.AccessLevel;
-import cafe.community.backend.model.AccessPresets;
+import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
@@ -31,7 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Verifies per-tab access across admin endpoints. The old roles (as presets) keep their access:
+ * Verifies per-tab access across admin endpoints. The presets keep the access of the old roles:
  * VIEWER reads but cannot write, DDD_POSTER may edit only the daily dish, EDITOR may write content.
  * Beyond that, each tab is hidden, readable or editable on its own.
  */
@@ -62,14 +62,13 @@ class AdminAuthorizationTest {
         userRepo.deleteAllInBatch();
     }
 
-    /** Seed a user with a fixed role so the role filter assigns its authorities. */
-    private RequestPostProcessor as(String oid, AdminRole role) {
+    /** Seed a staff member with a preset's access so the filter assigns its authorities. */
+    private RequestPostProcessor as(String oid, AccessPreset preset) {
         AdminUser u = new AdminUser();
         u.setAzureOid(oid);
         u.setEmail(oid + "@test.invalid");
         u.setDisplayName(oid);
-        u.setRole(role);
-        AccessPresets.applyTo(u, role);
+        preset.applyTo(u);
         userRepo.saveAndFlush(u);
         return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
     }
@@ -79,7 +78,7 @@ class AdminAuthorizationTest {
         AdminUser u = new AdminUser();
         u.setAzureOid(oid);
         u.setEmail(oid + "@test.invalid");
-        u.setRole(AdminRole.VIEWER);
+        u.setRole(AdminRole.STAFF);
         u.getPermissions().putAll(permissions);
         // Flushed: the filter's last-seen update clears the persistence context, which would drop
         // permission rows still waiting to be written.
@@ -189,42 +188,42 @@ class AdminAuthorizationTest {
 
     @Test
     void viewer_canReadAdminContent() throws Exception {
-        mockMvc.perform(get("/api/admin/vacancies").with(as("viewer-1", AdminRole.VIEWER)))
+        mockMvc.perform(get("/api/admin/vacancies").with(as("viewer-1", AccessPreset.VIEWER)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void viewer_cannotWriteContent() throws Exception {
-        mockMvc.perform(post("/api/admin/vacancies").with(as("viewer-2", AdminRole.VIEWER))
+        mockMvc.perform(post("/api/admin/vacancies").with(as("viewer-2", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(VACANCY_BODY))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void viewer_cannotReorderContent() throws Exception {
-        mockMvc.perform(patch("/api/admin/vacancies/reorder").with(as("viewer-4", AdminRole.VIEWER))
+        mockMvc.perform(patch("/api/admin/vacancies/reorder").with(as("viewer-4", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(REORDER_BODY))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(patch("/api/admin/menu/categories/reorder").with(as("viewer-5", AdminRole.VIEWER))
+        mockMvc.perform(patch("/api/admin/menu/categories/reorder").with(as("viewer-5", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"bar":"HUBBLE","orderedIds":[1]}
                                 """))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(patch("/api/admin/board/terms/reorder").with(as("viewer-6", AdminRole.VIEWER))
+        mockMvc.perform(patch("/api/admin/board/terms/reorder").with(as("viewer-6", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(REORDER_BODY))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void viewer_cannotBulkEditMenuItems() throws Exception {
-        mockMvc.perform(patch("/api/admin/menu/items/bulk-price").with(as("viewer-7", AdminRole.VIEWER))
+        mockMvc.perform(patch("/api/admin/menu/items/bulk-price").with(as("viewer-7", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"ids":[1],"regularPrice":7.50}
                                 """))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(patch("/api/admin/menu/items/bulk-move").with(as("viewer-8", AdminRole.VIEWER))
+        mockMvc.perform(patch("/api/admin/menu/items/bulk-move").with(as("viewer-8", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"ids":[1],"categoryId":1}
@@ -234,7 +233,7 @@ class AdminAuthorizationTest {
 
     @Test
     void viewer_cannotEditDailyDish() throws Exception {
-        mockMvc.perform(post("/api/admin/daily-dish").with(as("viewer-3", AdminRole.VIEWER))
+        mockMvc.perform(post("/api/admin/daily-dish").with(as("viewer-3", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(DAILY_DISH_BODY))
                 .andExpect(status().isForbidden());
     }
@@ -243,20 +242,20 @@ class AdminAuthorizationTest {
 
     @Test
     void dddPoster_canEditDailyDish() throws Exception {
-        mockMvc.perform(post("/api/admin/daily-dish").with(as("ddd-1", AdminRole.DDD_POSTER))
+        mockMvc.perform(post("/api/admin/daily-dish").with(as("ddd-1", AccessPreset.DDD_POSTER))
                         .contentType(MediaType.APPLICATION_JSON).content(DAILY_DISH_BODY))
                 .andExpect(status().isCreated());
     }
 
     @Test
     void dddPoster_canReadAdminContent() throws Exception {
-        mockMvc.perform(get("/api/admin/daily-dish").with(as("ddd-2", AdminRole.DDD_POSTER)))
+        mockMvc.perform(get("/api/admin/daily-dish").with(as("ddd-2", AccessPreset.DDD_POSTER)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void dddPoster_cannotEditMenu() throws Exception {
-        mockMvc.perform(post("/api/admin/menu/categories").with(as("ddd-3", AdminRole.DDD_POSTER))
+        mockMvc.perform(post("/api/admin/menu/categories").with(as("ddd-3", AccessPreset.DDD_POSTER))
                         .contentType(MediaType.APPLICATION_JSON).content(MENU_CATEGORY_BODY))
                 .andExpect(status().isForbidden());
     }
@@ -265,14 +264,14 @@ class AdminAuthorizationTest {
 
     @Test
     void editor_canEditMenu() throws Exception {
-        mockMvc.perform(post("/api/admin/menu/categories").with(as("editor-1", AdminRole.EDITOR))
+        mockMvc.perform(post("/api/admin/menu/categories").with(as("editor-1", AccessPreset.EDITOR))
                         .contentType(MediaType.APPLICATION_JSON).content(MENU_CATEGORY_BODY))
                 .andExpect(status().isCreated());
     }
 
     @Test
     void editor_canEditDailyDish() throws Exception {
-        mockMvc.perform(post("/api/admin/daily-dish").with(as("editor-2", AdminRole.EDITOR))
+        mockMvc.perform(post("/api/admin/daily-dish").with(as("editor-2", AccessPreset.EDITOR))
                         .contentType(MediaType.APPLICATION_JSON).content(DAILY_DISH_BODY))
                 .andExpect(status().isCreated());
     }

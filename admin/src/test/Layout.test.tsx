@@ -97,7 +97,7 @@ describe('Layout brand link', () => {
 describe('Layout skip link and focus on navigation', () => {
   function renderAdmin() {
     mockUseRole.mockReturnValue({
-      user: presetUser('EDITOR'), role: 'EDITOR', isLoading: false, error: null, refetch: () => {},
+      user: presetUser('EDITOR'), role: 'STAFF', isLoading: false, error: null, refetch: () => {},
     })
     Element.prototype.scrollIntoView = vi.fn()
     return renderInDataRouter(

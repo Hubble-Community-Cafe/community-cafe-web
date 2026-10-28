@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react'
 import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAuditLog, type AuditLogEntry } from '../lib/api'
+import { parseChanges } from '../lib/auditChanges'
+import { AuditChanges } from './audit/AuditChanges'
 
 /** Filter options mirror the backend AuditEntityType / AuditAction enums. */
 const ENTITY_TYPES = [
@@ -142,7 +144,11 @@ export function AuditLogPage() {
                         {e.entityType}
                         {e.entityLabel ? `: ${e.entityLabel}` : ''}
                       </td>
-                      <td className="py-3 text-slate-600">{e.summary || '–'}</td>
+                      {/* A minimum width, so the change list stays readable when the table scrolls on a phone. */}
+                      <td className="min-w-72 py-3 text-slate-600">
+                        {e.summary || '–'}
+                        <AuditChanges changes={parseChanges(e.changes)} action={e.action} />
+                      </td>
                     </tr>
                   ))}
                 </tbody>

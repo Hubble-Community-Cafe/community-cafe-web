@@ -12,7 +12,7 @@ export function staffUser(access: Partial<Access> = {}): AdminUser {
 
 /** A user with the access of one of the old roles. */
 export function presetUser(name: PresetName): AdminUser {
-  return { ...staffUser(preset(name)), role: name }
+  return staffUser(preset(name))
 }
 
 export function adminUser(): AdminUser {

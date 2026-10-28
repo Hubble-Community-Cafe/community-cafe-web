@@ -15,14 +15,17 @@ export interface Guide {
   sections: GuideSection[]
 }
 
-const ROLES = `Everyone signs in with their Hubble or Meteor Microsoft account and must be in the staff group. A first sign-in creates your account as **Viewer**; an admin gives you more rights on the **Users** page.
+const ACCESS = `Everyone signs in with their Hubble or Meteor Microsoft account and must be in the staff group. A first sign-in gives you **no access yet**: you only see the dashboard until an admin gives you access on the **Users** page.
 
-- **Viewer**: can look at every module and switch the bar screens (open, last call, closed). Cannot change content.
-- **DDD poster**: a viewer who can also post the **Daily dish**.
-- **Editor**: can change all content: menu, daily dish, opening hours, events, board, vacancies, associations, media and the screen posters.
-- **Admin**: an editor who can also manage users and read the audit log.
+Access is set **per tab**. For each tab (menu, daily dish, events, and so on) an admin picks one of:
 
-If a button you expect is missing, you probably do not have the role for it. Ask an admin.`
+- **Hidden**: the tab is not shown to you at all.
+- **View**: you can open the tab and look, but not change anything.
+- **Edit**: you can change what the tab manages.
+
+**Admins** have full access to every tab, and also manage users and read the audit log.
+
+If a tab or button you expect is missing, you probably do not have access to it. Ask an admin.`
 
 export const GUIDES: Record<string, Guide> = {
   '/': {
@@ -42,12 +45,12 @@ The dashboard shows today's dish, upcoming events and special opening hours, so 
 ## Unsaved changes
 If you have typed something in a form and click another page (or the back button), the admin asks whether to **discard your changes** or **keep editing**, so a mis-tap does not lose your work. Closing the tab shows a similar warning from your browser.`,
       },
-      { title: 'Roles', content: ROLES },
+      { title: 'Your access', content: ACCESS },
       {
         title: 'Every change is recorded',
         content: `Each change made here is written to the **audit log** with who made it and what changed, so mistakes can be traced and fixed. Admins can read it.
 
-Accounts that have not signed in for a year are removed automatically (never admin accounts). Signing in again gives you a fresh **Viewer** account.`,
+Accounts that have not signed in for a year are removed automatically (never admin accounts). Signing in again gives you a fresh account without access, so ask an admin to set it again.`,
       },
     ],
   },
@@ -101,7 +104,7 @@ Tick the checkboxes of several items to set one price for all of them, remove th
 2. Give it a **name**, and optionally a description, price and photo.
 3. Save. The site shows it on that date, so you can post the dishes for a whole week in advance.
 
-Editors and **DDD posters** can post dishes; viewers can only look.`,
+You need **Edit** access on the Daily dish tab to post dishes; with **View** you can only look.`,
       },
     ],
   },
@@ -228,11 +231,11 @@ An image that is still shown somewhere cannot be deleted: the admin tells you wh
 - **Last call**: the last call slide.
 - **Closed**: the closed slide.
 
-Anyone signed in can switch the scene, because it is part of running a shift. The page always reads the screens' real state back; **Mixed** means the screens currently show different things, for example after someone changed one directly in Aurora.`,
+You need **Edit** access on Screens to switch the scene; with **View** you see what the screens show but cannot switch them. The page always reads the screens' real state back; **Mixed** means the screens currently show different things, for example after someone changed one directly in Aurora.`,
       },
       {
         title: 'Choosing the slides',
-        content: `Editors choose which poster each scene shows. If a scene has no poster configured, switching to it is refused, rather than showing the wrong slide.`,
+        content: `People with access to **Screen posters** choose which poster each scene shows. If a scene has no poster configured, switching to it is refused, rather than showing the wrong slide.`,
       },
       {
         title: 'Poster requests from the website',
@@ -246,10 +249,16 @@ The screens mailbox gets a short email for every request, as a reminder to revie
   '/users': {
     title: 'Users',
     sections: [
-      { title: 'Roles', content: ROLES },
+      { title: 'How access works', content: ACCESS },
       {
-        title: 'Changing a role',
-        content: `Pick a new role in the list next to the person. It applies from their next action in the admin. You cannot change your own role, so there is always another admin involved.
+        title: 'Changing someone\'s access',
+        content: `Click **Change access** next to the person. For each tab choose **Hidden**, **View** or **Edit**, then click **Save access**. It applies from their next action in the admin.
+
+- **Start from** fills in every tab at once: **Viewer** (look at everything and switch the screens), **DDD poster** (a viewer who can also post the daily dish), **Editor** (change everything except users and the audit log) or **No access**. You can then adjust single tabs.
+- **Admin** gives full access to every tab, plus managing users and the audit log.
+- Edit on **Board**, **Vacancies** or **Associations** also lets someone upload images for those pages. Deleting images from the library needs Edit on **Media**.
+
+You cannot change your own access, so there is always another admin involved. Every change is written to the audit log.
 
 People who leave do not need to be removed by hand: accounts that have not signed in for a year are removed automatically (never admin accounts).`,
       },
@@ -262,6 +271,8 @@ People who leave do not need to be removed by hand: accounts that have not signe
       {
         title: 'Reading the audit log',
         content: `Every change made in the admin is listed here, newest first, with **who** made it, **what** changed and **when**. Filter by module or kind of change to find something quickly.
+
+Click **Show changes** under an entry to see exactly what was changed: the old value struck through, followed by the new one. For something that was added, **Show values** lists what it was created with; for something deleted, **Show last values** lists what it held, so it can be put back by hand. Saving a form without changing anything adds no entry.
 
 To protect privacy, the name and email of the person are removed from entries older than a year, and entries older than two years are deleted.`,
       },

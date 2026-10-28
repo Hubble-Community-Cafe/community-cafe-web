@@ -32,7 +32,7 @@ const CONTENT: AdminModule[] = [
 
 export type PresetName = 'VIEWER' | 'DDD_POSTER' | 'EDITOR'
 
-/** The access of the old roles. Must match the backend's AccessPresets. */
+/** The access of the old roles, as one-click starting points. Must match the backend's AccessPreset. */
 export function preset(name: PresetName): Access {
   const access = noAccess()
   for (const m of CONTENT) access[m] = name === 'EDITOR' ? 'EDIT' : 'VIEW'

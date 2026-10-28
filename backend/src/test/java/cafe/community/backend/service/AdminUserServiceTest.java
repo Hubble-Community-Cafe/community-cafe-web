@@ -1,7 +1,7 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.model.AccessLevel;
-import cafe.community.backend.model.AccessPresets;
+import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
@@ -63,22 +63,11 @@ class AdminUserServiceTest {
     }
 
     @Test
-    void updateRole_changesRoleAndWritesAudit() {
-        AdminUser target = adminUserService.getOrCreateUser("u3", "u3@hubble.cafe", "Three");
-
-        AdminUser updated = adminUserService.updateRole(target.getId(), AdminRole.EDITOR, "admin-oid");
-
-        assertThat(updated.getRole()).isEqualTo(AdminRole.EDITOR);
-        assertThat(updated.getPermissions()).isEqualTo(AccessPresets.forRole(AdminRole.EDITOR));
-        assertThat(auditLogRepository.findAll())
-                .anyMatch(a -> a.getAction() == AuditAction.ROLE_CHANGED);
-    }
-
-    @Test
-    void updateRole_toAdminStoresNoPermissions() {
+    void updateAccess_toAdminStoresNoPermissions() {
         AdminUser target = adminUserService.getOrCreateUser("u4", "u4@hubble.cafe", "Four");
+        adminUserService.updateAccess(target.getId(), false, AccessPreset.EDITOR.permissions(), "admin-oid");
 
-        adminUserService.updateRole(target.getId(), AdminRole.ADMIN, "admin-oid");
+        adminUserService.updateAccess(target.getId(), true, AccessPreset.EDITOR.permissions(), "admin-oid");
         entityManager.flush();
         entityManager.clear();
 
@@ -103,9 +92,9 @@ class AdminUserServiceTest {
     @Test
     void updateAccess_auditsEachChangedModule() {
         AdminUser target = adminUserService.getOrCreateUser("u6", "u6@hubble.cafe", "Six");
-        adminUserService.updateRole(target.getId(), AdminRole.VIEWER, "admin-oid");
+        adminUserService.updateAccess(target.getId(), false, AccessPreset.VIEWER.permissions(), "admin-oid");
         auditLogRepository.deleteAll();
-        Map<AdminModule, AccessLevel> viewer = AccessPresets.forRole(AdminRole.VIEWER);
+        Map<AdminModule, AccessLevel> viewer = AccessPreset.VIEWER.permissions();
         Map<AdminModule, AccessLevel> changed = new java.util.EnumMap<>(viewer);
         changed.put(AdminModule.EVENTS, AccessLevel.EDIT);
         changed.remove(AdminModule.MEDIA);
@@ -124,10 +113,10 @@ class AdminUserServiceTest {
     @Test
     void updateAccess_withoutAnyChangeWritesNoAudit() {
         AdminUser target = adminUserService.getOrCreateUser("u7", "u7@hubble.cafe", "Seven");
-        adminUserService.updateRole(target.getId(), AdminRole.VIEWER, "admin-oid");
+        adminUserService.updateAccess(target.getId(), false, AccessPreset.VIEWER.permissions(), "admin-oid");
         auditLogRepository.deleteAll();
 
-        adminUserService.updateAccess(target.getId(), false, AccessPresets.forRole(AdminRole.VIEWER), "admin-oid");
+        adminUserService.updateAccess(target.getId(), false, AccessPreset.VIEWER.permissions(), "admin-oid");
 
         assertThat(auditLogRepository.findAll()).isEmpty();
     }
@@ -163,14 +152,6 @@ class AdminUserServiceTest {
                 Map.of(AdminModule.SCREEN_POSTERS, AccessLevel.VIEW), "admin-oid"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Screen posters");
-    }
-
-    @Test
-    void updateRole_rejectsChangingYourOwnRole() {
-        AdminUser self = adminUserService.getOrCreateUser("self-oid", "self@hubble.cafe", "Self");
-        assertThatThrownBy(() -> adminUserService.updateRole(self.getId(), AdminRole.ADMIN, "self-oid"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("own role");
     }
 
     @Test

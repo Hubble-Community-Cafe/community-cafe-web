@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -45,6 +46,9 @@ class AuditLogControllerTest {
         u.setEmail(oid + "@test.invalid");
         u.setDisplayName(oid);
         u.setRole(role);
+        if (role == AdminRole.STAFF) {
+            AccessPreset.EDITOR.applyTo(u);
+        }
         userRepo.save(u);
         return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
     }
@@ -59,7 +63,7 @@ class AuditLogControllerTest {
 
     @Test
     void list_requiresAdmin() throws Exception {
-        mockMvc.perform(get("/api/admin/audit").with(as("ed", AdminRole.EDITOR)))
+        mockMvc.perform(get("/api/admin/audit").with(as("ed", AdminRole.STAFF)))
                 .andExpect(status().isForbidden());
     }
 

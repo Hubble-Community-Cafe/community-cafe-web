@@ -4,6 +4,8 @@ import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.HoursOverrideRepository;
 import cafe.community.backend.repository.OpeningHoursRepository;
+import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,10 +15,8 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -71,6 +71,7 @@ public class OpeningHoursService {
                     h.setDayOfWeek(day);
                     return h;
                 });
+        Snapshot before = AuditSnapshots.of(hours);
         hours.setOpen(LocalTime.parse(req.open(), TIME_FMT));
         hours.setClose(LocalTime.parse(req.close(), TIME_FMT));
         hours.setKitchenOpen(req.kitchenOpen() != null ? LocalTime.parse(req.kitchenOpen(), TIME_FMT) : null);
@@ -80,10 +81,11 @@ public class OpeningHoursService {
         String summary = (isNew ? "Set hours for " : "Updated hours for ") + label
                 + ": " + req.open() + " - " + req.close();
         if (isNew) {
-            auditService.recordCreate(AuditEntityType.OPENING_HOURS, saved.getId(), label, List.of(), summary);
+            auditService.recordCreate(AuditEntityType.OPENING_HOURS, saved.getId(), label,
+                    AuditSnapshots.of(saved).asCreated(), summary);
         } else {
-            auditService.recordAction(AuditEntityType.OPENING_HOURS, saved.getId(), label,
-                    AuditAction.UPDATE, List.of(), summary);
+            auditService.recordUpdate(AuditEntityType.OPENING_HOURS, saved.getId(), label,
+                    before.changesTo(AuditSnapshots.of(saved)), summary);
         }
         return WeeklyHoursDto.from(saved);
     }
@@ -91,9 +93,11 @@ public class OpeningHoursService {
     /** Mark a day as closed by removing its standing-hours row. */
     public void closeDay(BarLocation bar, DayOfWeek day) {
         hoursRepo.findByBarAndDayOfWeek(bar, day).ifPresent(h -> {
+            Snapshot lastValues = AuditSnapshots.of(h);
             hoursRepo.delete(h);
             auditService.recordDelete(AuditEntityType.OPENING_HOURS, h.getId(),
-                    bar.name() + " " + day.name(), "Marked closed: " + bar.name() + " " + day.name());
+                    bar.name() + " " + day.name(), lastValues.asDeleted(),
+                    "Marked closed: " + bar.name() + " " + day.name());
         });
     }
 
@@ -112,7 +116,8 @@ public class OpeningHoursService {
         applyAndValidate(o, req);
         HoursOverride saved = overrideRepo.save(o);
         String label = bar.name() + " " + saved.getDate();
-        auditService.recordCreate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, List.of(),
+        auditService.recordCreate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label,
+                AuditSnapshots.of(saved).asCreated(),
                 "Added override for " + label + ": " + describe(saved));
         return HoursOverrideDto.from(saved);
     }
@@ -121,17 +126,12 @@ public class OpeningHoursService {
     public HoursOverrideDto updateOverride(Long id, HoursOverrideRequest req) {
         HoursOverride o = overrideRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Override not found: " + id));
-        String oldDate = o.getDate().toString();
-        String oldStatus = describe(o);
-        String oldNote = o.getNote();
+        Snapshot before = AuditSnapshots.of(o);
 
         applyAndValidate(o, req);
         HoursOverride saved = overrideRepo.save(o);
 
-        List<FieldChange> changes = new ArrayList<>();
-        if (!oldDate.equals(saved.getDate().toString())) changes.add(new FieldChange("date", oldDate, saved.getDate().toString()));
-        if (!oldStatus.equals(describe(saved))) changes.add(new FieldChange("status", oldStatus, describe(saved)));
-        if (!Objects.equals(oldNote, saved.getNote())) changes.add(new FieldChange("note", oldNote, saved.getNote()));
+        List<FieldChange> changes = before.changesTo(AuditSnapshots.of(saved));
         String label = saved.getBar().name() + " " + saved.getDate();
         auditService.recordUpdate(AuditEntityType.HOURS_OVERRIDE, saved.getId(), label, changes,
                 "Updated override for " + label + ": " + describe(saved));
@@ -189,8 +189,9 @@ public class OpeningHoursService {
         HoursOverride override = overrideRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Override not found: " + id));
         String label = override.getBar().name() + " " + override.getDate();
+        Snapshot lastValues = AuditSnapshots.of(override);
         overrideRepo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.HOURS_OVERRIDE, id, label,
+        auditService.recordDelete(AuditEntityType.HOURS_OVERRIDE, id, label, lastValues.asDeleted(),
                 "Deleted override for " + label);
     }
 }

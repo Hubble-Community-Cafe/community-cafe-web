@@ -2,7 +2,7 @@ import { type Page, type Locator, expect } from '@playwright/test'
 
 /**
  * Page object for the admin app. Under the e2e stack the admin authenticates as a fixed
- * identity (E2E_AUTH_OID); the spec sets that user's role via the backend before navigating.
+ * identity (E2E_AUTH_OID); the spec sets that user's access via the backend before navigating.
  */
 export class AdminApp {
   constructor(private readonly page: Page) {}

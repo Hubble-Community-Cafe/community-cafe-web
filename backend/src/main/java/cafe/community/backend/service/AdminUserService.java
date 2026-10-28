@@ -2,7 +2,6 @@ package cafe.community.backend.service;
 
 import cafe.community.backend.dto.FieldChange;
 import cafe.community.backend.model.AccessLevel;
-import cafe.community.backend.model.AccessPresets;
 import cafe.community.backend.model.AdminModule;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
@@ -62,28 +61,6 @@ public class AdminUserService {
 
     public List<AdminUser> getAllUsers() {
         return adminUserRepository.findAll();
-    }
-
-    /** Update a user's role. Prevents an admin from changing their own role. */
-    public AdminUser updateRole(Long userId, AdminRole newRole, String requestingUserOid) {
-        AdminUser target = adminUserRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
-
-        if (target.getAzureOid().equals(requestingUserOid)) {
-            throw new IllegalArgumentException("Cannot change your own role");
-        }
-
-        AdminRole oldRole = target.getRole();
-        target.setRole(newRole);
-        AccessPresets.applyTo(target, newRole);
-        AdminUser saved = adminUserRepository.save(target);
-
-        auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
-                AuditAction.ROLE_CHANGED,
-                List.of(new FieldChange("role", String.valueOf(oldRole), String.valueOf(newRole))),
-                "Role changed for " + saved.getEmail());
-
-        return saved;
     }
 
     /**

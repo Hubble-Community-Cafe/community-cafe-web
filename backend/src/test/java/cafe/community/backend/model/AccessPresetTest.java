@@ -7,7 +7,7 @@ import java.util.Arrays;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** The presets must reproduce exactly the access the old hierarchical roles gave. */
-class AccessPresetsTest {
+class AccessPresetTest {
 
     private static final AdminModule[] CONTENT = {
             AdminModule.MENU, AdminModule.DAILY_DISH, AdminModule.OPENING_HOURS, AdminModule.EVENTS,
@@ -16,7 +16,7 @@ class AccessPresetsTest {
 
     @Test
     void viewerSeesAllContentAndSwitchesScreens() {
-        var viewer = AccessPresets.forRole(AdminRole.VIEWER);
+        var viewer = AccessPreset.VIEWER.permissions();
 
         assertThat(Arrays.stream(CONTENT).map(viewer::get)).containsOnly(AccessLevel.VIEW);
         assertThat(viewer.get(AdminModule.SCREENS)).isEqualTo(AccessLevel.EDIT);
@@ -25,7 +25,7 @@ class AccessPresetsTest {
 
     @Test
     void dddPosterIsAViewerWhoEditsTheDailyDish() {
-        var poster = AccessPresets.forRole(AdminRole.DDD_POSTER);
+        var poster = AccessPreset.DDD_POSTER.permissions();
 
         assertThat(poster.get(AdminModule.DAILY_DISH)).isEqualTo(AccessLevel.EDIT);
         assertThat(poster.get(AdminModule.MENU)).isEqualTo(AccessLevel.VIEW);
@@ -34,19 +34,21 @@ class AccessPresetsTest {
 
     @Test
     void editorEditsEverything() {
-        assertThat(AccessPresets.forRole(AdminRole.EDITOR))
+        assertThat(AccessPreset.EDITOR.permissions())
                 .containsOnlyKeys(AdminModule.values())
                 .allSatisfy((module, level) -> assertThat(level).isEqualTo(AccessLevel.EDIT));
     }
 
     @Test
-    void adminStoresNothingBecauseTheRoleGrantsEverything() {
-        assertThat(AccessPresets.forRole(AdminRole.ADMIN)).isEmpty();
-    }
+    void applyingAPresetMakesAStaffMemberWithExactlyItsAccess() {
+        AdminUser user = new AdminUser();
+        user.setRole(AdminRole.ADMIN);
+        user.getPermissions().put(AdminModule.MEDIA, AccessLevel.EDIT);
 
-    @Test
-    void staffHasNoPresetBecauseItsAccessIsSetPerTab() {
-        assertThat(AccessPresets.forRole(AdminRole.STAFF)).isEmpty();
+        AccessPreset.VIEWER.applyTo(user);
+
+        assertThat(user.getRole()).isEqualTo(AdminRole.STAFF);
+        assertThat(user.getPermissions()).isEqualTo(AccessPreset.VIEWER.permissions());
     }
 
     @Test

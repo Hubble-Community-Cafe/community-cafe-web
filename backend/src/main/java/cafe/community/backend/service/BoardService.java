@@ -9,6 +9,8 @@ import cafe.community.backend.repository.BoardMemberRepository;
 import cafe.community.backend.repository.BoardTermRepository;
 import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.util.SortOrders;
+import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -47,17 +49,18 @@ public class BoardService {
         }
         BoardTerm saved = termRepo.save(term);
         auditService.recordCreate(AuditEntityType.BOARD_TERM, saved.getId(), saved.getLabel(),
-                List.of(), "Created board term: " + saved.getLabel() + " (" + saved.getType().name() + ")");
+                AuditSnapshots.of(saved).asCreated(), "Created board term: " + saved.getLabel() + " (" + saved.getType().name() + ")");
         return BoardTermDto.from(saved);
     }
 
     public BoardTermDto updateTerm(Long id, BoardTermRequest req) {
         BoardTerm term = termRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + id));
+        Snapshot before = AuditSnapshots.of(term);
         applyTerm(term, req);
         BoardTerm saved = termRepo.save(term);
-        auditService.recordAction(AuditEntityType.BOARD_TERM, saved.getId(), saved.getLabel(),
-                AuditAction.UPDATE, List.of(),
+        auditService.recordUpdate(AuditEntityType.BOARD_TERM, saved.getId(), saved.getLabel(),
+                before.changesTo(AuditSnapshots.of(saved)),
                 "Updated board term: " + saved.getLabel() + " (" + saved.getType().name() + ")");
         return BoardTermDto.from(saved);
     }
@@ -78,8 +81,9 @@ public class BoardService {
         BoardTerm term = termRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board term not found: " + id));
         String label = term.getLabel();
+        Snapshot lastValues = AuditSnapshots.of(term);
         termRepo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.BOARD_TERM, id, label,
+        auditService.recordDelete(AuditEntityType.BOARD_TERM, id, label, lastValues.asDeleted(),
                 "Deleted board term: " + label);
     }
 
@@ -95,17 +99,18 @@ public class BoardService {
         BoardMember saved = memberRepo.save(member);
         term.getMembers().add(saved);
         auditService.recordCreate(AuditEntityType.BOARD_MEMBER, saved.getId(), saved.getName(),
-                List.of(), "Added board member: " + saved.getName() + " to \"" + term.getLabel() + "\"");
+                AuditSnapshots.of(saved).asCreated(), "Added board member: " + saved.getName() + " to \"" + term.getLabel() + "\"");
         return BoardMemberDto.from(saved);
     }
 
     public BoardMemberDto updateMember(Long id, BoardMemberRequest req) {
         BoardMember member = memberRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board member not found: " + id));
+        Snapshot before = AuditSnapshots.of(member);
         applyMember(member, req);
         BoardMember saved = memberRepo.save(member);
-        auditService.recordAction(AuditEntityType.BOARD_MEMBER, saved.getId(), saved.getName(),
-                AuditAction.UPDATE, List.of(),
+        auditService.recordUpdate(AuditEntityType.BOARD_MEMBER, saved.getId(), saved.getName(),
+                before.changesTo(AuditSnapshots.of(saved)),
                 "Updated board member: " + saved.getName());
         return BoardMemberDto.from(saved);
     }
@@ -129,8 +134,9 @@ public class BoardService {
         BoardMember member = memberRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Board member not found: " + id));
         String name = member.getName();
+        Snapshot lastValues = AuditSnapshots.of(member);
         memberRepo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.BOARD_MEMBER, id, name,
+        auditService.recordDelete(AuditEntityType.BOARD_MEMBER, id, name, lastValues.asDeleted(),
                 "Removed board member: " + name);
     }
 

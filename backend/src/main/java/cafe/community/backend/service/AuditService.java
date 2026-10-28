@@ -54,6 +54,12 @@ public class AuditService {
         record(entityType, entityId, label, AuditAction.DELETE, List.of(), summary);
     }
 
+    /** Record a deletion, keeping the last values of the removed fields so it can be put back by hand. */
+    public void recordDelete(AuditEntityType entityType, Long entityId, String label,
+                             List<FieldChange> lastValues, String summary) {
+        record(entityType, entityId, label, AuditAction.DELETE, lastValues, summary);
+    }
+
     /** Record an arbitrary action with optional field changes. */
     public void recordAction(AuditEntityType entityType, Long entityId, String label,
                              AuditAction action, List<FieldChange> changes, String summary) {
