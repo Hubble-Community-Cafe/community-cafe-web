@@ -41,11 +41,11 @@ class AdminUserServiceTest {
     private EntityManager entityManager;
 
     @Test
-    void getOrCreateUser_createsViewerByDefault() {
+    void getOrCreateUser_createsStaffWithoutAccessByDefault() {
         AdminUser user = adminUserService.getOrCreateUser("u1", "u1@hubble.cafe", "User One");
         assertThat(user.getId()).isNotNull();
-        assertThat(user.getRole()).isEqualTo(AdminRole.VIEWER);
-        assertThat(user.getPermissions()).isEqualTo(AccessPresets.forRole(AdminRole.VIEWER));
+        assertThat(user.getRole()).isEqualTo(AdminRole.STAFF);
+        assertThat(user.getPermissions()).isEmpty();
     }
 
     @Test
@@ -103,6 +103,7 @@ class AdminUserServiceTest {
     @Test
     void updateAccess_auditsEachChangedModule() {
         AdminUser target = adminUserService.getOrCreateUser("u6", "u6@hubble.cafe", "Six");
+        adminUserService.updateRole(target.getId(), AdminRole.VIEWER, "admin-oid");
         auditLogRepository.deleteAll();
         Map<AdminModule, AccessLevel> viewer = AccessPresets.forRole(AdminRole.VIEWER);
         Map<AdminModule, AccessLevel> changed = new java.util.EnumMap<>(viewer);
@@ -123,6 +124,7 @@ class AdminUserServiceTest {
     @Test
     void updateAccess_withoutAnyChangeWritesNoAudit() {
         AdminUser target = adminUserService.getOrCreateUser("u7", "u7@hubble.cafe", "Seven");
+        adminUserService.updateRole(target.getId(), AdminRole.VIEWER, "admin-oid");
         auditLogRepository.deleteAll();
 
         adminUserService.updateAccess(target.getId(), false, AccessPresets.forRole(AdminRole.VIEWER), "admin-oid");

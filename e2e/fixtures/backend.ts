@@ -7,7 +7,12 @@ import { BACKEND_URL } from '../playwright.config'
  * from a known baseline without going through Azure-authenticated login.
  */
 
-export type AdminRole = 'VIEWER' | 'DDD_POSTER' | 'EDITOR' | 'ADMIN'
+export type AdminRole = 'STAFF' | 'VIEWER' | 'DDD_POSTER' | 'EDITOR' | 'ADMIN'
+
+export type AdminModule =
+  | 'MENU' | 'DAILY_DISH' | 'OPENING_HOURS' | 'EVENTS' | 'BOARD' | 'VACANCIES'
+  | 'ASSOCIATIONS' | 'MEDIA' | 'SCREENS' | 'SCREEN_POSTERS'
+export type AccessLevel = 'HIDDEN' | 'VIEW' | 'EDIT'
 
 /** The fixed identity the admin frontend authenticates as (matches docker-compose.e2e.yml). */
 export const ADMIN_UI_OID = 'e2e-user'
@@ -44,6 +49,24 @@ export async function seedUser(
 /** Set the role of the identity the admin UI logs in as. */
 export async function setUiRole(request: APIRequestContext, role: AdminRole): Promise<void> {
   await seedUser(request, { oid: ADMIN_UI_OID, email: 'e2e@community.cafe', name: 'E2E User', role })
+}
+
+/**
+ * Give the identity the admin UI logs in as exactly these per-tab levels (every other tab
+ * hidden), set by an admin through the real access endpoint. No levels: a brand-new account.
+ */
+export async function setUiAccess(
+  request: APIRequestContext,
+  permissions: Partial<Record<AdminModule, AccessLevel>>,
+): Promise<void> {
+  await setUiRole(request, 'STAFF')
+  const headers = await asSeeder(request)
+  const users = await request.get(`${BACKEND_URL}/api/admin/users`, { headers })
+  if (!users.ok()) throw new Error(`GET /api/admin/users failed: ${users.status()}`)
+  const uiUser = ((await users.json()) as { id: number; email: string }[])
+    .find((u) => u.email === 'e2e@community.cafe')
+  if (!uiUser) throw new Error('The admin UI user was not seeded')
+  await adminPut(request, `/api/admin/users/${uiUser.id}/access`, { admin: false, permissions })
 }
 
 /** Ensure the API seeder identity exists as ADMIN, then return its auth headers. */

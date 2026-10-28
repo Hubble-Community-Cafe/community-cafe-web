@@ -3,9 +3,10 @@ import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAllUsers, updateUserRole, type AdminRole, type AdminUser } from '../lib/api'
 import { useRole } from '../lib/RoleContext'
 
-const ROLES: AdminRole[] = ['VIEWER', 'DDD_POSTER', 'EDITOR', 'ADMIN']
+const ROLES: AdminRole[] = ['STAFF', 'VIEWER', 'DDD_POSTER', 'EDITOR', 'ADMIN']
 
 const ROLE_LABELS: Record<AdminRole, string> = {
+  STAFF: 'Staff',
   VIEWER: 'Viewer',
   DDD_POSTER: 'DDD poster',
   EDITOR: 'Editor',

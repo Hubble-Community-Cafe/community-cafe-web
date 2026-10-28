@@ -5,7 +5,7 @@ import { usePermissions } from '../lib/usePermissions'
 /** The Daily Dinner Dish (Hubble only). Its own module so it can be delegated to
  *  DDD posters; viewers see it read-only. */
 export function DailyDishPage() {
-  const { canEditDailyDish } = usePermissions()
+  const canEditDailyDish = usePermissions().canEdit('DAILY_DISH')
 
   return (
     <div>

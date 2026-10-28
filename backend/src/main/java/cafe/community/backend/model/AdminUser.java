@@ -15,8 +15,8 @@ import java.util.Map;
 
 /**
  * A staff/board member who may sign in to the admin. Access is gated by an Entra
- * security group; this row holds the in-app role. Auto-created on first login
- * (VIEWER, or ADMIN when the Azure OID matches {@code app.initial-admin-oid}).
+ * security group; this row holds the in-app role and per-tab access. Auto-created on first login
+ * (STAFF without access, or ADMIN when the Azure OID matches {@code app.initial-admin-oid}).
  */
 @Data
 @Entity
@@ -43,7 +43,7 @@ public class AdminUser {
     @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
-    private AdminRole role = AdminRole.VIEWER;
+    private AdminRole role = AdminRole.STAFF;
 
     /**
      * Per-module access; a module without an entry is hidden. Loaded eagerly because the role

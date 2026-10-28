@@ -234,7 +234,7 @@ function VacancyRow({
 }
 
 export function VacanciesPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('VACANCIES')
   const [vacancies, setVacancies] = useState<Vacancy[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

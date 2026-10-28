@@ -157,7 +157,7 @@ function AssociationRow({
 }
 
 export function AssociationsPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('ASSOCIATIONS')
   const [associations, setAssociations] = useState<Association[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

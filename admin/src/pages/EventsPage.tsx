@@ -199,7 +199,7 @@ function EventRow({
 }
 
 export function EventsPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('EVENTS')
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [events, setEvents] = useState<CafeEvent[]>([])
   const [loading, setLoading] = useState(true)

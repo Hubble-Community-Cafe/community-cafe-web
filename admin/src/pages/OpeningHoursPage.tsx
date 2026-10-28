@@ -270,7 +270,7 @@ function OverrideForm({
 }
 
 export function OpeningHoursPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('OPENING_HOURS')
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [slots, setSlots] = useState<WeeklyHours[]>([])
   const [overrides, setOverrides] = useState<HoursOverride[]>([])

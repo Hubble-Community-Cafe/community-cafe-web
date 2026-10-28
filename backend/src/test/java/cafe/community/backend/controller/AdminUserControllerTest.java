@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Verifies the security wiring end to end: anonymous requests are rejected, an
- * authenticated user is auto-provisioned as VIEWER by the role filter, admin-only
+ * authenticated user is auto-provisioned without access by the role filter, admin-only
  * endpoints enforce the database-backed role, and admins set per-tab access.
  */
 @SpringBootTest
@@ -51,14 +51,20 @@ class AdminUserControllerTest {
     }
 
     @Test
-    void me_provisionsViewerOnFirstCall() throws Exception {
+    void me_provisionsStaffWithoutAccessOnFirstCall() throws Exception {
         mockMvc.perform(get("/api/admin/users/me").with(user("viewer-1")))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.role").value("VIEWER"))
+                .andExpect(jsonPath("$.role").value("STAFF"))
                 .andExpect(jsonPath("$.email").value("viewer-1@hubble.cafe"))
                 .andExpect(jsonPath("$.admin").value(false))
-                .andExpect(jsonPath("$.permissions.MENU").value("VIEW"))
-                .andExpect(jsonPath("$.permissions.SCREEN_POSTERS").value("HIDDEN"));
+                .andExpect(jsonPath("$.permissions.MENU").value("HIDDEN"))
+                .andExpect(jsonPath("$.permissions.SCREENS").value("HIDDEN"));
+    }
+
+    @Test
+    void aNewUserCannotOpenAnyContent() throws Exception {
+        mockMvc.perform(get("/api/admin/menu/categories").with(user("newcomer")))
+                .andExpect(status().isForbidden());
     }
 
     @Test

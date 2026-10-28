@@ -47,7 +47,7 @@ function kindBadge(kind: 'DRINK' | 'FOOD') {
 }
 
 export function MenuPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('MENU')
   const [selectedBar, setSelectedBar] = useState<BarLocation>('HUBBLE')
   const [allCategories, setAllCategories] = useState<MenuCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)

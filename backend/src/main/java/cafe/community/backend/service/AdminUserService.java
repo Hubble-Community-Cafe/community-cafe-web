@@ -24,8 +24,8 @@ import java.util.Objects;
 
 /**
  * Manages staff/board users. Users are auto-provisioned on first login (gated by
- * the Entra security group at the edge): VIEWER by default, or ADMIN when their
- * Azure OID matches {@code app.initial-admin-oid} to bootstrap the first admin.
+ * the Entra security group at the edge): STAFF without access to any tab by default, or ADMIN
+ * when their Azure OID matches {@code app.initial-admin-oid} to bootstrap the first admin.
  */
 @Service
 public class AdminUserService {
@@ -45,7 +45,7 @@ public class AdminUserService {
         this.initialAdminOid = initialAdminOid;
     }
 
-    /** Find by Azure OID or create a new user (VIEWER, or ADMIN for the initial admin). */
+    /** Find by Azure OID or create a new user (STAFF without access, or ADMIN for the initial admin). */
     public AdminUser getOrCreateUser(String azureOid, String email, String displayName) {
         return adminUserRepository.findByAzureOid(azureOid)
                 .map(existing -> {
@@ -147,8 +147,8 @@ public class AdminUserService {
 
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
-        user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.VIEWER);
-        AccessPresets.applyTo(user, user.getRole());
+        // Everyone else starts without access to any tab until an admin grants it.
+        user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.STAFF);
 
         AdminUser saved = adminUserRepository.save(user);
         log.info("Provisioned admin user email='{}' role={}", email, saved.getRole());

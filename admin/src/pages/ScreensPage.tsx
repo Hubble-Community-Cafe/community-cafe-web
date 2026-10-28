@@ -75,7 +75,9 @@ function PosterSelect({
 }
 
 export function ScreensPage() {
-  const { canEditContent } = usePermissions()
+  const { canEdit } = usePermissions()
+  const canSwitch = canEdit('SCREENS')
+  const canPickPosters = canEdit('SCREEN_POSTERS')
   const [status, setStatus] = useState<ScreenSceneStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -156,31 +158,37 @@ export function ScreensPage() {
             </div>
             {status.currentScene === 'MIXED' && (
               <p className="mt-2 text-xs text-slate-500">
-                The screens are not all showing the same thing. Pick a scene below to line them up.
+                The screens are not all showing the same thing.{canSwitch && ' Pick a scene below to line them up.'}
               </p>
             )}
 
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {SCENES.map(({ scene, label, hint, icon: Icon }) => (
-                <button
-                  key={scene}
-                  type="button"
-                  onClick={() => void apply(scene)}
-                  disabled={applying !== null}
-                  className={`flex flex-col items-center gap-1.5 rounded-xl border p-4 text-center transition disabled:opacity-50 ${
-                    status.currentScene === scene
-                      ? 'border-hubble-600 bg-hubble-50'
-                      : 'border-slate-200 hover:border-hubble-400 hover:bg-slate-50'
-                  }`}
-                >
-                  {applying === scene
-                    ? <Loader2 className="h-6 w-6 animate-spin text-hubble-600" />
-                    : <Icon className="h-6 w-6 text-hubble-700" />}
-                  <span className="font-semibold text-slate-800">{label}</span>
-                  <span className="text-xs text-slate-600">{hint}</span>
-                </button>
-              ))}
-            </div>
+            {canSwitch ? (
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {SCENES.map(({ scene, label, hint, icon: Icon }) => (
+                  <button
+                    key={scene}
+                    type="button"
+                    onClick={() => void apply(scene)}
+                    disabled={applying !== null}
+                    className={`flex flex-col items-center gap-1.5 rounded-xl border p-4 text-center transition disabled:opacity-50 ${
+                      status.currentScene === scene
+                        ? 'border-hubble-600 bg-hubble-50'
+                        : 'border-slate-200 hover:border-hubble-400 hover:bg-slate-50'
+                    }`}
+                  >
+                    {applying === scene
+                      ? <Loader2 className="h-6 w-6 animate-spin text-hubble-600" />
+                      : <Icon className="h-6 w-6 text-hubble-700" />}
+                    <span className="font-semibold text-slate-800">{label}</span>
+                    <span className="text-xs text-slate-600">{hint}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="mt-4 text-sm text-slate-500">
+                You can see what the screens show, but not switch them. Ask an admin if you need to.
+              </p>
+            )}
           </section>
 
           <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -200,7 +208,7 @@ export function ScreensPage() {
             )}
           </section>
 
-          {canEditContent && (
+          {canPickPosters && (
             <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
               <h2 className="font-semibold text-slate-800">Posters</h2>
               <p className="mt-1 text-sm text-slate-600">

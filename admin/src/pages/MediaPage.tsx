@@ -89,7 +89,7 @@ function AssetCard({
 }
 
 export function MediaPage() {
-  const { canEditContent } = usePermissions()
+  const canEditContent = usePermissions().canEdit('MEDIA')
   const [assets, setAssets] = useState<MediaAsset[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)

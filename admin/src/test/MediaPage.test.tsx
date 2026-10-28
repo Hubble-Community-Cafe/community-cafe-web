@@ -4,6 +4,7 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MediaPage } from '../pages/MediaPage'
 import { fetchAllMedia, uploadMedia, deleteMedia } from '../lib/api'
 import { usePermissions } from '../lib/usePermissions'
+import { permissionsFor, staffUser } from './access'
 import { MAX_UPLOAD_BYTES } from '../lib/upload'
 
 vi.mock('../lib/api', () => ({
@@ -17,10 +18,7 @@ const mockFetch = vi.mocked(fetchAllMedia)
 const mockUpload = vi.mocked(uploadMedia)
 const mockPermissions = vi.mocked(usePermissions)
 
-const asEditor = () => mockPermissions.mockReturnValue({
-  isViewer: true, isDddPoster: true, isEditor: true, isAdmin: false,
-  canEditContent: true, canEditDailyDish: true, canManageUsers: false, canViewAuditLog: false,
-})
+const asEditor = () => mockPermissions.mockReturnValue(permissionsFor(staffUser({ MEDIA: 'EDIT' })))
 
 /** A File of a given size, without allocating the bytes. */
 const fileOfSize = (name: string, bytes: number): File => {
