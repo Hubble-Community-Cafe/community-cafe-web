@@ -5,8 +5,12 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A staff/board member who may sign in to the admin. Access is gated by an Entra
@@ -39,6 +43,19 @@ public class AdminUser {
     @Enumerated(EnumType.STRING)
     @Column(name = "role", nullable = false, length = 20)
     private AdminRole role = AdminRole.VIEWER;
+
+    /**
+     * Per-module access; a module without an entry is hidden. Loaded eagerly because the role
+     * filter reads it on every admin request. The database removes the rows with the user.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "admin_user_permission", joinColumns = @JoinColumn(name = "admin_user_id"))
+    @MapKeyEnumerated(EnumType.STRING)
+    @MapKeyColumn(name = "module", length = 30)
+    @Enumerated(EnumType.STRING)
+    @Column(name = "access_level", nullable = false, length = 10)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    private Map<AdminModule, AccessLevel> permissions = new HashMap<>();
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

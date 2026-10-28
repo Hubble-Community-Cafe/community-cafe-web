@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.model.AccessPresets;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -41,6 +42,7 @@ class AdminUserServiceTest {
         AdminUser user = adminUserService.getOrCreateUser("u1", "u1@hubble.cafe", "User One");
         assertThat(user.getId()).isNotNull();
         assertThat(user.getRole()).isEqualTo(AdminRole.VIEWER);
+        assertThat(user.getPermissions()).isEqualTo(AccessPresets.forRole(AdminRole.VIEWER));
     }
 
     @Test
@@ -64,8 +66,20 @@ class AdminUserServiceTest {
         AdminUser updated = adminUserService.updateRole(target.getId(), AdminRole.EDITOR, "admin-oid");
 
         assertThat(updated.getRole()).isEqualTo(AdminRole.EDITOR);
+        assertThat(updated.getPermissions()).isEqualTo(AccessPresets.forRole(AdminRole.EDITOR));
         assertThat(auditLogRepository.findAll())
                 .anyMatch(a -> a.getAction() == AuditAction.ROLE_CHANGED);
+    }
+
+    @Test
+    void updateRole_toAdminStoresNoPermissions() {
+        AdminUser target = adminUserService.getOrCreateUser("u4", "u4@hubble.cafe", "Four");
+
+        adminUserService.updateRole(target.getId(), AdminRole.ADMIN, "admin-oid");
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(adminUserService.getCurrentUser("u4").getPermissions()).isEmpty();
     }
 
     @Test

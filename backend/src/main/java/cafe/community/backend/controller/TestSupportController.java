@@ -2,6 +2,7 @@ package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.FakeAuroraClient;
+import cafe.community.backend.model.AccessPresets;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.ScreenSceneSettings;
@@ -116,6 +117,7 @@ public class TestSupportController {
         user.setEmail(req.email() != null && !req.email().isBlank() ? req.email() : req.oid() + "@e2e.test");
         user.setDisplayName(req.name() != null && !req.name().isBlank() ? req.name() : req.oid());
         user.setRole(AdminRole.valueOf(req.role()));
+        AccessPresets.applyTo(user, user.getRole());
         adminUsers.save(user);
     }
 

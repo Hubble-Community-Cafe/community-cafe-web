@@ -1,6 +1,7 @@
 package cafe.community.backend.service;
 
 import cafe.community.backend.dto.FieldChange;
+import cafe.community.backend.model.AccessPresets;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -69,6 +70,7 @@ public class AdminUserService {
 
         AdminRole oldRole = target.getRole();
         target.setRole(newRole);
+        AccessPresets.applyTo(target, newRole);
         AdminUser saved = adminUserRepository.save(target);
 
         auditService.recordAction(AuditEntityType.ADMIN_USER, userId, saved.getEmail(),
@@ -89,6 +91,7 @@ public class AdminUserService {
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
         user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.VIEWER);
+        AccessPresets.applyTo(user, user.getRole());
 
         AdminUser saved = adminUserRepository.save(user);
         log.info("Provisioned admin user email='{}' role={}", email, saved.getRole());

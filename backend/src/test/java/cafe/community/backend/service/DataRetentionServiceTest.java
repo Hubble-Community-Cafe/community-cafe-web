@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.model.AccessPresets;
 import cafe.community.backend.model.AdminRole;
 import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
@@ -89,6 +90,9 @@ class DataRetentionServiceTest {
                 .contains(activeViewer, inactiveAdmin, neverSeen)
                 .doesNotContain(inactiveViewer, inactiveEditor, inactivePoster);
         assertThat(result.adminUsersDeleted()).isEqualTo(3);
+        assertThat(jdbc.queryForList("SELECT DISTINCT admin_user_id FROM admin_user_permission", Long.class))
+                .as("permissions go with the removed accounts")
+                .containsExactlyInAnyOrder(activeViewer, neverSeen);
     }
 
     private long audit(LocalDateTime createdAt) {
@@ -121,6 +125,7 @@ class DataRetentionServiceTest {
         user.setAzureOid(oid);
         user.setEmail(oid + "@hubble.cafe");
         user.setRole(role);
+        AccessPresets.applyTo(user, role);
         long id = adminUserRepository.saveAndFlush(user).getId();
         jdbc.update("UPDATE admin_user SET last_seen_at = ? WHERE id = ?", lastSeenAt, id);
         return id;
