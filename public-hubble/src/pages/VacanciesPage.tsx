@@ -14,7 +14,7 @@ function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
     <div className="rounded-xl border border-hubble-100 bg-hubble-50 px-5 py-4">
       <h3 className="font-title text-lg font-bold text-hubble-700">{vacancy.title}</h3>
       {vacancy.description && (
-        <p className="mt-2 text-sm leading-relaxed text-hubble-800/80">{vacancy.description}</p>
+        <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-hubble-800/80">{vacancy.description}</p>
       )}
       <dl className="mt-3 flex flex-wrap gap-x-6 gap-y-1 text-xs text-hubble-600">
         {vacancy.hours && (

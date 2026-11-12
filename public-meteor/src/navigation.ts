@@ -30,6 +30,7 @@ export const NAV: NavGroup[] = [
     children: [
       { label: 'Current board', to: '/community/board' },
       { label: 'Previous boards', to: '/community/board/previous' },
+      { label: 'Vacancies', to: '/vacancies' },
     ],
   },
   {
