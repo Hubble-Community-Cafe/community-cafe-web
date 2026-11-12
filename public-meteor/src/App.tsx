@@ -13,6 +13,7 @@ const PreviousBoardsPage = lazy(() => import('./pages/BoardPage').then((m) => ({
 const ComplaintsPage = lazy(() => import('./pages/ComplaintsPage').then((m) => ({ default: m.ComplaintsPage })))
 const DeclarationsPage = lazy(() => import('./pages/DeclarationsPage').then((m) => ({ default: m.DeclarationsPage })))
 const DiscountPolicyPage = lazy(() => import('./pages/DiscountPolicyPage').then((m) => ({ default: m.DiscountPolicyPage })))
+const VacanciesPage = lazy(() => import('./pages/VacanciesPage').then((m) => ({ default: m.VacanciesPage })))
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage })))
 
 function App() {
@@ -25,6 +26,7 @@ function App() {
         <Route path="/agenda" element={<EventsPage />} />
         <Route path="/community/board" element={<CurrentBoardPage />} />
         <Route path="/community/board/previous" element={<PreviousBoardsPage />} />
+        <Route path="/vacancies" element={<VacanciesPage />} />
         <Route path="/complaints" element={<ComplaintsPage />} />
         <Route path="/declarations" element={<DeclarationsPage />} />
         <Route path="/menu/discount-policy" element={<DiscountPolicyPage />} />

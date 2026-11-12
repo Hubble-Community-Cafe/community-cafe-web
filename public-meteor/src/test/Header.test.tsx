@@ -24,6 +24,13 @@ describe('Header', () => {
     }
   })
 
+  it('lists Vacancies inside the Community dropdown', () => {
+    renderHeader()
+    const primary = screen.getByRole('navigation', { name: 'Primary' })
+    const communityButton = within(primary).getByRole('button', { name: /community/i })
+    expect(communityButton.closest('div')?.querySelector('a[href="/vacancies"]')).toBeTruthy()
+  })
+
   it('links the reservation button out to the external app in a new tab', () => {
     renderHeader()
     const reservation = screen.getAllByRole('link', { name: /reservation/i })[0]

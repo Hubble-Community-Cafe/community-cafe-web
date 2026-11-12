@@ -36,8 +36,8 @@ export const GUIDES: Record<string, Guide> = {
         content: `This admin manages the content of both public websites, **hubble.cafe** and **meteor.cafe**, in one place. Most changes are live on the site right away: there is no separate publish step unless a module says so (events have a *published* switch).
 
 ## Where things show up
-- **Menu**, **opening hours**, **events** and the **board** are set per cafe and appear on that cafe's site.
-- The **daily dish**, **vacancies**, **associations** and the supervisory board only have a page on the Hubble site.
+- **Menu**, **opening hours**, **events**, the **board** and **vacancies** are set per cafe and appear on that cafe's site.
+- The **daily dish**, **associations** and the supervisory board only have a page on the Hubble site.
 - Anything marked **Shared** appears for both cafes.
 
 The dashboard shows today's dish, upcoming events and special opening hours, so you can spot what needs attention.
@@ -182,10 +182,10 @@ When a new board starts, add the new term, mark it **Current**, and turn *Curren
     sections: [
       {
         title: 'Open positions',
-        content: `Vacancies are listed on the **Hubble** site under *Open positions*. Give each a title, and optionally a description, hours, type, image and how to apply (an email address or a link).
+        content: `Vacancies are listed on the **Hubble** and **Meteor** sites under *Open positions*. Give each a title, and optionally a description, hours, type, image and how to apply (an email address or a link).
 
 - Only **active** vacancies are shown; switch one off when it is filled instead of deleting it.
-- Use **Shared** or **Hubble** for the cafe. The Meteor site has no vacancies page, so a vacancy for Meteor only is not shown anywhere.`,
+- Pick **Hubble** or **Meteor** to show a vacancy on that cafe's site only, or leave it **Shared** to show it on both.`,
       },
     ],
   },

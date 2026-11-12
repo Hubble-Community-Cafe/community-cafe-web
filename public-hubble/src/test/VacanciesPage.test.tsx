@@ -43,4 +43,14 @@ describe('Hubble VacanciesPage', () => {
     expect(await screen.findByText('Could not load the open positions. Please try again later.')).toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('vacancies', expect.any(Error))
   })
+
+  it('keeps the line breaks typed in the description', async () => {
+    getVacancies.mockResolvedValue([
+      vacancy({ description: '26-28 uur\nMaandag t/m vrijdag\nGeen weekenden' }),
+    ])
+    renderPage()
+    const description = await screen.findByText(/26-28 uur/)
+    expect(description.textContent).toBe('26-28 uur\nMaandag t/m vrijdag\nGeen weekenden')
+    expect(description).toHaveClass('whitespace-pre-line')
+  })
 })

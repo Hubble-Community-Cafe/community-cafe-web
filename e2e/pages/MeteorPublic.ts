@@ -21,6 +21,10 @@ export class MeteorPublic {
     await this.page.goto('/community/board')
   }
 
+  async gotoVacancies(): Promise<void> {
+    await this.page.goto('/vacancies')
+  }
+
   async gotoDeclarations(): Promise<void> {
     await this.page.goto('/declarations')
     await expect(this.page.getByRole('heading', { name: 'Online Declarations' })).toBeVisible()

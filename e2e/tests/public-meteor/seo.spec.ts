@@ -35,7 +35,7 @@ test.describe('Meteor SEO meta', () => {
   test('every page has its own title', async ({ page }) => {
     const titles = new Map<string, string>()
     for (const route of ['/', '/menu', '/menu/discount-policy', '/agenda', '/community/board',
-      '/community/board/previous', '/complaints', '/declarations', '/privacy']) {
+      '/community/board/previous', '/vacancies', '/complaints', '/declarations', '/privacy']) {
       await page.goto(route)
       // index.html already carries the site name as the title; pages load on demand and then set
       // their own, so wait for that instead of reading the placeholder.
