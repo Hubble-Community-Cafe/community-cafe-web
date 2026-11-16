@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { submitDeclarationForm, FormError, formsChallengeUrl } from '@cafe/shared-web'
+import {
+  submitDeclarationForm, formsChallengeUrl, checkUpload, RECEIPT_UPLOAD, useFormSubmit,
+} from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
 
-const MAX_BYTES = 10 * 1024 * 1024
-const ACCEPTED = ['application/pdf', 'image/jpeg', 'image/png']
 const CATEGORIES = ['Board Costs', 'Committee Costs', 'Event Costs', 'Bar Costs', 'Other']
 
 const field =
@@ -20,32 +20,20 @@ export function DeclarationsPage() {
     amount: '', category: 'Board Costs', description: '', honeypot: '',
   })
   const [file, setFile] = useState<File | null>(null)
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, send } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
-    if (!file) { setError('Please attach the receipt (PDF or image).'); return }
-    if (!ACCEPTED.includes(file.type)) { setError('Unsupported file type. Attach a PDF or image.'); return }
-    if (file.size > MAX_BYTES) { setError('That file is larger than 10 MB.'); return }
-
-    setStatus('sending')
-    try {
+    void send(async (altcha) => {
       const data = new FormData()
       Object.entries(form).forEach(([k, v]) => data.append(k, v))
-      data.append('altcha', altcha ?? '')
-      data.append('file', file)
+      data.append('altcha', altcha)
+      data.append('file', file!) // never null here: the check ran first
       await submitDeclarationForm(data)
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    }, () => checkUpload(file, RECEIPT_UPLOAD))
   }
 
   return (

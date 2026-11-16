@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { submitInformation, FormError, formsChallengeUrl } from '@cafe/shared-web'
+import { submitInformation, formsChallengeUrl, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
@@ -12,27 +12,19 @@ const label = 'block text-sm font-semibold text-hubble-800'
 export function InformationPage() {
   usePageSeo('Information form', 'Ask Hubble Community Cafe a general question.')
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', honeypot: '' })
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, send } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
+    void send(async (altcha) => {
       await submitInformation({
         name: form.name, email: form.email, phone: form.phone, message: form.message,
-        honeypot: form.honeypot, altcha: altcha ?? '',
+        honeypot: form.honeypot, altcha,
       })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    })
   }
 
   return (

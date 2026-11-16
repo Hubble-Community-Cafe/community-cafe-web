@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { submitTip, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
+import { submitTip, formsChallengeUrl, type ComplaintType, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
@@ -22,28 +22,20 @@ export function TipsPage() {
   })
   const [type, setType] = useState<ComplaintType>('TIP')
   const [wantsUpdates, setWantsUpdates] = useState(true)
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, send } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
+    void send(async (altcha) => {
       await submitTip({
         name: form.name, email: form.email, phone: form.phone, date: form.date,
         type, message: form.message, wantsUpdates,
-        honeypot: form.honeypot, altcha: altcha ?? '',
+        honeypot: form.honeypot, altcha,
       })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    })
   }
 
   return (

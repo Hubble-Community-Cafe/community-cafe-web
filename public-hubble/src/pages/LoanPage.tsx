@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { submitLoan, FormError, formsChallengeUrl } from '@cafe/shared-web'
+import { submitLoan, formsChallengeUrl, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
@@ -28,9 +28,7 @@ export function LoanPage() {
     name: '', association: '', email: '',
     pickupDate: '', pickupTime: '', returnDate: '', returnTime: '', message: '', honeypot: '',
   })
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, send } = useFormSubmit()
   const [preview, setPreview] = useState<{ src: string; alt: string } | null>(null)
   usePageSeo('Loan Equipment', 'Connected associations can borrow tables, taps, speakers and more from Hubble.')
 
@@ -45,17 +43,11 @@ export function LoanPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [preview])
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
-      await submitLoan({ ...form, altcha: altcha ?? '' })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    void send(async (altcha) => {
+      await submitLoan({ ...form, altcha })
+    })
   }
 
   return (

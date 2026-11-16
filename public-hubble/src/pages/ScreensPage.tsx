@@ -1,13 +1,19 @@
 import { useState } from 'react'
-import { submitScreenForm, FormError, formsChallengeUrl, type UploadProgress } from '@cafe/shared-web'
+import {
+  submitScreenForm, formsChallengeUrl, type UploadProgress, checkUpload, type UploadRule, useFormSubmit,
+} from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { UploadProgressPanel } from '../components/UploadProgressPanel'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { ColourField } from '../components/ColourField'
 import { usePageSeo } from '../lib/seo'
 
-const MAX_BYTES = 20 * 1024 * 1024
-const ACCEPTED = ['image/jpeg', 'image/png', 'video/mp4']
+const POSTER_UPLOAD: UploadRule = {
+  accept: ['image/jpeg', 'image/png', 'video/mp4'],
+  maxBytes: 20 * 1024 * 1024,
+  missing: 'Please choose a poster file (JPG, PNG or MP4).',
+  wrongType: 'Unsupported file type. Use JPG, PNG or MP4.',
+}
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
@@ -34,10 +40,8 @@ export function ScreensPage() {
   })
   const [permanent, setPermanent] = useState(false)
   const [file, setFile] = useState<File | null>(null)
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const { setAltcha, status, error, send } = useFormSubmit()
   const [progress, setProgress] = useState<UploadProgress | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -48,34 +52,32 @@ export function ScreensPage() {
     !permanent && !!form.startDate && !!form.endDate &&
     new Date(form.endDate).getTime() - new Date(form.startDate).getTime() > TWO_WEEKS_MS
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    if (!file) { setError('Please choose a poster file (JPG, PNG or MP4).'); return }
-    if (!ACCEPTED.includes(file.type)) { setError('Unsupported file type. Use JPG, PNG or MP4.'); return }
-    if (file.size > MAX_BYTES) { setError('That file is larger than 20 MB.'); return }
-    if (!permanent) {
-      if (!form.startDate || !form.endDate) {
-        setError('Please choose a start and end date, or tick the permanent-poster box.'); return
-      }
-      if (form.endDate < form.startDate) { setError('The end date must be on or after the start date.'); return }
+  /** What is wrong before sending, if anything: the poster file, then the dates. */
+  const check = (): string | null => {
+    const fileProblem = checkUpload(file, POSTER_UPLOAD)
+    if (fileProblem) return fileProblem
+    if (permanent) return null
+    if (!form.startDate || !form.endDate) {
+      return 'Please choose a start and end date, or tick the permanent-poster box.'
     }
+    if (form.endDate < form.startDate) return 'The end date must be on or after the start date.'
+    return null
+  }
 
-    setStatus('sending')
-    try {
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void send(async (altcha) => {
       const data = new FormData()
       Object.entries(form).forEach(([k, v]) => data.append(k, v))
       data.append('permanent', String(permanent))
-      data.append('altcha', altcha ?? '')
-      data.append('file', file)
-      await submitScreenForm(data, setProgress)
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    } finally {
-      setProgress(null)
-    }
+      data.append('altcha', altcha)
+      data.append('file', file!) // never null here: the check ran first
+      try {
+        await submitScreenForm(data, setProgress)
+      } finally {
+        setProgress(null)
+      }
+    }, check)
   }
 
   return (

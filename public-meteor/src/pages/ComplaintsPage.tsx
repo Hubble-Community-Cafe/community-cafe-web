@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { submitComplaint, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
+import { submitComplaint, formsChallengeUrl, type ComplaintType, useFormSubmit } from '@cafe/shared-web'
 import { AltchaWidget } from '../components/AltchaWidget'
 import { usePageSeo } from '../lib/seo'
 
@@ -23,21 +23,13 @@ export function ComplaintsPage() {
   const [type, setType] = useState<ComplaintType>('TIP')
   const [message, setMessage] = useState('')
   const [honeypot, setHoneypot] = useState('')
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, send } = useFormSubmit()
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
-      await submitComplaint({ name, email, phone, date, type, message, honeypot, altcha: altcha ?? '' })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    void send(async (altcha) => {
+      await submitComplaint({ name, email, phone, date, type, message, honeypot, altcha })
+    })
   }
 
   return (
