@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours, reportApiFailure,
   DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
+  useApiResource,
 } from '@cafe/shared-web'
 import { EXTERNAL } from '../navigation'
 import { usePageSeo } from '../lib/seo'
@@ -33,22 +33,14 @@ const FEATURES = [
 
 export function Home() {
   usePageSeo('', 'Hubble Community Cafe on the TU/e campus: food, drinks, events, and a living room for over 70 student associations.')
-  const [hours, setHours] = useState<WeeklyHours[]>([])
-  const [hoursLoaded, setHoursLoaded] = useState(false)
-  const [hoursError, setHoursError] = useState(false)
-  const [overrides, setOverrides] = useState<HoursOverride[]>([])
-
-  useEffect(() => {
-    getWeeklyHours('HUBBLE')
-      .then(setHours)
-      .catch((err: unknown) => {
-        void reportApiFailure('opening-hours', err)
-        setHoursError(true)
-      })
-      .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('HUBBLE').then(setOverrides)
-      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
-  }, [])
+  const { data: hours, loaded: hoursLoaded, error: hoursError } = useApiResource<WeeklyHours[]>(
+    () => getWeeklyHours('HUBBLE'), [],
+    (err) => void reportApiFailure('opening-hours', err),
+  )
+  const { data: overrides } = useApiResource<HoursOverride[]>(
+    () => getUpcomingOverrides('HUBBLE'), [],
+    (err) => void reportApiFailure('opening-hours-overrides', err),
+  )
 
   const allDays = DAY_ORDER.map((d) => ({ day: d, slot: hours.find((h) => h.dayOfWeek === d) ?? null }))
   const grouped = groupWeeklyHours(hours)

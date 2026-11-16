@@ -1,6 +1,5 @@
-import { useEffect, useState } from 'react'
 import { ExternalLink } from 'lucide-react'
-import { getUpcomingEvents, reportApiFailure, type CafeEvent } from '@cafe/shared-web'
+import { getUpcomingEvents, reportApiFailure, type CafeEvent, useApiResource } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { usePageSeo } from '../lib/seo'
 
@@ -51,19 +50,10 @@ function EventCard({ event }: { event: CafeEvent }) {
 
 export function EventsPage() {
   usePageSeo('Events', 'Upcoming events at Hubble Community Cafe: parties, lectures, drinks and more.')
-  const [events, setEvents] = useState<CafeEvent[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getUpcomingEvents('HUBBLE')
-      .then(setEvents)
-      .catch((err: unknown) => {
-        void reportApiFailure('events', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: events, loaded, error } = useApiResource<CafeEvent[]>(
+    () => getUpcomingEvents('HUBBLE'), [],
+    (err) => void reportApiFailure('events', err),
+  )
 
   return (
     <PageShell title="Events">

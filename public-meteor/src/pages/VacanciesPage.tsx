@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getVacancies, reportApiFailure, type Vacancy } from '@cafe/shared-web'
+import { getVacancies, reportApiFailure, type Vacancy, useApiResource } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { usePageSeo } from '../lib/seo'
 
@@ -36,19 +35,10 @@ function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
 
 export function VacanciesPage() {
   usePageSeo('Vacancies', 'Open positions at Meteor Community Cafe.')
-  const [vacancies, setVacancies] = useState<Vacancy[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getVacancies('METEOR')
-      .then(setVacancies)
-      .catch((err: unknown) => {
-        void reportApiFailure('vacancies', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: vacancies, loaded, error } = useApiResource<Vacancy[]>(
+    () => getVacancies('METEOR'), [],
+    (err) => void reportApiFailure('vacancies', err),
+  )
 
   return (
     <PageShell title="Vacancies">

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   getMenu,
   reportApiFailure,
   type MenuTab,
   type MenuCategoryWithItems,
   type MenuItem,
+  useApiResource,
 } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
@@ -70,23 +71,14 @@ function CategoryBlock({ category }: { category: MenuCategoryWithItems }) {
 
 export function MenuPage() {
   usePageSeo('Menu', 'The Hubble drinks and food menu, with TU/e student pricing.')
-  const [tabs, setTabs] = useState<MenuTab[]>([])
-  const [activeTabId, setActiveTabId] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getMenu('HUBBLE')
-      .then((data) => {
-        setTabs(data)
-        if (data.length > 0) setActiveTabId(data[0].id)
-      })
-      .catch((err: unknown) => {
-        void reportApiFailure('menu', err)
-        setError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+  const { data: tabs, loaded, error } = useApiResource<MenuTab[]>(
+    () => getMenu('HUBBLE'), [],
+    (err) => void reportApiFailure('menu', err),
+  )
+  const isLoading = !loaded
+  // The tab the visitor picked, or else the first one.
+  const [chosenTabId, setActiveTabId] = useState<number | null>(null)
+  const activeTabId = chosenTabId ?? tabs[0]?.id ?? null
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null
 

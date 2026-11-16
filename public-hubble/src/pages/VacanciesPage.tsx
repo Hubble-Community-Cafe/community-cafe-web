@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getVacancies, reportApiFailure, type Vacancy } from '@cafe/shared-web'
+import { getVacancies, reportApiFailure, type Vacancy, useApiResource } from '@cafe/shared-web'
 import { usePageSeo } from '../lib/seo'
 
 const TEAM_PHOTOS = [
@@ -47,19 +46,10 @@ function VacancyCard({ vacancy }: { vacancy: Vacancy }) {
 
 export function VacanciesPage() {
   usePageSeo('Vacancies', 'Open positions and volunteer roles at Hubble Community Cafe.')
-  const [vacancies, setVacancies] = useState<Vacancy[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getVacancies('HUBBLE')
-      .then(setVacancies)
-      .catch((err: unknown) => {
-        void reportApiFailure('vacancies', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: vacancies, loaded, error } = useApiResource<Vacancy[]>(
+    () => getVacancies('HUBBLE'), [],
+    (err) => void reportApiFailure('vacancies', err),
+  )
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 md:py-10">

@@ -1,22 +1,13 @@
-import { useEffect, useState } from 'react'
-import { getBoard, reportApiFailure, type BoardTerm, type BoardMember } from '@cafe/shared-web'
+import { getBoard, reportApiFailure, type BoardTerm, type BoardMember, useApiResource } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
-  const [terms, setTerms] = useState<BoardTerm[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-  useEffect(() => {
-    getBoard()
-      .then(setTerms)
-      .catch((err: unknown) => {
-        void reportApiFailure('board', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: terms, loaded, error } = useApiResource<BoardTerm[]>(
+    () => getBoard(), [],
+    (err) => void reportApiFailure('board', err),
+  )
   return { terms, loaded, error }
 }
 

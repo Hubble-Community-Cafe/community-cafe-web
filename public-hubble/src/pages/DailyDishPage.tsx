@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getTodaysDishes, reportApiFailure, type DailyDish } from '@cafe/shared-web'
+import { getTodaysDishes, reportApiFailure, type DailyDish, useApiResource } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -19,19 +18,11 @@ function TodayTag() {
 
 export function DailyDishPage() {
   usePageSeo('Daily Dinner Dish', 'Today’s affordable dinner dish at Hubble Community Cafe.')
-  const [dishes, setDishes] = useState<DailyDish[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getTodaysDishes()
-      .then(setDishes)
-      .catch((err: unknown) => {
-        void reportApiFailure('daily-dish', err)
-        setError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+  const { data: dishes, loaded, error } = useApiResource<DailyDish[]>(
+    () => getTodaysDishes(), [],
+    (err) => void reportApiFailure('daily-dish', err),
+  )
+  const isLoading = !loaded
 
   return (
     <PageShell title="Daily Dinner Dish">

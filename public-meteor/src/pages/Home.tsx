@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, reportApiFailure, type WeeklyHours, type HoursOverride,
+  useApiResource,
 } from '@cafe/shared-web'
 import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
@@ -41,22 +41,14 @@ function groupHours(hours: WeeklyHours[]): { label: string; open: string; close:
 
 export function Home() {
   usePageSeo('', 'Meteor Community Cafe on the TU/e campus: a lively cafe and meeting space by day, a relaxed spot for events by night.')
-  const [hours, setHours] = useState<WeeklyHours[]>([])
-  const [hoursLoaded, setHoursLoaded] = useState(false)
-  const [hoursError, setHoursError] = useState(false)
-  const [overrides, setOverrides] = useState<HoursOverride[]>([])
-
-  useEffect(() => {
-    getWeeklyHours('METEOR')
-      .then(setHours)
-      .catch((err: unknown) => {
-        void reportApiFailure('opening-hours', err)
-        setHoursError(true)
-      })
-      .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('METEOR').then(setOverrides)
-      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
-  }, [])
+  const { data: hours, loaded: hoursLoaded, error: hoursError } = useApiResource<WeeklyHours[]>(
+    () => getWeeklyHours('METEOR'), [],
+    (err) => void reportApiFailure('opening-hours', err),
+  )
+  const { data: overrides } = useApiResource<HoursOverride[]>(
+    () => getUpcomingOverrides('METEOR'), [],
+    (err) => void reportApiFailure('opening-hours-overrides', err),
+  )
 
   const closedDays = DAY_ORDER.filter((d) => !hours.find((h) => h.dayOfWeek === d))
   const grouped = groupHours(hours)

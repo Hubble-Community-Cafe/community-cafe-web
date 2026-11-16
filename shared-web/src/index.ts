@@ -16,6 +16,7 @@ export {
   type TipInput, type InformationInput, type LoanInput, type UploadProgress,
 } from './api/forms'
 export { cn } from './lib/cn'
+export { useApiResource, type ApiResource } from './lib/useApiResource'
 export { installChunkReload } from './lib/chunkReload'
 export { initSentry, sentryRelease } from './lib/sentry'
 export { applyPageMeta, type PageMeta } from './lib/seo'

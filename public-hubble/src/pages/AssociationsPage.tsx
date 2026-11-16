@@ -1,24 +1,14 @@
-import { useEffect, useState } from 'react'
-import { getAssociations, reportApiFailure, type Association } from '@cafe/shared-web'
+import { getAssociations, reportApiFailure, type Association, useApiResource } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 export function AssociationsPage() {
   usePageSeo('Associations', 'The student associations that are part of the Hubble community.')
-  const [associations, setAssociations] = useState<Association[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getAssociations('HUBBLE')
-      .then(setAssociations)
-      .catch((err: unknown) => {
-        void reportApiFailure('associations', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: associations, loaded, error } = useApiResource<Association[]>(
+    () => getAssociations('HUBBLE'), [],
+    (err) => void reportApiFailure('associations', err),
+  )
 
   return (
     <PageShell
