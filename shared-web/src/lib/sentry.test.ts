@@ -3,8 +3,12 @@ import { eventFiltersIntegration } from '@sentry/browser'
 import type { Event } from '@sentry/browser'
 import { initSentry, sentryRelease, SENTRY_DENY_URLS, SENTRY_IGNORE_ERRORS } from './sentry'
 
+/** Stands in for @sentry/browser: the integration has the shape the real one returns, hooks unused. */
 function fakeSdk() {
-  return { init: vi.fn(), browserTracingIntegration: vi.fn(() => ({ name: 'BrowserTracing' })) }
+  return {
+    init: vi.fn(),
+    browserTracingIntegration: vi.fn(() => ({ name: 'BrowserTracing', setup: () => {}, afterAllSetup: () => {} })),
+  }
 }
 
 const base = { project: 'community-cafe-public-meteor', version: '1.4.5', environment: 'production' }
