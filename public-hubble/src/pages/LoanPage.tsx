@@ -6,7 +6,9 @@ import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-600'
 const label = 'block text-sm font-semibold text-hubble-800'
 const mail = 'font-semibold text-hubble-700 hover:underline'
 // A reference looks like an inline link but opens the image in a modal instead of a new tab.
@@ -28,7 +30,7 @@ export function LoanPage() {
     name: '', association: '', email: '',
     pickupDate: '', pickupTime: '', returnDate: '', returnTime: '', message: '', honeypot: '',
   })
-  const { setAltcha, status, error, send } = useFormSubmit()
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
   const [preview, setPreview] = useState<{ src: string; alt: string } | null>(null)
   usePageSeo('Loan Equipment', 'Connected associations can borrow tables, taps, speakers and more from Hubble.')
 
@@ -125,39 +127,39 @@ export function LoanPage() {
           </p>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-8 space-y-5" noValidate>
+        <form {...formProps} onSubmit={submit} className="mt-8 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="l-name" className={label}>Name *</label>
-              <input id="l-name" required value={form.name} onChange={set('name')} className={field} autoComplete="name" />
+              <input id="l-name" required value={form.name} {...fieldProps('name')} onChange={set('name')} className={field} autoComplete="name" />
             </div>
             <div>
               <label htmlFor="l-assoc" className={label}>Association *</label>
-              <input id="l-assoc" required value={form.association} onChange={set('association')} className={field} />
+              <input id="l-assoc" required value={form.association} {...fieldProps('association')} onChange={set('association')} className={field} />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="l-email" className={label}>Email *</label>
-              <input id="l-email" type="email" required value={form.email} onChange={set('email')} className={field} autoComplete="email" />
+              <input id="l-email" type="email" required value={form.email} {...fieldProps('email')} onChange={set('email')} className={field} autoComplete="email" />
             </div>
             <div>
               <label htmlFor="l-pdate" className={label}>Pick-up date *</label>
-              <input id="l-pdate" type="date" required value={form.pickupDate} onChange={set('pickupDate')} className={field} />
+              <input id="l-pdate" type="date" required value={form.pickupDate} {...fieldProps('pickupDate')} onChange={set('pickupDate')} className={field} />
             </div>
             <div>
               <label htmlFor="l-ptime" className={label}>Pick-up time *</label>
-              <input id="l-ptime" type="time" required value={form.pickupTime} onChange={set('pickupTime')} className={field} />
+              <input id="l-ptime" type="time" required value={form.pickupTime} {...fieldProps('pickupTime')} onChange={set('pickupTime')} className={field} />
             </div>
             <div>
               <label htmlFor="l-rdate" className={label}>Return date *</label>
-              <input id="l-rdate" type="date" required value={form.returnDate} onChange={set('returnDate')} className={field} />
+              <input id="l-rdate" type="date" required value={form.returnDate} {...fieldProps('returnDate')} onChange={set('returnDate')} className={field} />
             </div>
             <div>
               <label htmlFor="l-rtime" className={label}>Return time *</label>
-              <input id="l-rtime" type="time" required value={form.returnTime} onChange={set('returnTime')} className={field} />
+              <input id="l-rtime" type="time" required value={form.returnTime} {...fieldProps('returnTime')} onChange={set('returnTime')} className={field} />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="l-message" className={label}>Message *</label>
-              <textarea id="l-message" required rows={5} value={form.message} onChange={set('message')} className={field}
+              <textarea id="l-message" required rows={5} value={form.message} {...fieldProps('message')} onChange={set('message')} className={field}
                 placeholder="What you would like to borrow, and anything we should know." />
             </div>
           </div>
@@ -170,7 +172,7 @@ export function LoanPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={status === 'sending'}

@@ -11,7 +11,9 @@ const TYPES: { value: ComplaintType; label: string }[] = [
 
 const fieldClass =
   'mt-1 w-full rounded-lg border border-meteor-200 bg-white px-3 py-2.5 text-sm text-meteor-900 ' +
-  'shadow-sm outline-none transition focus-visible:border-meteor-accent focus-visible:ring-2 focus-visible:ring-meteor-accent/40'
+  'shadow-sm outline-none transition focus-visible:border-meteor-accent focus-visible:ring-2 focus-visible:ring-meteor-accent/40 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-700'
 const labelClass = 'block text-sm font-semibold text-meteor-900'
 
 export function ComplaintsPage() {
@@ -23,7 +25,7 @@ export function ComplaintsPage() {
   const [type, setType] = useState<ComplaintType>('TIP')
   const [message, setMessage] = useState('')
   const [honeypot, setHoneypot] = useState('')
-  const { setAltcha, status, error, send } = useFormSubmit()
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,41 +64,41 @@ export function ComplaintsPage() {
         </div>
       ) : (
         <form
+          {...formProps}
           onSubmit={submit}
-          noValidate
           className="mt-8 space-y-5 rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm md:p-8"
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="name" className={labelClass}>Name *</label>
-              <input id="name" required maxLength={200} value={name}
+              <input id="name" {...fieldProps('name')} required maxLength={200} value={name}
                 onChange={(e) => setName(e.target.value)} className={fieldClass} autoComplete="name" />
             </div>
             <div>
               <label htmlFor="email" className={labelClass}>Email *</label>
-              <input id="email" type="email" required maxLength={200} value={email}
+              <input id="email" {...fieldProps('email')} type="email" required maxLength={200} value={email}
                 onChange={(e) => setEmail(e.target.value)} className={fieldClass} autoComplete="email" />
             </div>
             <div>
               <label htmlFor="phone" className={labelClass}>Phone</label>
-              <input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)}
+              <input id="phone" {...fieldProps('phone')} value={phone} onChange={(e) => setPhone(e.target.value)}
                 className={fieldClass} placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div>
               <label htmlFor="date" className={labelClass}>Date <span className="font-normal text-meteor-800/70">(if relevant)</span></label>
-              <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)}
+              <input id="date" {...fieldProps('date')} type="date" value={date} onChange={(e) => setDate(e.target.value)}
                 className={fieldClass} />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="type" className={labelClass}>Type</label>
-              <select id="type" value={type} onChange={(e) => setType(e.target.value as ComplaintType)}
+              <select id="type" {...fieldProps('type')} value={type} onChange={(e) => setType(e.target.value as ComplaintType)}
                 className={fieldClass}>
                 {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="message" className={labelClass}>Message *</label>
-              <textarea id="message" required rows={5} maxLength={5000} value={message}
+              <textarea id="message" {...fieldProps('message')} required rows={5} maxLength={5000} value={message}
                 onChange={(e) => setMessage(e.target.value)} className={fieldClass} />
             </div>
           </div>
@@ -113,7 +115,7 @@ export function ComplaintsPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={status === 'sending'}

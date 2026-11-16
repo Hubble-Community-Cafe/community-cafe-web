@@ -47,6 +47,7 @@ describe('Meteor ComplaintsPage', () => {
     submitComplaint.mockRejectedValue(new FormError('Message must not be blank'))
     const user = userEvent.setup()
     renderPage()
+    await fill(user)
     await send(user)
     expect(await screen.findByRole('alert')).toHaveTextContent('Message must not be blank')
     expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()

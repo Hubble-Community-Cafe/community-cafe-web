@@ -143,13 +143,13 @@ public class FormService {
             period = "Type: Permanent association poster (general, no fixed dates)";
         } else {
             if (isBlank(req.getStartDate()) || isBlank(req.getEndDate())) {
-                throw new IllegalArgumentException(
+                throw new InvalidFieldException(isBlank(req.getStartDate()) ? "startDate" : "endDate",
                         "Please provide a start and end date, or mark this as a permanent poster.");
             }
-            start = parseDate(req.getStartDate(), "start date");
-            end = parseDate(req.getEndDate(), "end date");
+            start = parseDate(req.getStartDate(), "start date", "startDate");
+            end = parseDate(req.getEndDate(), "end date", "endDate");
             if (end.isBefore(start)) {
-                throw new IllegalArgumentException("The end date must be on or after the start date.");
+                throw new InvalidFieldException("endDate", "The end date must be on or after the start date.");
             }
             period = "Start Date: " + req.getStartDate() + "\nEnd Date: " + req.getEndDate();
         }
@@ -228,7 +228,11 @@ public class FormService {
             return true;
         } catch (AuroraRejectedException e) {
             log.warn("Aurora refused a poster request ({}): {}", e.reason(), e.getMessage());
-            throw new IllegalArgumentException(PosterRequestMapper.rejectionMessage(e.reason()));
+            String message = PosterRequestMapper.rejectionMessage(e.reason());
+            // TOO_LARGE and UNSUPPORTED_FILE are about the poster; INVALID is about the request as a whole.
+            throw e.reason() == AuroraRejectedException.Reason.INVALID
+                    ? new IllegalArgumentException(message)
+                    : new InvalidFieldException("file", message);
         } catch (AuroraException e) {
             log.warn("Aurora is unavailable for a poster request, emailing it instead: {}", e.getMessage());
             return false;
@@ -437,11 +441,11 @@ public class FormService {
                 form, bar == null || bar.isBlank() ? "NONE" : bar);
     }
 
-    private LocalDate parseDate(String value, String what) {
+    private LocalDate parseDate(String value, String what, String field) {
         try {
             return LocalDate.parse(value);
         } catch (DateTimeParseException e) {
-            throw new IllegalArgumentException("Please provide a valid " + what + " (YYYY-MM-DD).");
+            throw new InvalidFieldException(field, "Please provide a valid " + what + " (YYYY-MM-DD).");
         }
     }
 
@@ -449,11 +453,11 @@ public class FormService {
         try {
             BigDecimal amount = new BigDecimal(raw.trim().replace(",", "."));
             if (amount.signum() <= 0) {
-                throw new IllegalArgumentException("The amount must be greater than zero.");
+                throw new InvalidFieldException("amount", "The amount must be greater than zero.");
             }
             return amount;
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Please provide a valid amount, e.g. 12,50.");
+            throw new InvalidFieldException("amount", "Please provide a valid amount, e.g. 12,50.");
         }
     }
 

@@ -18,7 +18,7 @@ export {
 export { cn } from './lib/cn'
 export { MAIN_CONTENT_ID, useFocusMainOnNavigate } from './lib/mainContent'
 export { useApiResource, type ApiResource } from './lib/useApiResource'
-export { useFormSubmit, type FormStatus } from './lib/useFormSubmit'
+export { useFormSubmit, type FormStatus, type FormProblem, type FieldProps } from './lib/useFormSubmit'
 export { useDropdown } from './lib/useDropdown'
 export { checkUpload, RECEIPT_UPLOAD, type UploadRule } from './lib/upload'
 export { installChunkReload } from './lib/chunkReload'

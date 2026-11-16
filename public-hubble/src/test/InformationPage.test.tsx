@@ -41,6 +41,9 @@ describe('Hubble InformationPage', () => {
     submitInformation.mockRejectedValueOnce(new FormError('Message must not be blank'))
     const user = userEvent.setup()
     renderPage()
+    await user.type(screen.getByLabelText('Name *'), 'Anke')
+    await user.type(screen.getByLabelText('Email *'), 'anke@example.com')
+    await user.type(screen.getByLabelText('Message *'), ' ')
     await user.click(screen.getByRole('button', { name: 'Send' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Message must not be blank')
 

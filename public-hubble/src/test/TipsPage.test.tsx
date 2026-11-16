@@ -43,12 +43,13 @@ describe('Hubble TipsPage', () => {
   })
 
   it('shows the backend validation message and keeps the form', async () => {
-    submitTip.mockRejectedValue(new FormError('email must be a well-formed email address'))
+    submitTip.mockRejectedValue(new FormError('Email must be a well-formed email address'))
     const user = userEvent.setup()
     renderPage()
+    await fill(user)
     await user.click(screen.getByRole('button', { name: 'Send' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('email must be a well-formed email address')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email must be a well-formed email address')
     expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()
     expect(screen.queryByRole('heading', { name: 'Thank you!' })).not.toBeInTheDocument()
   })

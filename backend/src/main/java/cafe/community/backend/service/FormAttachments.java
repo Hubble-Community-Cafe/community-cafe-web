@@ -32,27 +32,27 @@ final class FormAttachments {
     }
 
     /**
-     * The uploaded file as an attachment, or an {@link IllegalArgumentException} with a message
-     * for the visitor when it is missing, too large or not one of {@code allowedTypes}.
+     * The uploaded file as an attachment, or an {@link InvalidFieldException} on the "file" field
+     * with a message for the visitor when it is missing, too large or not one of {@code allowedTypes}.
      */
     static FormEmail.Attachment require(MultipartFile file, Set<String> allowedTypes, String what,
                                         long maxBytes, String baseName) {
         if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Please attach " + what + ".");
+            throw new InvalidFieldException("file", "Please attach " + what + ".");
         }
         if (file.getSize() > maxBytes) {
-            throw new IllegalArgumentException(
+            throw new InvalidFieldException("file",
                     "The file is too large (max " + maxBytes / (1024 * 1024) + " MB).");
         }
         byte[] data;
         try {
             data = file.getBytes();
         } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read the uploaded file.");
+            throw new InvalidFieldException("file", "Could not read the uploaded file.");
         }
         String type = detect(data);
         if (type == null || !allowedTypes.contains(type)) {
-            throw new IllegalArgumentException("Unsupported file type. Please upload " + what + ".");
+            throw new InvalidFieldException("file", "Unsupported file type. Please upload " + what + ".");
         }
         return new FormEmail.Attachment(baseName + "." + EXTENSIONS.get(type), type, data);
     }

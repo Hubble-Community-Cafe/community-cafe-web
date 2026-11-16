@@ -9,7 +9,9 @@ const CATEGORIES = ['Board Costs', 'Committee Costs', 'Event Costs', 'Bar Costs'
 
 const fieldClass =
   'mt-1 w-full rounded-lg border border-meteor-200 bg-white px-3 py-2.5 text-sm text-meteor-900 ' +
-  'shadow-sm outline-none transition focus-visible:border-meteor-accent focus-visible:ring-2 focus-visible:ring-meteor-accent/40'
+  'shadow-sm outline-none transition focus-visible:border-meteor-accent focus-visible:ring-2 focus-visible:ring-meteor-accent/40 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-700'
 const labelClass = 'block text-sm font-semibold text-meteor-900'
 
 export function DeclarationsPage() {
@@ -19,7 +21,7 @@ export function DeclarationsPage() {
     amount: '', category: 'Board Costs', description: '', honeypot: '',
   })
   const [file, setFile] = useState<File | null>(null)
-  const { setAltcha, status, error, send } = useFormSubmit()
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -34,7 +36,10 @@ export function DeclarationsPage() {
       data.append('altcha', altcha)
       data.append('file', file!) // never null here: the check ran first
       await submitDeclarationForm(data)
-    }, () => checkUpload(file, RECEIPT_UPLOAD))
+    }, () => {
+      const problem = checkUpload(file, RECEIPT_UPLOAD)
+      return problem ? { message: problem, field: 'file' } : null
+    })
   }
 
   return (
@@ -63,57 +68,57 @@ export function DeclarationsPage() {
         </div>
       ) : (
         <form
+          {...formProps}
           onSubmit={submit}
-          noValidate
           className="mt-8 space-y-5 rounded-2xl border border-meteor-100 bg-white p-6 shadow-sm md:p-8"
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="d-name" className={labelClass}>Full name *</label>
               <input id="d-name" required maxLength={200} value={form.fullName}
-                onChange={set('fullName')} className={fieldClass} autoComplete="name" />
+                {...fieldProps('fullName')} onChange={set('fullName')} className={fieldClass} autoComplete="name" />
             </div>
             <div>
               <label htmlFor="d-email" className={labelClass}>Email address *</label>
               <input id="d-email" type="email" required maxLength={200} value={form.email}
-                onChange={set('email')} className={fieldClass} autoComplete="email" />
+                {...fieldProps('email')} onChange={set('email')} className={fieldClass} autoComplete="email" />
             </div>
             <div>
               <label htmlFor="d-phone" className={labelClass}>Phone number</label>
-              <input id="d-phone" value={form.phone} onChange={set('phone')} className={fieldClass}
+              <input id="d-phone" value={form.phone} {...fieldProps('phone')} onChange={set('phone')} className={fieldClass}
                 placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div>
               <label htmlFor="d-iban" className={labelClass}>IBAN *</label>
-              <input id="d-iban" required value={form.iban} onChange={set('iban')} className={fieldClass}
+              <input id="d-iban" required value={form.iban} {...fieldProps('iban')} onChange={set('iban')} className={fieldClass}
                 placeholder="NL00 BANK 0000 0000 00" />
             </div>
             <div>
               <label htmlFor="d-date" className={labelClass}>Date of purchase *</label>
               <input id="d-date" type="date" required value={form.dateOfPurchase}
-                onChange={set('dateOfPurchase')} className={fieldClass} />
+                {...fieldProps('dateOfPurchase')} onChange={set('dateOfPurchase')} className={fieldClass} />
             </div>
             <div>
               <label htmlFor="d-amount" className={labelClass}>Amount in euros *</label>
-              <input id="d-amount" required value={form.amount} onChange={set('amount')}
+              <input id="d-amount" required value={form.amount} {...fieldProps('amount')} onChange={set('amount')}
                 className={fieldClass} placeholder="1,23" inputMode="decimal" />
             </div>
             <div>
               <label htmlFor="d-cat" className={labelClass}>Category *</label>
-              <select id="d-cat" value={form.category} onChange={set('category')} className={fieldClass}>
+              <select id="d-cat" value={form.category} {...fieldProps('category')} onChange={set('category')} className={fieldClass}>
                 {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="d-file" className={labelClass}>Receipt *</label>
-              <input id="d-file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+              <input id="d-file" type="file" {...fieldProps('file')} accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="mt-1 w-full text-sm text-meteor-800 file:mr-3 file:rounded file:border-0 file:bg-meteor-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-meteor-800" />
+                className="mt-1 w-full rounded aria-[invalid=true]:outline-2 aria-[invalid=true]:outline-offset-4 aria-[invalid=true]:outline-red-700 text-sm text-meteor-800 file:mr-3 file:rounded file:border-0 file:bg-meteor-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-meteor-800" />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="d-desc" className={labelClass}>Description</label>
               <textarea id="d-desc" rows={4} maxLength={5000} value={form.description}
-                onChange={set('description')} className={fieldClass}
+                {...fieldProps('description')} onChange={set('description')} className={fieldClass}
                 placeholder="What the costs were for (event/committee), and an explanation of the receipt items if not self-explanatory." />
             </div>
           </div>
@@ -130,7 +135,7 @@ export function DeclarationsPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={status === 'sending'}

@@ -128,4 +128,11 @@ describe('submitScreenForm without progress', () => {
     ) as typeof fetch
     await expect(submitScreenForm(new FormData())).rejects.toThrow('Association must not be blank')
   })
+
+  it('carries the field the backend names, for the form to mark', async () => {
+    globalThis.fetch = vi.fn().mockResolvedValue(
+      new Response(JSON.stringify({ message: 'IBAN must be a valid IBAN', field: 'iban' }), { status: 400 }),
+    ) as typeof fetch
+    await expect(submitScreenForm(new FormData())).rejects.toMatchObject({ field: 'iban' })
+  })
 })

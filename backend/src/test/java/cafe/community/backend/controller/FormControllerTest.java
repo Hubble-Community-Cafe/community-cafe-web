@@ -31,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -156,7 +157,8 @@ class FormControllerTest {
                         .content("""
                                 {"name":"Alice","email":"alice@x.com","type":"TIP"}
                                 """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("message"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -218,7 +220,8 @@ class FormControllerTest {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
                         .param("startDate", "2026-07-15").param("endDate", "2026-07-01"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("endDate"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -228,7 +231,8 @@ class FormControllerTest {
         mockMvc.perform(multipart("/api/forms/screen").file(txt)
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
                         .param("startDate", "2026-07-01").param("endDate", "2026-07-15"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("file"));
     }
 
     @Test
@@ -248,7 +252,8 @@ class FormControllerTest {
     void screen_missingDatesWithoutPermanent_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("startDate"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -336,6 +341,7 @@ class FormControllerTest {
                         .param("iban", "not an iban").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "10,00").param("category", "Other"))
                 .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("iban"))
                 .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
                         .jsonPath("$.message").value("IBAN must be a valid IBAN"));
         verify(mail, never()).send(any());
@@ -378,7 +384,8 @@ class FormControllerTest {
                         .param("fullName", "Sven").param("email", "sven@x.com")
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "free").param("category", "Other"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("amount"));
     }
 
     /** The multipart limit is 20 MB for posters, but a receipt keeps its own 10 MB limit. */
@@ -402,7 +409,8 @@ class FormControllerTest {
                         .param("fullName", "Sven").param("email", "sven@x.com")
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "10,00").param("category", "Other"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("file"));
     }
 
     // ── Tips, Complaints & Ideas (Hubble) ─────────────────────────────────────────

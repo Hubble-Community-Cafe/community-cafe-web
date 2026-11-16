@@ -196,6 +196,18 @@ class ScreenFormAuroraTest {
 
     // ── Aurora refuses: the requester sees why ──────────────────────────────────
 
+    /** A refusal of the request as a whole marks no single field. */
+    @Test
+    void auroraRefusesTheRequest_marksNoField() throws Exception {
+        when(aurora.createPosterRequest(any())).thenThrow(new AuroraRejectedException(
+                AuroraRejectedException.Reason.INVALID, "Aurora refused the poster request with 422"));
+
+        mockMvc.perform(dated())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("The screens system")))
+                .andExpect(jsonPath("$.field").doesNotExist());
+    }
+
     @Test
     void auroraRefusesTheFile_showsTheRequesterWhyAndSendsNothing(CapturedOutput output) throws Exception {
         when(aurora.createPosterRequest(any())).thenThrow(new AuroraRejectedException(
@@ -205,7 +217,8 @@ class ScreenFormAuroraTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(
                         "We could not read your poster. Please upload a valid JPG, PNG or MP4 file "
-                                + "(iPhone .mov videos are not supported)."));
+                                + "(iPhone .mov videos are not supported)."))
+                .andExpect(jsonPath("$.field").value("file"));
 
         verify(mail, never()).send(any());
         assertThat(repo.count()).isZero();

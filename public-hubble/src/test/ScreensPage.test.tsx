@@ -86,6 +86,7 @@ describe('Hubble ScreensPage', () => {
 
     await send(user)
     expect(await screen.findByRole('alert')).toHaveTextContent('Please choose a poster file (JPG, PNG or MP4).')
+    expect(screen.getByLabelText('Poster file *')).toHaveAttribute('aria-invalid', 'true')
 
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.gif', 'image/gif'))
     await send(user)
@@ -116,11 +117,13 @@ describe('Hubble ScreensPage', () => {
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
 
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('Please choose a start and end date')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please fill in: Start date, End date.')
 
     await fillDates(user, '2030-10-14', '2030-10-01')
     await send(user)
     expect(await screen.findByRole('alert')).toHaveTextContent('The end date must be on or after the start date.')
+    expect(screen.getByLabelText(/^End date/)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/^Start date/)).not.toHaveAttribute('aria-invalid')
     expect(submitScreenForm).not.toHaveBeenCalled()
   })
 
@@ -128,6 +131,7 @@ describe('Hubble ScreensPage', () => {
     submitScreenForm.mockRejectedValue(new FormError('Association must not be blank'))
     const user = userEvent.setup()
     renderPage()
+    await fillContact(user)
     await fillDates(user, '2030-10-01', '2030-10-14')
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
     await send(user)
