@@ -4,9 +4,12 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
@@ -59,6 +62,21 @@ class RateLimitFilterTest {
         assertThat(blocked.body.toString()).contains("RATE_LIMIT_EXCEEDED");
         // The blocked request never reaches the chain: still exactly ten pass-throughs.
         verify(chain, times(10)).doFilter(any(), any());
+    }
+
+    /** The client IP is personal data: the warning says which form was hit, not by whom. */
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void logsTheBlockWithoutTheClientIp(CapturedOutput output) throws Exception {
+        RateLimitFilter filter = new RateLimitFilter(clock);
+        FilterChain chain = mock(FilterChain.class);
+
+        for (int i = 0; i < 11; i++) {
+            filter.doFilterInternal(post("/api/forms/complaint", "198.51.100.23"), new Captured().response, chain);
+        }
+
+        assertThat(output.getAll()).contains("Rate limit exceeded on /api/forms/complaint")
+                .doesNotContain("198.51.100.23");
     }
 
     @Test

@@ -7,6 +7,7 @@ import * as Sentry from '@sentry/react'
 import { initSentry, installChunkReload } from '@cafe/shared-web'
 import { msalConfig } from './lib/authConfig'
 import { setMsalInstance } from './lib/api'
+import { sentryUser } from './lib/sentryUser'
 import App from './App'
 import './index.css'
 
@@ -34,7 +35,7 @@ msalInstance
       const account = response?.account ?? msalInstance.getAllAccounts()[0] ?? null
       if (account) {
         msalInstance.setActiveAccount(account)
-        Sentry.setUser({ email: account.username })
+        Sentry.setUser(sentryUser(account))
         window.dispatchEvent(new Event('msal:accountChanged'))
       }
     } catch (error) {
@@ -46,7 +47,7 @@ msalInstance
       if (event.eventType === EventType.LOGIN_SUCCESS && event.payload) {
         const account = (event.payload as { account: AccountInfo | null }).account
         msalInstance.setActiveAccount(account)
-        if (account) Sentry.setUser({ email: account.username })
+        if (account) Sentry.setUser(sentryUser(account))
         window.dispatchEvent(new Event('msal:accountChanged'))
       }
       if (event.eventType === EventType.LOGOUT_SUCCESS) {

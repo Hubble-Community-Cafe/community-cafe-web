@@ -63,7 +63,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
         if ("POST".equalsIgnoreCase(request.getMethod())
                 && request.getRequestURI().startsWith(PATH_PREFIX)
                 && isRateLimited(clientIp(request))) {
-            log.warn("Rate limit exceeded for IP {} on {}", clientIp(request), request.getRequestURI());
+            // No client IP in the log: it is personal data, and the count alone shows abuse.
+            log.warn("Rate limit exceeded on {}", request.getRequestURI());
             response.setStatus(429);
             response.setContentType("application/json");
             response.getWriter().write(

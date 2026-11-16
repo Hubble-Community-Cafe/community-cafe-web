@@ -129,7 +129,8 @@ public class AdminUserService {
         user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.STAFF);
 
         AdminUser saved = adminUserRepository.save(user);
-        log.info("Provisioned admin user email='{}' role={}", email, saved.getRole());
+        // The object id, not the email: personal data stays out of the logs.
+        log.info("Provisioned admin user oid={} role={}", saved.getAzureOid(), saved.getRole());
         return saved;
     }
 
