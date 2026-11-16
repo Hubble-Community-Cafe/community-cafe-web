@@ -3,7 +3,6 @@ package cafe.community.backend.service;
 import cafe.community.backend.dto.VacancyDto;
 import cafe.community.backend.dto.VacancyRequest;
 import cafe.community.backend.model.*;
-import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.repository.VacancyRepository;
 import cafe.community.backend.util.SortOrders;
 import cafe.community.backend.service.audit.AuditSnapshots;
@@ -19,12 +18,12 @@ import java.util.List;
 public class VacancyService {
 
     private final VacancyRepository repo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
 
-    public VacancyService(VacancyRepository repo, MediaAssetRepository mediaRepo, AuditService auditService) {
+    public VacancyService(VacancyRepository repo, MediaService media, AuditService auditService) {
         this.repo = repo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
     }
 
@@ -102,8 +101,6 @@ public class VacancyService {
         if (req.sortOrder() != null) {
             v.setSortOrder(req.sortOrder());
         }
-        MediaAsset image = req.imageId() != null
-                ? mediaRepo.findById(req.imageId()).orElse(null) : null;
-        v.setImage(image);
+        v.setImage(media.resolve(req.imageId()));
     }
 }

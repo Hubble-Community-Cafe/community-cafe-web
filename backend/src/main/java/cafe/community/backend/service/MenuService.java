@@ -26,19 +26,19 @@ public class MenuService {
     private final MenuCategoryRepository categoryRepo;
     private final MenuItemRepository itemRepo;
     private final DailyDishRepository dishRepo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
 
     public MenuService(
             MenuCategoryRepository categoryRepo,
             MenuItemRepository itemRepo,
             DailyDishRepository dishRepo,
-            MediaAssetRepository mediaRepo,
+            MediaService media,
             AuditService auditService) {
         this.categoryRepo = categoryRepo;
         this.itemRepo = itemRepo;
         this.dishRepo = dishRepo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
     }
 
@@ -411,11 +411,7 @@ public class MenuService {
             item.setSortOrder(req.sortOrder());
         }
         item.setActive(req.active());
-        if (req.imageId() != null) {
-            item.setImage(mediaRepo.findById(req.imageId()).orElse(null));
-        } else {
-            item.setImage(null);
-        }
+        item.setImage(media.resolve(req.imageId()));
     }
 
     private void applyDish(DailyDish dish, DailyDishRequest req) {
@@ -423,11 +419,7 @@ public class MenuService {
         dish.setName(req.name());
         dish.setDescription(req.description());
         dish.setPrice(req.price());
-        if (req.imageId() != null) {
-            dish.setImage(mediaRepo.findById(req.imageId()).orElse(null));
-        } else {
-            dish.setImage(null);
-        }
+        dish.setImage(media.resolve(req.imageId()));
     }
 
     /** Where a new tab or sub-heading lands: after the last of the list it joins. */

@@ -57,6 +57,16 @@ public class MediaService {
         this.auditService = auditService;
     }
 
+    /**
+     * The image an editor picked on another module (an event, a board photo, a logo), or null when
+     * none was picked. An id that no longer exists also gives null: the content is saved without
+     * the image rather than refused.
+     */
+    @Transactional(readOnly = true)
+    public MediaAsset resolve(Long id) {
+        return id != null ? repo.findById(id).orElse(null) : null;
+    }
+
     @Transactional(readOnly = true)
     public List<MediaAssetDto> getAll() {
         return repo.findAllByOrderByCreatedAtDesc().stream().map(MediaAssetDto::from).toList();

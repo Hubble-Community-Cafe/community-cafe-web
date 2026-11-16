@@ -4,7 +4,6 @@ import cafe.community.backend.dto.AssociationDto;
 import cafe.community.backend.dto.AssociationRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.AssociationRepository;
-import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.service.audit.AuditSnapshots;
 import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
@@ -18,12 +17,12 @@ import java.util.List;
 public class AssociationService {
 
     private final AssociationRepository repo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
 
-    public AssociationService(AssociationRepository repo, MediaAssetRepository mediaRepo, AuditService auditService) {
+    public AssociationService(AssociationRepository repo, MediaService media, AuditService auditService) {
         this.repo = repo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
     }
 
@@ -70,8 +69,6 @@ public class AssociationService {
     private void apply(Association a, AssociationRequest req) {
         a.setName(req.name());
         a.setBar(BarLocation.parseOrShared(req.bar()));
-        MediaAsset logo = req.logoId() != null
-                ? mediaRepo.findById(req.logoId()).orElse(null) : null;
-        a.setLogo(logo);
+        a.setLogo(media.resolve(req.logoId()));
     }
 }

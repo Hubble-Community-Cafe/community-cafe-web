@@ -4,7 +4,6 @@ import cafe.community.backend.dto.EventDto;
 import cafe.community.backend.dto.EventRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.EventRepository;
-import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.service.audit.AuditSnapshots;
 import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
@@ -25,12 +24,12 @@ public class EventService {
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final EventRepository eventRepo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
 
-    public EventService(EventRepository eventRepo, MediaAssetRepository mediaRepo, AuditService auditService) {
+    public EventService(EventRepository eventRepo, MediaService media, AuditService auditService) {
         this.eventRepo = eventRepo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
     }
 
@@ -91,8 +90,6 @@ public class EventService {
         event.setPrice(req.price());
         event.setSubscribeLink(req.subscribeLink());
         event.setPublished(req.published());
-        MediaAsset image = req.imageId() != null
-                ? mediaRepo.findById(req.imageId()).orElse(null) : null;
-        event.setImage(image);
+        event.setImage(media.resolve(req.imageId()));
     }
 }
