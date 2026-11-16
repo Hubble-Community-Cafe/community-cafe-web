@@ -11,18 +11,10 @@ import {
   type BarLocation, type DailyDish, type CafeEvent,
   type HoursOverride, type AuditLogEntry,
 } from '../lib/api'
+import { barDaysFrom, barToday } from '../lib/barDate'
 
 // ── Date / format helpers ──────────────────────────────────────────────────────
 
-function localDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-const todayStr = () => localDateStr(new Date())
-function inDaysStr(n: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + n)
-  return localDateStr(d)
-}
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -68,7 +60,7 @@ function DailyDishWidget() {
 
   useEffect(() => {
     fetchDailyDishes()
-      .then((list) => setDish(list.find((d) => d.date === todayStr()) ?? null))
+      .then((list) => setDish(list.find((d) => d.date === barToday()) ?? null))
       .catch(() => setDish(null))
   }, [])
 
@@ -101,7 +93,7 @@ function EventsWidget() {
   useEffect(() => {
     Promise.all([fetchEvents('HUBBLE'), fetchEvents('METEOR')])
       .then(([h, m]) => {
-        const today = todayStr()
+        const today = barToday()
         const upcoming = [...h, ...m]
           .filter((e) => e.date >= today)
           .sort((a, b) => a.date.localeCompare(b.date))
@@ -145,8 +137,8 @@ function OverridesWidget() {
   useEffect(() => {
     Promise.all([fetchOverrides('HUBBLE'), fetchOverrides('METEOR')])
       .then(([h, m]) => {
-        const today = todayStr()
-        const horizon = inDaysStr(14)
+        const today = barToday()
+        const horizon = barDaysFrom(14)
         const list = [...h, ...m]
           .filter((o) => o.date >= today && o.date <= horizon)
           .sort((a, b) => a.date.localeCompare(b.date))
