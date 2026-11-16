@@ -37,7 +37,7 @@ public class BoardService {
     }
 
     public List<BoardTermDto> getAll() {
-        return termRepo.findAll(org.springframework.data.domain.Sort.by("sortOrder", "label"))
+        return termRepo.findAll(Sort.by("sortOrder", "label"))
                 .stream().map(BoardTermDto::from).toList();
     }
 

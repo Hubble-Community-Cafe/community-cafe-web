@@ -62,7 +62,6 @@ public class E2eSecurityConfig {
                 .requestMatchers("/", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/test/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/daily-dish/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/opening-hours/**").permitAll()

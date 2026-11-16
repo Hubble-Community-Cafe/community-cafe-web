@@ -22,4 +22,3 @@ export { applyPageMeta, type PageMeta } from './lib/seo'
 export {
   groupWeeklyHours, groupKitchenHours, DAY_LABELS, DAY_ORDER, type HoursGroup,
 } from './lib/hours'
-export { hubble, meteor, fonts, brandColor } from './theme/tokens'

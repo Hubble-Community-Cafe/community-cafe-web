@@ -67,7 +67,6 @@ public class SecurityConfig {
                 .requestMatchers("/", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 // Public sites read published CMS content without logging in.
-                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/daily-dish/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/opening-hours/**").permitAll()
