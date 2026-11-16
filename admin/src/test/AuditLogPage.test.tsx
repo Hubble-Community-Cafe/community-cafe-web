@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { AuditLogPage } from '../pages/AuditLogPage'
 import { fetchAuditLog, type AuditLogEntry, type Page } from '../lib/api'
 
@@ -23,6 +23,16 @@ describe('AuditLogPage filtering', () => {
   beforeEach(() => {
     mockFetch.mockReset()
     mockFetch.mockResolvedValue(emptyPage)
+  })
+
+  it('lets staff filter on reordering and screen changes too', async () => {
+    renderPage()
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled())
+    const actions = screen.getByLabelText('Filter by action')
+    expect(within(actions).getByRole('option', { name: 'Reorder' })).toBeInTheDocument()
+    expect(within(actions).getByRole('option', { name: 'Scene changed' })).toBeInTheDocument()
+    expect(within(screen.getByLabelText('Filter by entity')).getByRole('option', { name: 'Screen scene' }))
+      .toBeInTheDocument()
   })
 
   it('loads unfiltered on mount', async () => {

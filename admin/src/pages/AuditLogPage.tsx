@@ -3,14 +3,7 @@ import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAuditLog, type AuditLogEntry } from '../lib/api'
 import { parseChanges } from '../lib/auditChanges'
 import { AuditChanges } from './audit/AuditChanges'
-
-/** Filter options mirror the backend AuditEntityType / AuditAction enums. */
-const ENTITY_TYPES = [
-  'ADMIN_USER', 'MEDIA_ASSET', 'MENU_CATEGORY', 'MENU_ITEM', 'DAILY_DISH',
-  'OPENING_HOURS', 'HOURS_OVERRIDE', 'EVENT', 'BOARD_TERM', 'BOARD_MEMBER',
-  'VACANCY', 'ASSOCIATION',
-]
-const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'PERMISSIONS_CHANGED', 'TOGGLE']
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../lib/auditFilters'
 
 /** ADMIN_USER -> "Admin user" for the dropdown labels. */
 const humanize = (value: string) =>
@@ -59,7 +52,7 @@ export function AuditLogPage() {
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-normal normal-case text-slate-700"
             >
               <option value="">All entities</option>
-              {ENTITY_TYPES.map((t) => (
+              {AUDIT_ENTITY_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {humanize(t)}
                 </option>
@@ -78,7 +71,7 @@ export function AuditLogPage() {
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-normal normal-case text-slate-700"
             >
               <option value="">All actions</option>
-              {ACTIONS.map((a) => (
+              {AUDIT_ACTIONS.map((a) => (
                 <option key={a} value={a}>
                   {humanize(a)}
                 </option>
