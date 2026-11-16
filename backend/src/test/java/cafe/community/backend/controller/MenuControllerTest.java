@@ -2,6 +2,7 @@ package cafe.community.backend.controller;
 
 import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
+import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.service.MenuService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ class MenuControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired MenuService menuService;
+    @Autowired MediaAssetRepository mediaRepo;
 
     @Test
     void publicMenu_noAuthRequired() throws Exception {
@@ -75,6 +77,63 @@ class MenuControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].name").value("Lasagna"))
                 .andExpect(jsonPath("$[1].name").value("Vegan Curry"));
+    }
+
+    // ===== Images survive an edit =====
+    // The admin has no image picker: it sends back the imageId it was given, so that id must be
+    // in the response, or every save of an item or dish with an image would clear it.
+
+    private MediaAsset image() {
+        MediaAsset asset = new MediaAsset();
+        asset.setFilename("dish.jpg");
+        asset.setContentType("image/jpeg");
+        asset.setUrl("https://api.test/media/dish.jpg");
+        asset.setCreatedAt(java.time.LocalDateTime.now());
+        return mediaRepo.saveAndFlush(asset);
+    }
+
+    @Test
+    void menuItem_exposesItsImageId_soAnEditCanKeepTheImage() throws Exception {
+        MediaAsset photo = image();
+        MenuCategoryDto tab = menuService.createCategory(
+                new MenuCategoryRequest("Food", MenuKind.FOOD, null, 1, BarLocation.HUBBLE, null));
+        MenuCategoryDto cat = menuService.createCategory(
+                new MenuCategoryRequest("Mains", MenuKind.FOOD, null, 1, BarLocation.HUBBLE, tab.id()));
+        MenuItemDto created = menuService.createItem(cat.id(), new MenuItemRequest(
+                "Burger", null, new BigDecimal("9.00"), null, List.of(), List.of(), List.of(), photo.getId(), 1, true));
+
+        mockMvc.perform(get("/api/admin/menu/categories/" + cat.id() + "/items").with(asAdmin()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].imageId").value(photo.getId()))
+                .andExpect(jsonPath("$[0].imageUrl").value("https://api.test/media/dish.jpg"));
+
+        // What the admin form now sends on save: the same imageId back.
+        mockMvc.perform(put("/api/admin/menu/items/" + created.id()).with(asAdmin())
+                        .contentType("application/json")
+                        .content("""
+                                {"name":"Burger deluxe","regularPrice":9.5,"sizeOptions":[],"dietaryTags":[],
+                                 "allergens":[],"imageId":%d,"active":true}
+                                """.formatted(created.imageId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Burger deluxe"))
+                .andExpect(jsonPath("$.imageId").value(photo.getId()));
+    }
+
+    @Test
+    void dailyDish_exposesItsImageId_soAnEditCanKeepTheImage() throws Exception {
+        MediaAsset photo = image();
+        DailyDishDto created = menuService.createDish(new DailyDishRequest(
+                LocalDate.now(), "Lasagna", null, new BigDecimal("9.00"), photo.getId()));
+        org.junit.jupiter.api.Assertions.assertEquals(photo.getId(), created.imageId());
+
+        mockMvc.perform(put("/api/admin/daily-dish/" + created.id()).with(asAdmin())
+                        .contentType("application/json")
+                        .content("""
+                                {"date":"%s","name":"Lasagna al forno","price":9.5,"imageId":%d}
+                                """.formatted(LocalDate.now(), created.imageId())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.imageId").value(photo.getId()))
+                .andExpect(jsonPath("$.imageUrl").value("https://api.test/media/dish.jpg"));
     }
 
     @Test

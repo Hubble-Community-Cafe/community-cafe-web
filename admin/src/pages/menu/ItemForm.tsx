@@ -59,7 +59,8 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         sizeOptions: csvToList(sizeOptions),
         dietaryTags: csvToList(dietaryTags),
         allergens: csvToList(allergens),
-        imageId: null,
+        // No image picker yet: keep whatever image the item already has.
+        imageId: initial?.imageId ?? null,
         // Position is set by dragging: omitting it appends a new item and leaves an
         // existing one where it is.
         active,

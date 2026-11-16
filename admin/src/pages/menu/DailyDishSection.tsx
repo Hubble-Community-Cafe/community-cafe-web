@@ -39,7 +39,8 @@ function DishForm({
         name: name.trim(),
         description: description.trim() || null,
         price: price.trim() ? parseFloat(price) : null,
-        imageId: null,
+        // No image picker yet: keep whatever image the dish already has.
+        imageId: initial?.imageId ?? null,
       })
     } catch {
       setError('Could not save daily dish.')

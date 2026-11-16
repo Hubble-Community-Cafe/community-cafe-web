@@ -13,6 +13,7 @@ const coffee: MenuItem = {
   sizeOptions: [],
   dietaryTags: [],
   allergens: [],
+  imageId: null,
   imageUrl: null,
   sortOrder: 4,
   active: true,
@@ -41,6 +42,25 @@ describe('ItemForm', () => {
       expect(onSave).toHaveBeenCalledWith(
         expect.objectContaining({ regularPrice: 3.35, studentPrice: 2.3 }),
       ),
+    )
+  })
+
+  /** There is no image picker, so saving must hand the item's image back rather than clear it. */
+  it('keeps the image an item already has', async () => {
+    const onSave = renderForm({ ...coffee, imageId: 42, imageUrl: 'https://api.test/media/42.jpg' })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ imageId: 42 })),
+    )
+  })
+
+  it('creates a new item without an image', async () => {
+    const onSave = renderForm()
+    fireEvent.change(screen.getByLabelText(/^name/i), { target: { value: 'Tea' } })
+    fireEvent.change(screen.getByLabelText(/regular price/i), { target: { value: '2.5' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+    await waitFor(() =>
+      expect(onSave).toHaveBeenCalledWith(expect.objectContaining({ imageId: null })),
     )
   })
 

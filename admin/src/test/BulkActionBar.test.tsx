@@ -6,7 +6,7 @@ import type { MenuCategory, MenuItem } from '../lib/api'
 function item(id: number, name: string): MenuItem {
   return {
     id, categoryId: 1, name, description: null, regularPrice: 7, studentPrice: 6,
-    sizeOptions: [], dietaryTags: [], allergens: [], imageUrl: null, sortOrder: id, active: true,
+    sizeOptions: [], dietaryTags: [], allergens: [], imageId: null, imageUrl: null, sortOrder: id, active: true,
   }
 }
 

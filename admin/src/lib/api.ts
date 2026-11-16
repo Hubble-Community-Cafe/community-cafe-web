@@ -210,6 +210,8 @@ export interface MenuItem {
   sizeOptions: string[]
   dietaryTags: string[]
   allergens: string[]
+  /** No picker for it yet: the form sends it back unchanged so a save keeps the image. */
+  imageId: number | null
   imageUrl: string | null
   sortOrder: number
   active: boolean
@@ -221,6 +223,8 @@ export interface DailyDish {
   name: string
   description: string | null
   price: number | null
+  /** No picker for it yet: the form sends it back unchanged so a save keeps the image. */
+  imageId: number | null
   imageUrl: string | null
 }
 
