@@ -1,4 +1,4 @@
-import { lazy, type ReactNode } from 'react'
+import { lazy, type ComponentType, type ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import { useIsAuthenticated } from '@azure/msal-react'
 import { Loader2, ShieldX } from 'lucide-react'
@@ -11,7 +11,7 @@ import { RoleProvider, useRole } from './lib/RoleContext'
 import { usePermissions } from './lib/usePermissions'
 import { useGroupAuthorization } from './lib/useGroupAuthorization'
 import { isE2E } from './lib/e2eAuth'
-import { canAccess, type NavRequirement } from './navigation'
+import { canAccess, NAV_ITEMS, type NavPath, type NavRequirement } from './navigation'
 
 // The layout, sign-in and dashboard are in the main bundle; each editor downloads when it is first
 // opened (the menu editor brings the drag-and-drop library). The Suspense is in Layout.
@@ -26,6 +26,26 @@ const BoardPage = lazy(() => import('./pages/BoardPage').then((m) => ({ default:
 const VacanciesPage = lazy(() => import('./pages/VacanciesPage').then((m) => ({ default: m.VacanciesPage })))
 const AssociationsPage = lazy(() => import('./pages/AssociationsPage').then((m) => ({ default: m.AssociationsPage })))
 const ScreensPage = lazy(() => import('./pages/ScreensPage').then((m) => ({ default: m.ScreensPage })))
+
+type PagePath = Exclude<NavPath, '/'>
+
+/**
+ * The page behind each nav path. Who may open it comes from its nav item (navigation.ts), so the
+ * menu and the route can never disagree; the dashboard is the index route.
+ */
+export const PAGES: Record<PagePath, ComponentType> = {
+  '/menu': MenuPage,
+  '/daily-dish': DailyDishPage,
+  '/hours': OpeningHoursPage,
+  '/events': EventsPage,
+  '/board': BoardPage,
+  '/vacancies': VacanciesPage,
+  '/associations': AssociationsPage,
+  '/media': MediaPage,
+  '/screens': ScreensPage,
+  '/users': UsersPage,
+  '/audit': AuditLogPage,
+}
 
 function FullScreen({ children }: { children: ReactNode }) {
   return (
@@ -91,9 +111,9 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/** Gates a route on the database-backed access, with the same rule as its nav item. Editing is
- *  gated inside each page. */
-function RequireAccess({ requires, children }: { requires: NavRequirement; children: ReactNode }) {
+/** Gates a route on the database-backed access, by its nav item's requirement. Editing is gated
+ *  inside each page. */
+function RequireAccess({ requires, children }: { requires?: NavRequirement; children: ReactNode }) {
   const { isLoading } = useRole()
   const permissions = usePermissions()
 
@@ -122,94 +142,16 @@ function App() {
             }
           >
             <Route index element={<DashboardPage />} />
-            <Route
-              path="menu"
-              element={
-                <RequireAccess requires={['MENU']}>
-                  <MenuPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="daily-dish"
-              element={
-                <RequireAccess requires={['DAILY_DISH']}>
-                  <DailyDishPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="hours"
-              element={
-                <RequireAccess requires={['OPENING_HOURS']}>
-                  <OpeningHoursPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="events"
-              element={
-                <RequireAccess requires={['EVENTS']}>
-                  <EventsPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="board"
-              element={
-                <RequireAccess requires={['BOARD']}>
-                  <BoardPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="vacancies"
-              element={
-                <RequireAccess requires={['VACANCIES']}>
-                  <VacanciesPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="associations"
-              element={
-                <RequireAccess requires={['ASSOCIATIONS']}>
-                  <AssociationsPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="media"
-              element={
-                <RequireAccess requires={['MEDIA']}>
-                  <MediaPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="screens"
-              element={
-                <RequireAccess requires={['SCREENS', 'SCREEN_POSTERS']}>
-                  <ScreensPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="users"
-              element={
-                <RequireAccess requires="admin">
-                  <UsersPage />
-                </RequireAccess>
-              }
-            />
-            <Route
-              path="audit"
-              element={
-                <RequireAccess requires="admin">
-                  <AuditLogPage />
-                </RequireAccess>
-              }
-            />
+            {NAV_ITEMS.filter((item) => item.to !== '/').map((item) => {
+              const Page = PAGES[item.to as PagePath]
+              return (
+                <Route
+                  key={item.to}
+                  path={item.to.slice(1)}
+                  element={<RequireAccess requires={item.requires}><Page /></RequireAccess>}
+                />
+              )
+            })}
           </Route>
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
