@@ -16,7 +16,7 @@ vi.mock('../lib/RoleContext', () => ({ useRole: vi.fn() }))
 const mockUseRole = vi.mocked(useRole)
 
 function renderLayoutAs(user: AdminUser) {
-  mockUseRole.mockReturnValue({ user, role: user.role, isLoading: false, error: null, refetch: () => {} })
+  mockUseRole.mockReturnValue({ user, role: user.role, isLoading: false, error: null, refetch: async () => {} })
   return renderInDataRouter(<Layout />)
 }
 
@@ -97,7 +97,7 @@ describe('Layout brand link', () => {
 describe('Layout skip link and focus on navigation', () => {
   function renderAdmin() {
     mockUseRole.mockReturnValue({
-      user: presetUser('EDITOR'), role: 'STAFF', isLoading: false, error: null, refetch: () => {},
+      user: presetUser('EDITOR'), role: 'STAFF', isLoading: false, error: null, refetch: async () => {},
     })
     Element.prototype.scrollIntoView = vi.fn()
     return renderInDataRouter(

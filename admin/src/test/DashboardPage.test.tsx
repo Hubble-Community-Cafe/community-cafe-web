@@ -15,7 +15,7 @@ vi.mock('../lib/api', () => ({
 }))
 
 function renderAs(user: AdminUser) {
-  vi.mocked(useRole).mockReturnValue({ user, role: user.role, isLoading: false, error: null, refetch: () => {} })
+  vi.mocked(useRole).mockReturnValue({ user, role: user.role, isLoading: false, error: null, refetch: async () => {} })
   return render(<MemoryRouter><DashboardPage /></MemoryRouter>)
 }
 

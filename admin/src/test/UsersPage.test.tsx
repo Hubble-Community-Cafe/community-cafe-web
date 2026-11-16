@@ -24,7 +24,7 @@ const level = (tab: string, name: 'Hidden' | 'View' | 'Edit') =>
 describe('UsersPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(useRole).mockReturnValue({ user: me, role: 'ADMIN', isLoading: false, error: null, refetch: () => {} })
+    vi.mocked(useRole).mockReturnValue({ user: me, role: 'ADMIN', isLoading: false, error: null, refetch: async () => {} })
     vi.mocked(fetchAllUsers).mockResolvedValue([me, newcomer, viewer])
   })
 

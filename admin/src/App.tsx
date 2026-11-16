@@ -4,6 +4,7 @@ import { useIsAuthenticated } from '@azure/msal-react'
 import { Loader2, ShieldX } from 'lucide-react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { Layout } from './components/Layout'
+import { AccessLoadFailed } from './components/AccessLoadFailed'
 import { LoginPage } from './pages/LoginPage'
 import { DashboardPage } from './pages/DashboardPage'
 import { RoleProvider, useRole } from './lib/RoleContext'
@@ -38,6 +39,7 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
   const e2e = isE2E()
   const isAuthenticated = isMsalAuthenticated || e2e
   const { isLoading: isCheckingGroup, isAuthorized, error: groupError } = useGroupAuthorization()
+  const { user, isLoading: isLoadingRole, error: roleError, refetch } = useRole()
 
   if (isAuthenticated && !e2e && isCheckingGroup) {
     return (
@@ -78,6 +80,12 @@ function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />
+  }
+
+  // Their record (and so their access) failed to load and none was loaded before: say so, rather
+  // than let every page treat it as "no access". A failed refresh later keeps them working.
+  if (roleError && !user && !isLoadingRole) {
+    return <AccessLoadFailed onRetry={refetch} />
   }
 
   return <>{children}</>
