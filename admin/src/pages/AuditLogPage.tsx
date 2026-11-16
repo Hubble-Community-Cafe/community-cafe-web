@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAuditLog, type AuditLogEntry } from '../lib/api'
 import { parseChanges } from '../lib/auditChanges'
@@ -25,26 +25,22 @@ export function AuditLogPage() {
   const [entityType, setEntityType] = useState('')
   const [action, setAction] = useState('')
 
-  const load = useCallback(async (p: number, et: string, ac: string) => {
-    setIsLoading(true)
-    try {
-      const result = await fetchAuditLog(p, 50, {
-        entityType: et || undefined,
-        action: ac || undefined,
-      })
-      setEntries(result.content)
-      setTotalPages(result.totalPages)
-      setError(null)
-    } catch {
-      setError('Failed to load the audit log.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    load(page, entityType, action)
-  }, [load, page, entityType, action])
+    // Changing a filter or page while the previous one still loads: only the latest answer may
+    // land, or the list would show entries that do not match the filters on screen.
+    let current = true
+    setIsLoading(true)
+    fetchAuditLog(page, 50, { entityType: entityType || undefined, action: action || undefined })
+      .then((result) => {
+        if (!current) return
+        setEntries(result.content)
+        setTotalPages(result.totalPages)
+        setError(null)
+      })
+      .catch(() => { if (current) setError('Failed to load the audit log.') })
+      .finally(() => { if (current) setIsLoading(false) })
+    return () => { current = false }
+  }, [page, entityType, action])
 
   return (
     <>

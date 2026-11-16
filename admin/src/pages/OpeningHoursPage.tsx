@@ -277,22 +277,23 @@ export function OpeningHoursPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = async (b: BarLocation) => {
+  useEffect(() => {
+    // Only the current bar's answer may land: a slower request for the bar just left would
+    // otherwise show its hours under the other bar's name.
+    let current = true
     setLoading(true)
     setEditingOverride(null)
     setError(null)
-    try {
-      const [h, o] = await Promise.all([fetchWeeklyHours(b), fetchOverrides(b)])
-      setSlots(h)
-      setOverrides(o)
-    } catch {
-      setError('Failed to load opening hours')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load(bar) }, [bar])
+    Promise.all([fetchWeeklyHours(bar), fetchOverrides(bar)])
+      .then(([h, o]) => {
+        if (!current) return
+        setSlots(h)
+        setOverrides(o)
+      })
+      .catch(() => { if (current) setError('Failed to load opening hours') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [bar])
 
   const handleDaySaved = (day: DayOfWeek, updated: WeeklyHours | null) => {
     setSlots((prev) => {

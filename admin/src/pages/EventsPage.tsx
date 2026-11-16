@@ -208,19 +208,18 @@ export function EventsPage() {
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const load = async (b: BarLocation) => {
+  useEffect(() => {
+    // Switching bars quickly can leave the previous bar's request still running. Only the current
+    // bar's answer may land, or Hubble's events would show under "Meteor events".
+    let current = true
     setLoading(true)
     setError(null)
-    try {
-      setEvents(await fetchEvents(b))
-    } catch {
-      setError('Failed to load events')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load(bar) }, [bar])
+    fetchEvents(bar)
+      .then((list) => { if (current) setEvents(list) })
+      .catch(() => { if (current) setError('Failed to load events') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [bar])
 
   const handleCreated = (e: CafeEvent) => {
     setEvents((prev) => [e, ...prev].sort((a, b) => b.date.localeCompare(a.date)))
