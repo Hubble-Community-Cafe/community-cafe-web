@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { Check, X } from 'lucide-react'
 import { MediaPicker } from '../../components/MediaPicker'
 import type { BoardTerm, BoardTermRequest, BarLocation, BoardType, MediaAsset } from '../../lib/api'
@@ -13,6 +13,7 @@ export function TermForm({
   onSave: (req: BoardTermRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [label, setLabel] = useState(initial?.label ?? '')
   const [type, setType] = useState<BoardType>(initial?.type ?? 'EXECUTIVE')
   const [bar, setBar] = useState<BarLocation | ''>(initial?.bar ?? '')
@@ -52,22 +53,22 @@ export function TermForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Label *</label>
-          <input value={label} onChange={(e) => setLabel(e.target.value)} required
+          <label htmlFor={`${formId}-label`} className="block text-xs font-medium text-slate-600">Label *</label>
+          <input id={`${formId}-label`} value={label} onChange={(e) => setLabel(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Board 2025 - September" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Type</label>
-          <select value={type} onChange={(e) => setType(e.target.value as BoardType)}
+          <label htmlFor={`${formId}-type`} className="block text-xs font-medium text-slate-600">Type</label>
+          <select id={`${formId}-type`} value={type} onChange={(e) => setType(e.target.value as BoardType)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="EXECUTIVE">Executive board</option>
             <option value="SUPERVISORY">Supervisory board</option>
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Bar (blank = shared)</label>
-          <select value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
+          <label htmlFor={`${formId}-bar`} className="block text-xs font-medium text-slate-600">Bar (blank = shared)</label>
+          <select id={`${formId}-bar`} value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="">Shared</option>
             <option value="HUBBLE">Hubble</option>
@@ -82,15 +83,15 @@ export function TermForm({
           </label>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Group photo</label>
-          <div className="mt-1">
+          <span id={`${formId}-group-photo`} className="block text-xs font-medium text-slate-600">Group photo</span>
+          <div role="group" aria-labelledby={`${formId}-group-photo`} className="mt-1">
             <MediaPicker value={groupPhoto} onChange={setGroupPhoto} />
           </div>
           <p className="mt-1 text-xs text-slate-500">Shown on the previous-boards page for this term.</p>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Photo credit</label>
-          <input value={photoCredit} onChange={(e) => setPhotoCredit(e.target.value)}
+          <label htmlFor={`${formId}-photo-credit`} className="block text-xs font-medium text-slate-600">Photo credit</label>
+          <input id={`${formId}-photo-credit`} value={photoCredit} onChange={(e) => setPhotoCredit(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Photos by Jane Doe / Studio X" />
         </div>

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useId } from 'react'
 import { Check, X } from 'lucide-react'
 import { MediaPicker } from '../../components/MediaPicker'
 import type { BoardMember, BoardMemberRequest, MediaAsset } from '../../lib/api'
@@ -15,6 +15,7 @@ export function MemberForm({
   onSave: (req: BoardMemberRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [name, setName] = useState(initial?.name ?? '')
   const [role, setRole] = useState(initial?.role ?? '')
   const [photo, setPhoto] = useState<MediaAsset | null>(
@@ -47,20 +48,20 @@ export function MemberForm({
     <form onSubmit={submit} className="space-y-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-medium text-slate-600">Name *</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} required
+          <label htmlFor={`${formId}-name`} className="block text-xs font-medium text-slate-600">Name *</label>
+          <input id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Alice" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Role</label>
-          <input value={role} onChange={(e) => setRole(e.target.value)}
+          <label htmlFor={`${formId}-role`} className="block text-xs font-medium text-slate-600">Role</label>
+          <input id={`${formId}-role`} value={role} onChange={(e) => setRole(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="President" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Photo</label>
-          <div className="mt-1">
+          <span id={`${formId}-photo`} className="block text-xs font-medium text-slate-600">Photo</span>
+          <div role="group" aria-labelledby={`${formId}-photo`} className="mt-1">
             <MediaPicker value={photo} onChange={setPhoto} />
           </div>
         </div>

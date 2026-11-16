@@ -20,6 +20,7 @@ function listToCsv(list: string[]): string {
 }
 
 export function ItemForm({ initial, onSave, onCancel }: Props) {
+  const formId = useId()
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [regularPrice, setRegularPrice] = useState(
@@ -89,10 +90,10 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-description`} className="mb-1 block text-xs font-medium text-slate-600">
             Description <span className="text-slate-500">(optional)</span>
           </label>
-          <textarea
+          <textarea id={`${formId}-description`}
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -129,10 +130,10 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-size-options`} className="mb-1 block text-xs font-medium text-slate-600">
             Size options <span className="text-slate-500">(comma-separated)</span>
           </label>
-          <input
+          <input id={`${formId}-size-options`}
             value={sizeOptions}
             onChange={(e) => setSizeOptions(e.target.value)}
             placeholder="0.25L, 0.5L"
@@ -140,10 +141,10 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-dietary-tags`} className="mb-1 block text-xs font-medium text-slate-600">
             Dietary tags <span className="text-slate-500">(comma-separated)</span>
           </label>
-          <input
+          <input id={`${formId}-dietary-tags`}
             value={dietaryTags}
             onChange={(e) => setDietaryTags(e.target.value)}
             placeholder="vegan, gluten-free"
@@ -151,10 +152,10 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-allergens`} className="mb-1 block text-xs font-medium text-slate-600">
             Allergens <span className="text-slate-500">(comma-separated)</span>
           </label>
-          <input
+          <input id={`${formId}-allergens`}
             value={allergens}
             onChange={(e) => setAllergens(e.target.value)}
             placeholder="nuts, dairy"

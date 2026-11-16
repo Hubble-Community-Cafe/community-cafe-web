@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import {
@@ -29,6 +29,7 @@ function EventForm({
   onSave: (req: EventRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [date, setDate] = useState(initial?.date ?? '')
@@ -68,37 +69,37 @@ function EventForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Title *</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required
+          <label htmlFor={`${formId}-title`} className="block text-xs font-medium text-slate-600">Title *</label>
+          <input id={`${formId}-title`} value={title} onChange={(e) => setTitle(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Quiz Night" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Date *</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required
+          <label htmlFor={`${formId}-date`} className="block text-xs font-medium text-slate-600">Date *</label>
+          <input id={`${formId}-date`} type="date" value={date} onChange={(e) => setDate(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Start time</label>
-          <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+          <label htmlFor={`${formId}-start-time`} className="block text-xs font-medium text-slate-600">Start time</label>
+          <input id={`${formId}-start-time`} type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Price</label>
-          <input value={price} onChange={(e) => setPrice(e.target.value)}
+          <label htmlFor={`${formId}-price`} className="block text-xs font-medium text-slate-600">Price</label>
+          <input id={`${formId}-price`} value={price} onChange={(e) => setPrice(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Free / €5 / TBD" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Sign-up link</label>
-          <input type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+          <label htmlFor={`${formId}-signup-link`} className="block text-xs font-medium text-slate-600">Sign-up link</label>
+          <input id={`${formId}-signup-link`} type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
             value={subscribeLink} onChange={(e) => setSubscribeLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+          <label htmlFor={`${formId}-description`} className="block text-xs font-medium text-slate-600">Description</label>
+          <textarea id={`${formId}-description`} value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="A short description of the event…" />
         </div>

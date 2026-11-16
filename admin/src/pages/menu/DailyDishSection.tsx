@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useId } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import {
   fetchDailyDishes,
@@ -21,6 +21,7 @@ function DishForm({
   onSave: (req: DailyDishRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [date, setDate] = useState(initial?.date ?? barToday())
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
@@ -59,8 +60,8 @@ function DishForm({
       )}
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Date</label>
-          <input
+          <label htmlFor={`${formId}-date`} className="mb-1 block text-xs font-medium text-slate-600">Date</label>
+          <input id={`${formId}-date`}
             required
             type="date"
             value={date}
@@ -69,8 +70,8 @@ function DishForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Dish name</label>
-          <input
+          <label htmlFor={`${formId}-dish-name`} className="mb-1 block text-xs font-medium text-slate-600">Dish name</label>
+          <input id={`${formId}-dish-name`}
             required
             maxLength={200}
             value={name}
@@ -79,10 +80,10 @@ function DishForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-price`} className="mb-1 block text-xs font-medium text-slate-600">
             Price (€) <span className="text-slate-500">(optional)</span>
           </label>
-          <input
+          <input id={`${formId}-price`}
             type="number"
             step="0.01"
             min="0"
@@ -92,10 +93,10 @@ function DishForm({
           />
         </div>
         <div className="sm:col-span-3">
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-description`} className="mb-1 block text-xs font-medium text-slate-600">
             Description <span className="text-slate-500">(optional)</span>
           </label>
-          <textarea
+          <textarea id={`${formId}-description`}
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}

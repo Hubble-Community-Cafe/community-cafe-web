@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
 import { SortableList } from '../components/SortableList'
@@ -22,6 +22,7 @@ function VacancyForm({
   onSave: (req: VacancyRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [hours, setHours] = useState(initial?.hours ?? '')
@@ -70,14 +71,14 @@ function VacancyForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Title *</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required
+          <label htmlFor={`${formId}-title`} className="block text-xs font-medium text-slate-600">Title *</label>
+          <input id={`${formId}-title`} value={title} onChange={(e) => setTitle(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Manager" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
-          <select value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
+          <label htmlFor={`${formId}-bar`} className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
+          <select id={`${formId}-bar`} value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="">Both</option>
             <option value="HUBBLE">Hubble</option>
@@ -85,39 +86,39 @@ function VacancyForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Hours</label>
-          <input value={hours} onChange={(e) => setHours(e.target.value)}
+          <label htmlFor={`${formId}-hours`} className="block text-xs font-medium text-slate-600">Hours</label>
+          <input id={`${formId}-hours`} value={hours} onChange={(e) => setHours(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="10-15 hrs/week" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Type</label>
-          <input value={type} onChange={(e) => setType(e.target.value)}
+          <label htmlFor={`${formId}-type`} className="block text-xs font-medium text-slate-600">Type</label>
+          <input id={`${formId}-type`} value={type} onChange={(e) => setType(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Paid" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Apply e-mail</label>
-          <input type="email" value={applyEmail} onChange={(e) => setApplyEmail(e.target.value)}
+          <label htmlFor={`${formId}-apply-email`} className="block text-xs font-medium text-slate-600">Apply e-mail</label>
+          <input id={`${formId}-apply-email`} type="email" value={applyEmail} onChange={(e) => setApplyEmail(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="jobs@hubble.cafe" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Apply link</label>
-          <input type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+          <label htmlFor={`${formId}-apply-link`} className="block text-xs font-medium text-slate-600">Apply link</label>
+          <input id={`${formId}-apply-link`} type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
             value={applyLink} onChange={(e) => setApplyLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+          <label htmlFor={`${formId}-description`} className="block text-xs font-medium text-slate-600">Description</label>
+          <textarea id={`${formId}-description`} value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Short description of the role…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Photo</label>
-          <div className="mt-1">
+          <span id={`${formId}-photo`} className="block text-xs font-medium text-slate-600">Photo</span>
+          <div role="group" aria-labelledby={`${formId}-photo`} className="mt-1">
             <MediaPicker value={image} onChange={setImage} />
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
 import { usePermissions } from '../lib/usePermissions'
@@ -19,6 +19,7 @@ function AssociationForm({
   onSave: (req: AssociationRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [name, setName] = useState(initial?.name ?? '')
   const [bar, setBar] = useState<BarLocation | ''>(initial?.bar ?? '')
   const [logo, setLogo] = useState<MediaAsset | null>(
@@ -49,14 +50,14 @@ function AssociationForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-medium text-slate-600">Name *</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} required
+          <label htmlFor={`${formId}-name`} className="block text-xs font-medium text-slate-600">Name *</label>
+          <input id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Inter Actief" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
-          <select value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
+          <label htmlFor={`${formId}-bar`} className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
+          <select id={`${formId}-bar`} value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="">Both</option>
             <option value="HUBBLE">Hubble</option>
@@ -64,8 +65,8 @@ function AssociationForm({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Logo</label>
-          <div className="mt-1">
+          <span id={`${formId}-logo`} className="block text-xs font-medium text-slate-600">Logo</span>
+          <div role="group" aria-labelledby={`${formId}-logo`} className="mt-1">
             <MediaPicker value={logo} onChange={setLogo} />
           </div>
         </div>

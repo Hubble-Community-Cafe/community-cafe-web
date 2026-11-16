@@ -12,6 +12,7 @@ interface Props {
 }
 
 export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCancel }: Props) {
+  const formId = useId()
   const [name, setName] = useState(initial?.name ?? '')
   const [kind, setKind] = useState<MenuKind>(initial?.kind ?? 'DRINK')
   const [note, setNote] = useState(initial?.availabilityNote ?? '')
@@ -63,8 +64,8 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Type</label>
-          <select
+          <label htmlFor={`${formId}-type`} className="mb-1 block text-xs font-medium text-slate-600">Type</label>
+          <select id={`${formId}-type`}
             value={kind}
             onChange={(e) => setKind(e.target.value as MenuKind)}
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
@@ -74,10 +75,10 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
           </select>
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-availability-note`} className="mb-1 block text-xs font-medium text-slate-600">
             Availability note <span className="text-slate-500">(optional)</span>
           </label>
-          <input
+          <input id={`${formId}-availability-note`}
             maxLength={255}
             value={note}
             onChange={(e) => setNote(e.target.value)}
@@ -87,8 +88,8 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
         </div>
         {fixedParentId === undefined && (
           <div>
-            <label className="mb-1 block text-xs font-medium text-slate-600">Visible on</label>
-            <select
+            <label htmlFor={`${formId}-visible-on`} className="mb-1 block text-xs font-medium text-slate-600">Visible on</label>
+            <select id={`${formId}-visible-on`}
               value={bar}
               onChange={(e) => setBar(e.target.value as BarLocation)}
               className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm"
