@@ -20,9 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -155,8 +153,8 @@ public class FormService {
             }
             period = "Start Date: " + req.getStartDate() + "\nEnd Date: " + req.getEndDate();
         }
-        FormEmail.Attachment poster = requireFile(req.getFile(), SCREEN_TYPES,
-                "a JPG, PNG or MP4 poster", MAX_POSTER_BYTES);
+        FormEmail.Attachment poster = FormAttachments.require(req.getFile(), SCREEN_TYPES,
+                "a JPG, PNG or MP4 poster", MAX_POSTER_BYTES, "poster");
 
         boolean inAurora = submitToAurora(req, start, end, poster);
 
@@ -255,8 +253,8 @@ public class FormService {
         String cc = meteor ? declarationsMeteorCc : declarationsCc;
 
         BigDecimal amount = parseAmount(req.getAmount());
-        FormEmail.Attachment receipt = requireFile(req.getFile(), RECEIPT_TYPES,
-                "a PDF or image receipt", MAX_FILE_BYTES);
+        FormEmail.Attachment receipt = FormAttachments.require(req.getFile(), RECEIPT_TYPES,
+                "a PDF or image receipt", MAX_FILE_BYTES, "receipt");
 
         String body = "New E-Declaration from the " + (meteor ? "Meteor" : "Hubble") + " website\n\n"
                 + "Full name: " + req.getFullName() + "\n"
@@ -437,28 +435,6 @@ public class FormService {
         // single Grafana query can group page views, form submissions and reservations by bar.
         analytics.info("APP_ANALYTICS event=form_submitted form={} bar={}",
                 form, bar == null || bar.isBlank() ? "NONE" : bar);
-    }
-
-    private FormEmail.Attachment requireFile(MultipartFile file, Set<String> allowedTypes, String what,
-                                             long maxBytes) {
-        if (file == null || file.isEmpty()) {
-            throw new IllegalArgumentException("Please attach " + what + ".");
-        }
-        if (file.getSize() > maxBytes) {
-            throw new IllegalArgumentException(
-                    "The file is too large (max " + maxBytes / (1024 * 1024) + " MB).");
-        }
-        String contentType = file.getContentType();
-        if (contentType == null || !allowedTypes.contains(contentType)) {
-            throw new IllegalArgumentException("Unsupported file type. Please upload " + what + ".");
-        }
-        try {
-            String name = file.getOriginalFilename();
-            return new FormEmail.Attachment(name != null && !name.isBlank() ? name : "attachment",
-                    contentType, file.getBytes());
-        } catch (IOException e) {
-            throw new IllegalArgumentException("Could not read the uploaded file.");
-        }
     }
 
     private LocalDate parseDate(String value, String what) {

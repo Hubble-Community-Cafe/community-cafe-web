@@ -1,5 +1,7 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.service.TestUploads;
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.mail.FormEmail;
 import cafe.community.backend.mail.FormMailService;
 import cafe.community.backend.repository.FormSubmissionRepository;
@@ -48,11 +50,11 @@ class FormControllerTest {
     }
 
     private MockMultipartFile png() {
-        return new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3});
+        return new MockMultipartFile("file", "poster.png", "image/png", TestImages.png(1, 1));
     }
 
     private MockMultipartFile pdf() {
-        return new MockMultipartFile("file", "receipt.pdf", "application/pdf", new byte[]{1, 2, 3});
+        return new MockMultipartFile("file", "receipt.pdf", "application/pdf", TestUploads.pdf());
     }
 
     // ── Complaint ────────────────────────────────────────────────────────────────
@@ -320,6 +322,41 @@ class FormControllerTest {
                 .andExpect(status().isBadRequest());
 
         verify(mail, never()).send(any());
+    }
+
+    /**
+     * The treasurer must never receive a visitor's HTML page dressed up as a receipt: the type is
+     * read from the bytes, so the declared type and the double extension change nothing.
+     */
+    @Test
+    void declaration_htmlDisguisedAsAPdf_isRejected() throws Exception {
+        MockMultipartFile disguised = new MockMultipartFile("file", "receipt.pdf.html", "application/pdf",
+                "<html><body>Pay here</body></html>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        mockMvc.perform(multipart("/api/forms/declaration").file(disguised)
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("Unsupported file type. Please upload a PDF or image receipt."));
+        verify(mail, never()).send(any());
+    }
+
+    @Test
+    void declaration_receiptIsRenamedFromItsDetectedType() throws Exception {
+        MockMultipartFile oddlyNamed = new MockMultipartFile("file", "scan.pdf.exe", "application/octet-stream",
+                TestUploads.pdf());
+        mockMvc.perform(multipart("/api/forms/declaration").file(oddlyNamed)
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+        FormEmail.Attachment receipt = to(sent, "finance@hubble.cafe").attachments().get(0);
+        assertThat(receipt.filename()).isEqualTo("receipt.pdf");
+        assertThat(receipt.contentType()).isEqualTo("application/pdf");
     }
 
     @Test

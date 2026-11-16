@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.altcha.AltchaService;
 import cafe.community.backend.aurora.AuroraClient;
 import cafe.community.backend.dto.ComplaintRequest;
@@ -112,7 +113,7 @@ class FormServiceAnalyticsTest {
         req.setPermanent(true);
         req.setHexColor("#FFF200");
         req.setMessage("hi");
-        req.setFile(new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3}));
+        req.setFile(new MockMultipartFile("file", "poster.png", "image/png", TestImages.png(1, 1)));
         req.setAltcha("ok");
 
         service.submitScreen(req);
@@ -130,7 +131,7 @@ class FormServiceAnalyticsTest {
         req.setAmount("12,50");
         req.setCategory("Supplies");
         req.setDescription("Cups");
-        req.setFile(new MockMultipartFile("file", "receipt.pdf", "application/pdf", new byte[]{1, 2, 3}));
+        req.setFile(new MockMultipartFile("file", "receipt.pdf", "application/pdf", TestUploads.pdf()));
         req.setAltcha("ok");
         return req;
     }

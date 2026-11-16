@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.AuroraClient;
 import cafe.community.backend.mail.FormEmail;
@@ -50,7 +51,7 @@ class ScreenFormAuroraRecordFailureTest {
         when(repo.save(any())).thenThrow(new DataIntegrityViolationException("Field 'summary' doesn't have a default value"));
 
         mockMvc.perform(multipart("/api/forms/screen")
-                        .file(new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3}))
+                        .file(new MockMultipartFile("file", "poster.png", "image/png", TestImages.png(1, 1)))
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
                         .param("permanent", "true"))
                 .andExpect(status().isNoContent());
