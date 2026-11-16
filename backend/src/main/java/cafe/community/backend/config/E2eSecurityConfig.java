@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -57,23 +56,12 @@ public class E2eSecurityConfig {
         http
             .cors(cors -> cors.configurationSource(e2eCorsConfigurationSource()))
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/actuator/health", "/error").permitAll()
-                .requestMatchers("/test/**").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/daily-dish/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/opening-hours/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/forms/challenge").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/forms/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
-                .anyRequest().authenticated()
-            );
+            .authorizeHttpRequests(auth -> {
+                PublicRoutes.permit(auth);
+                // The e2e-only reset and seeding endpoints (TestSupportController, e2e profile).
+                auth.requestMatchers("/test/**").permitAll()
+                    .anyRequest().authenticated();
+            });
 
         TestHeaderAuthFilter testAuthFilter = new TestHeaderAuthFilter();
         http.addFilterBefore(testAuthFilter, AuthorizationFilter.class);

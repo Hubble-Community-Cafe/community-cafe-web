@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -62,26 +61,12 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // CSRF disabled: stateless JWT bearer auth (not cookies), so CSRF does not apply.
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/actuator/health", "/error").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                // Public sites read published CMS content without logging in.
-                .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/daily-dish/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/opening-hours/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
-                // Public form submissions (honeypot + ALTCHA + rate-limit protected) + the challenge.
-                .requestMatchers(HttpMethod.GET, "/api/forms/challenge").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/forms/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+            .authorizeHttpRequests(auth -> {
+                PublicRoutes.permit(auth);
                 // Everything under /api/admin requires a valid staff token.
-                .requestMatchers("/api/admin/**").authenticated()
-                .anyRequest().authenticated()
-            );
+                auth.requestMatchers("/api/admin/**").authenticated()
+                    .anyRequest().authenticated();
+            });
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
