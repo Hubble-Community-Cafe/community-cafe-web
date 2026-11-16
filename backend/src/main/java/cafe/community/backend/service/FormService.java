@@ -33,7 +33,10 @@ import java.util.Set;
  * Validates and processes public form submissions: honeypot screening, field/file validation,
  * a stored audit record (no file persisted), and a plain-text staff notification with the
  * uploaded file attached. Recipients are configured per form via {@code app.mail.forms.*}.
- * The submitter also receives a best-effort confirmation email (reply-to the relevant team).
+ * The submitter also receives a best-effort confirmation email. It repeats only values the server
+ * chose or validated (form type, parsed dates and amounts), never free text: the address is the
+ * submitter's own claim, so echoing their name or message would let anyone send arbitrary text
+ * from our domains to any inbox.
  *
  * <p>Poster screen requests go to Aurora for review instead; staff only get a notice by email,
  * unless Aurora is unavailable, in which case the request is emailed with the poster as before.
@@ -120,14 +123,11 @@ public class FormService {
                 "Meteor " + label + " from " + req.name(), body, List.of()));
         logSubmission("complaint", null);
 
-        String confirmation = "Hi " + req.name() + ",\n\n"
-                + "Thanks for contacting Meteor. We have received your " + label.toLowerCase()
-                + " and the team will look into it.\n\n"
-                + "For your records, this is what you sent:\n\n"
-                + "Type: " + label + "\n"
-                + "Date: " + orDash(req.date()) + "\n\n"
-                + "Message:\n" + req.message() + "\n\n"
-                + "Kind regards,\nMeteor Community Cafe\n";
+        String confirmation = confirmationBody(
+                "Thanks for contacting Meteor. We have received your " + label.toLowerCase()
+                        + " and the team will look into it.",
+                "Type: " + label + "\n",
+                "Meteor Community Cafe");
         sendConfirmation(meteorFrom, req.email(),
                 "We received your " + label.toLowerCase(), confirmation);
     }
@@ -203,12 +203,13 @@ public class FormService {
         }
         logSubmission("screen", null);
 
-        String confirmation = "Hi " + req.getName() + ",\n\n"
-                + "Thanks! We have received your poster screen request for " + req.getAssociation()
-                + " and the screens team will review it.\n\n"
-                + "For your records:\n\n"
-                + period + "\n\n"
-                + "Kind regards,\nHubble Community Cafe\n";
+        // Dates are echoed from the parsed values, never the raw strings.
+        String confirmation = confirmationBody(
+                "Thanks! We have received your poster screen request and the screens team will review it.",
+                req.isPermanent()
+                        ? "Type: Permanent association poster (general, no fixed dates)\n"
+                        : "Start date: " + start + "\nEnd date: " + end + "\n",
+                "Hubble Community Cafe");
         sendConfirmation(hubbleFrom, req.getEmail(),
                 "We received your poster screen request", confirmation);
     }
@@ -273,14 +274,11 @@ public class FormService {
                 body, List.of(receipt)));
         logSubmission("declaration", bar.name());
 
-        String confirmation = "Hi " + req.getFullName() + ",\n\n"
-                + "Thanks! We have received your declaration and the treasurer will process it.\n\n"
-                + "For your records:\n\n"
-                + "Amount in euros: " + amount.toPlainString() + "\n"
-                + "Category: " + req.getCategory() + "\n"
-                + "Date of purchase: " + req.getDateOfPurchase() + "\n\n"
-                + "If anything is unclear we will contact you. \n\n"
-                + "Kind regards,\n" + bar.getDisplayName() + "\n";
+        String confirmation = confirmationBody(
+                "Thanks! We have received your declaration and the treasurer will process it. "
+                        + "If anything is unclear we will contact you.",
+                "Amount in euros: " + amount.toPlainString() + "\n",
+                bar.getDisplayName());
         sendConfirmation(from, req.getEmail(),
                 "We received your declaration", confirmation);
     }
@@ -311,14 +309,11 @@ public class FormService {
                 "Hubble " + label + " from " + req.name(), body, List.of()));
         logSubmission("tips", null);
 
-        String confirmation = "Hi " + req.name() + ",\n\n"
-                + "Thanks for contacting Hubble. We have received your " + label.toLowerCase()
-                + " and the team will look into it.\n\n"
-                + "For your records, this is what you sent:\n\n"
-                + "Type: " + label + "\n"
-                + "Date: " + orDash(req.date()) + "\n\n"
-                + "Message:\n" + req.message() + "\n\n"
-                + "Kind regards,\nHubble Community Cafe\n";
+        String confirmation = confirmationBody(
+                "Thanks for contacting Hubble. We have received your " + label.toLowerCase()
+                        + " and the team will look into it.",
+                "Type: " + label + "\n",
+                "Hubble Community Cafe");
         sendConfirmation(hubbleFrom, req.email(),
                 "We received your " + label.toLowerCase(), confirmation);
     }
@@ -340,12 +335,10 @@ public class FormService {
                 "Hubble information request from " + req.name(), body, List.of()));
         logSubmission("information", null);
 
-        String confirmation = "Hi " + req.name() + ",\n\n"
-                + "Thanks for contacting Hubble. We have received your message and will get back "
-                + "to you.\n\n"
-                + "For your records:\n\n"
-                + "Message:\n" + req.message() + "\n\n"
-                + "Kind regards,\nHubble Community Cafe\n";
+        String confirmation = confirmationBody(
+                "Thanks for contacting Hubble. We have received your message and will get back to you.",
+                null,
+                "Hubble Community Cafe");
         sendConfirmation(hubbleFrom, req.email(), "We received your message", confirmation);
     }
 
@@ -369,18 +362,28 @@ public class FormService {
                 body, List.of()));
         logSubmission("loan", null);
 
-        String confirmation = "Hi " + req.name() + ",\n\n"
-                + "Thanks! We have received your equipment loan request for " + req.association()
-                + " and the community manager will review it. This is a request, not a confirmed "
-                + "booking.\n\n"
-                + "For your records:\n\n"
-                + "Pick-up: " + req.pickupDate() + " at " + req.pickupTime() + "\n"
-                + "Return: " + req.returnDate() + " at " + req.returnTime() + "\n\n"
-                + "Kind regards,\nHubble Community Cafe\n";
+        String confirmation = confirmationBody(
+                "Thanks! We have received your equipment loan request and the community manager will "
+                        + "review it. This is a request, not a confirmed booking.",
+                null,
+                "Hubble Community Cafe");
         sendConfirmation(hubbleFrom, req.email(), "We received your loan request", confirmation);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
+
+    /**
+     * The submitter confirmation text. {@code records} may only hold values the server chose or
+     * validated (see the class comment); pass null when there is nothing safe to repeat.
+     */
+    private static String confirmationBody(String intro, String records, String signature) {
+        return "Hello,\n\n"
+                + intro + "\n\n"
+                + (records != null ? "For your records:\n\n" + records + "\n" : "")
+                + "The team has your full submission, so it is not repeated here. If you did not "
+                + "send this, you can ignore this email.\n\n"
+                + "Kind regards,\n" + signature + "\n";
+    }
 
     /**
      * Best-effort acknowledgment to the submitter. The staff notification is already sent, so a

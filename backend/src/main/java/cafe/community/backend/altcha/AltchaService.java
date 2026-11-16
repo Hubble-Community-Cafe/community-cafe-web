@@ -43,7 +43,7 @@ public class AltchaService {
     public AltchaService(
             @Value("${app.altcha.enabled:false}") boolean enabled,
             @Value("${app.altcha.hmac-key:}") String hmacKey,
-            @Value("${app.altcha.max-number:50000}") int maxNumber,
+            @Value("${app.altcha.max-number:1000000}") int maxNumber,
             @Value("${app.altcha.expiry-seconds:300}") long expirySeconds) {
         this.enabled = enabled;
         this.maxNumber = maxNumber;

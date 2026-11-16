@@ -19,6 +19,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -77,7 +79,9 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@meteor.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@meteor.cafe");
         assertThat(ack.subject()).isEqualTo("We received your tip");
-        assertThat(ack.body()).contains("Hi Alice").contains("Lovely food");
+        // Only server-chosen values come back: no name, no message (see the abuse test below).
+        assertThat(ack.body()).contains("Hello,").contains("Type: Tip")
+                .doesNotContain("Alice").doesNotContain("Lovely food");
         assertThat(ack.attachments()).isEmpty();
 
         assertThat(repo.count()).isEqualTo(1);
@@ -102,6 +106,46 @@ class FormControllerTest {
 
         assertThat(output.getAll()).contains("Could not send submitter confirmation from noreply@meteor.cafe")
                 .doesNotContain("carol.visitor@example.com");
+    }
+
+    /**
+     * The confirmation goes to whatever address was typed in, so it must not carry anything else
+     * the visitor typed: otherwise anyone could send their own text and links to any inbox, from
+     * our real mailboxes.
+     */
+    @Test
+    void confirmation_neverEchoesFreeTextToTheClaimedAddress() throws Exception {
+        String lure = "Your account is locked, verify at https://evil.example/login";
+        mockMvc.perform(post("/api/forms/information").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","email":"victim@example.com","message":"%s"}
+                                """.formatted(lure, lure)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/forms/loan").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","association":"%s","email":"victim@example.com",
+                                 "pickupDate":"evil.example/a","pickupTime":"evil.example/b",
+                                 "returnDate":"evil.example/c","returnTime":"evil.example/d",
+                                 "message":"%s"}
+                                """.formatted(lure, lure, lure)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/forms/tips").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","email":"victim@example.com","type":"TIP",
+                                 "date":"evil.example/e","message":"%s"}
+                                """.formatted(lure, lure)))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(6)).send(sent.capture());
+        List<FormEmail> acks = sent.getAllValues().stream()
+                .filter(e -> e.to().equals("victim@example.com"))
+                .toList();
+
+        assertThat(acks).hasSize(3).allSatisfy(ack -> {
+            assertThat(ack.subject()).doesNotContain("evil.example");
+            assertThat(ack.body()).doesNotContain("evil.example").doesNotContain("locked");
+        });
     }
 
     @Test
@@ -149,7 +193,8 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.subject()).isEqualTo("We received your poster screen request");
-        assertThat(ack.body()).contains("Hi Anke").contains("Doppio");
+        assertThat(ack.body()).contains("Start date: 2026-07-01").contains("End date: 2026-07-15")
+                .doesNotContain("Anke").doesNotContain("Doppio").doesNotContain("Please post");
         assertThat(ack.attachments()).isEmpty();
     }
 
@@ -228,8 +273,8 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.subject()).isEqualTo("We received your declaration");
-        assertThat(ack.body()).contains("Hi Sven Rooijakkers").contains("Amount in euros: 150.04")
-                .contains("Hubble Community Cafe");
+        assertThat(ack.body()).contains("Amount in euros: 150.04").contains("Hubble Community Cafe")
+                .doesNotContain("Sven").doesNotContain("SVH Exam").doesNotContain("Other");
         assertThat(ack.attachments()).isEmpty();
     }
 
@@ -406,7 +451,8 @@ class FormControllerTest {
 
         FormEmail ack = to(sent, "lotte@x.com");
         assertThat(ack.subject()).isEqualTo("We received your loan request");
-        assertThat(ack.body()).contains("Doppio");
+        assertThat(ack.body()).contains("not a confirmed booking")
+                .doesNotContain("Lotte").doesNotContain("Doppio").doesNotContain("cantus");
     }
 
     @Test
