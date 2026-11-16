@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { HubbleInformationForm } from '../../pages/PublicForms'
 import { clearMailpit, waitForMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -8,13 +9,15 @@ test.describe('Hubble information form', () => {
   })
 
   test('submitting a question emails the info list and confirms the submitter', async ({ page, request }, testInfo) => {
+
+    const info = new HubbleInformationForm(page)
     await page.goto('/contact/information')
     await expect(page.getByRole('heading', { name: 'Information Form' })).toBeVisible()
 
-    await page.locator('#i-name').fill('Tess Tester')
-    await page.locator('#i-email').fill('tess@example.com')
-    await page.locator('#i-phone').fill('+316 12345678')
-    await page.locator('#i-message').fill('Could we host a borrel next month?')
+    await info.name.fill('Tess Tester')
+    await info.email.fill('tess@example.com')
+    await info.phone.fill('+316 12345678')
+    await info.message.fill('Could we host a borrel next month?')
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Thank you!' })).toBeVisible()

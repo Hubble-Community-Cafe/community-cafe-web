@@ -24,25 +24,38 @@ export interface ScreensRequest {
 export class HubbleScreensForm {
   constructor(private readonly page: Page) {}
 
+  /**
+   * A field by the label a visitor reads (see PublicForms.ts for why not by id), searched inside
+   * the form only. Labels end in " *" for required fields, hence the anchored patterns below.
+   */
+  field(label: RegExp): Locator {
+    return this.page.locator('main form').getByLabel(label)
+  }
+
+  /** The clock/progress colour, a hex like #FFF200. */
+  colourField(): Locator {
+    return this.field(/^Clock \/ progress colour/)
+  }
+
   async goto(): Promise<void> {
     await this.page.goto('/contact/screens')
     await expect(this.page.getByRole('heading', { name: 'Hubble Poster Screens' })).toBeVisible()
   }
 
   async fill(req: ScreensRequest): Promise<void> {
-    await this.page.locator('#s-name').fill(req.name)
-    await this.page.locator('#s-assoc').fill(req.association)
-    await this.page.locator('#s-email').fill(req.email)
+    await this.field(/^Name/).fill(req.name)
+    await this.field(/^Association/).fill(req.association)
+    await this.field(/^Email/).fill(req.email)
     if (req.dates) {
-      await this.page.locator('#s-start').fill(req.dates.start)
-      await this.page.locator('#s-end').fill(req.dates.end)
+      await this.field(/^Start date/).fill(req.dates.start)
+      await this.field(/^End date/).fill(req.dates.end)
     } else {
       // Dates are disabled for a permanent poster; submit without them.
       await this.page.getByRole('checkbox', { name: /permanent poster/i }).check()
     }
-    if (req.hexColor) await this.page.locator('#s-hex').fill(req.hexColor)
-    if (req.message) await this.page.locator('#s-msg').fill(req.message)
-    await this.page.locator('#s-file').setInputFiles(
+    if (req.hexColor) await this.colourField().fill(req.hexColor)
+    if (req.message) await this.field(/^Message/).fill(req.message)
+    await this.field(/^Poster file/).setInputFiles(
       req.file ?? { name: 'poster.png', mimeType: 'image/png', buffer: PNG },
     )
   }
@@ -61,7 +74,7 @@ export class HubbleScreensForm {
    * full colour) and height (bright to dark). Returns the hex the field then holds.
    */
   async pickColour(x: number, y: number): Promise<string> {
-    const hex = this.page.locator('#s-hex')
+    const hex = this.colourField()
     const before = await hex.inputValue()
     await this.colourSwatch().click()
     const area = this.colourPicker().getByRole('slider', { name: 'Color' })

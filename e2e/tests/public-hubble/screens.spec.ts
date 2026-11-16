@@ -22,7 +22,7 @@ test.describe('Hubble poster screens form', () => {
     await expect(page.locator('figure img')).toBeVisible()
     await expect(page.getByText('Maximum file size: 20 MB')).toBeVisible()
     // Hubble and Meteor share the same screens, so there is no cafe to choose.
-    await expect(page.locator('#s-cafe')).toHaveCount(0)
+    await expect(form.field(/cafe/i)).toHaveCount(0)
 
     await form.fill({
       ...ANKE, dates: { start: inDays(2), end: inDays(16) }, hexColor: '#FFF200', message: 'For our borrel',
@@ -74,10 +74,10 @@ test.describe('Hubble poster screens form', () => {
     const form = new HubbleScreensForm(page)
     await form.goto()
     // Nothing entered means the screens use white.
-    await expect(page.locator('#s-hex')).toHaveAttribute('placeholder', '#FFFFFF')
+    await expect(form.colourField()).toHaveAttribute('placeholder', '#FFFFFF')
     await expect(form.colourSwatch()).toHaveAttribute('data-colour', '#FFFFFF')
 
-    await page.locator('#s-hex').fill('#E4007C')
+    await form.colourField().fill('#E4007C')
     await expect(form.colourSwatch()).toHaveAttribute('data-colour', '#E4007C')
 
     const picked = await form.pickColour(0.9, 0.2)

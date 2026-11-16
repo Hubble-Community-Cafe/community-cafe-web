@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { DeclarationForm } from '../../pages/PublicForms'
 import { resetBackend, seedEvent, inDays } from '../../fixtures/backend'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -24,6 +25,7 @@ test.describe('Meteor mobile navigation', () => {
   // The upload path is covered on desktop; on a phone what matters is that the form is
   // reachable at all, since it sits inside the Menu group rather than at the top level.
   test('reaches the declaration form from the mobile menu', async ({ page }) => {
+    const declaration = new DeclarationForm(page)
     await page.goto('/')
 
     await page.getByRole('button', { name: 'Open menu' }).click()
@@ -34,6 +36,6 @@ test.describe('Meteor mobile navigation', () => {
 
     await expect(page).toHaveURL(/\/declarations$/)
     await expect(page.getByRole('heading', { name: 'Online Declarations' })).toBeVisible()
-    await expect(page.locator('#d-iban')).toBeVisible()
+    await expect(declaration.iban).toBeVisible()
   })
 })

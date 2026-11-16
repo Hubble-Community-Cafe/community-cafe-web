@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { HubbleTipsForm } from '../../pages/PublicForms'
 import { clearMailpit, waitForMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -8,12 +9,14 @@ test.describe('Hubble tips form on mobile', () => {
   })
 
   test('submits a tip from a phone, emailing the team and a confirmation', async ({ page, request }, testInfo) => {
+
+    const tips = new HubbleTipsForm(page)
     await page.goto('/contact/tips')
 
-    await page.locator('#t-name').fill('Mobile Pim')
-    await page.locator('#t-email').fill('mobile.pim@example.com')
-    await page.locator('#t-type').selectOption('TIP')
-    await page.locator('#t-message').fill('Great mobile experience.')
+    await tips.name.fill('Mobile Pim')
+    await tips.email.fill('mobile.pim@example.com')
+    await tips.type.selectOption('TIP')
+    await tips.message.fill('Great mobile experience.')
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Thank you!' })).toBeVisible()

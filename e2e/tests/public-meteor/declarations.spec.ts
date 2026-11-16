@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { DeclarationForm } from '../../pages/PublicForms'
 import { MINIMAL_PDF } from '../../fixtures/files'
 import { clearMailpit, waitForMessageTo, expectNoMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
@@ -10,17 +11,19 @@ test.describe('Meteor e-declaration form', () => {
   })
 
   test('submitting a declaration emails the Meteor treasurer with the receipt attached', async ({ page, request }, testInfo) => {
+
+    const declaration = new DeclarationForm(page)
     const meteor = new MeteorPublic(page)
     await meteor.gotoDeclarations()
 
-    await page.locator('#d-name').fill('Nora Vermeer')
-    await page.locator('#d-email').fill('nora@example.com')
-    await page.locator('#d-iban').fill('NL70 TRIO 0338 5890 15')
-    await page.locator('#d-date').fill('2026-06-18')
-    await page.locator('#d-amount').fill('40,00')
-    await page.locator('#d-cat').selectOption('Bar Costs')
-    await page.locator('#d-desc').fill('Ice for the terrace bar')
-    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: MINIMAL_PDF })
+    await declaration.fullName.fill('Nora Vermeer')
+    await declaration.email.fill('nora@example.com')
+    await declaration.iban.fill('NL70 TRIO 0338 5890 15')
+    await declaration.dateOfPurchase.fill('2026-06-18')
+    await declaration.amount.fill('40,00')
+    await declaration.category.selectOption('Bar Costs')
+    await declaration.description.fill('Ice for the terrace bar')
+    await declaration.receipt.setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: MINIMAL_PDF })
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Declaration submitted' })).toBeVisible()
@@ -47,14 +50,16 @@ test.describe('Meteor e-declaration form', () => {
   })
 
   test('a declaration without a receipt is rejected client-side', async ({ page, request }) => {
+
+    const declaration = new DeclarationForm(page)
     const meteor = new MeteorPublic(page)
     await meteor.gotoDeclarations()
 
-    await page.locator('#d-name').fill('No Receipt')
-    await page.locator('#d-email').fill('x@example.com')
-    await page.locator('#d-iban').fill('NL70TRIO0338589015')
-    await page.locator('#d-date').fill('2026-06-18')
-    await page.locator('#d-amount').fill('10,00')
+    await declaration.fullName.fill('No Receipt')
+    await declaration.email.fill('x@example.com')
+    await declaration.iban.fill('NL70TRIO0338589015')
+    await declaration.dateOfPurchase.fill('2026-06-18')
+    await declaration.amount.fill('10,00')
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('alert')).toContainText('Please attach the receipt')
