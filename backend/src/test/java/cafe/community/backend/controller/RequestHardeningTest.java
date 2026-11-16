@@ -11,12 +11,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
+import static cafe.community.backend.TestUsers.token;
 import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -34,12 +33,6 @@ class RequestHardeningTest {
 
     @Autowired MockMvc mockMvc;
 
-    private RequestPostProcessor asAdmin() {
-        return jwt().jwt(j -> j.claim("oid", "hardening-admin-oid")
-                .claim("preferred_username", "admin@hubble.cafe")
-                .claim("name", "Admin"));
-    }
-
     private static String event(String bar, String subscribeLink) {
         return """
                 {"bar":"%s","title":"Pub quiz","date":"2026-12-01","published":true,"subscribeLink":%s}
@@ -51,7 +44,7 @@ class RequestHardeningTest {
     @ParameterizedTest
     @ValueSource(strings = {"javascript:alert(1)", "data:text/html,hi", "www.example.com", "https://a b.example"})
     void anEventSignUpLinkMustBeAWebLink(String link) throws Exception {
-        mockMvc.perform(post("/api/admin/events").with(asAdmin())
+        mockMvc.perform(post("/api/admin/events").with(token("hardening-admin-oid"))
                         .contentType("application/json").content(event("HUBBLE", link)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("subscribeLink must start with https:// or http://"));
@@ -60,17 +53,17 @@ class RequestHardeningTest {
     @ParameterizedTest
     @ValueSource(strings = {"https://forms.office.com/r/abc", "HTTP://example.com/x?y=1", ""})
     void anEventAcceptsAWebLinkOrNone(String link) throws Exception {
-        mockMvc.perform(post("/api/admin/events").with(asAdmin())
+        mockMvc.perform(post("/api/admin/events").with(token("hardening-admin-oid"))
                         .contentType("application/json").content(event("HUBBLE", link)))
                 .andExpect(status().is2xxSuccessful());
-        mockMvc.perform(post("/api/admin/events").with(asAdmin())
+        mockMvc.perform(post("/api/admin/events").with(token("hardening-admin-oid"))
                         .contentType("application/json").content(event("METEOR", null)))
                 .andExpect(status().is2xxSuccessful());
     }
 
     @Test
     void aVacancyApplyLinkMustBeAWebLink() throws Exception {
-        mockMvc.perform(post("/api/admin/vacancies").with(asAdmin()).contentType("application/json")
+        mockMvc.perform(post("/api/admin/vacancies").with(token("hardening-admin-oid")).contentType("application/json")
                         .content("{\"title\":\"Bartender\",\"applyLink\":\"javascript:alert(1)\",\"active\":true}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("applyLink must start with https:// or http://"));
@@ -78,13 +71,13 @@ class RequestHardeningTest {
 
     @Test
     void aVacancyApplyEmailMustBeAPlainAddress() throws Exception {
-        mockMvc.perform(post("/api/admin/vacancies").with(asAdmin()).contentType("application/json")
+        mockMvc.perform(post("/api/admin/vacancies").with(token("hardening-admin-oid")).contentType("application/json")
                         .content("{\"title\":\"Bartender\",\"applyEmail\":\"jobs@hubble.cafe?bcc=x@evil.example\","
                                 + "\"active\":true}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("applyEmail must be an e-mail address"));
 
-        mockMvc.perform(post("/api/admin/vacancies").with(asAdmin()).contentType("application/json")
+        mockMvc.perform(post("/api/admin/vacancies").with(token("hardening-admin-oid")).contentType("application/json")
                         .content("{\"title\":\"Bartender\",\"applyEmail\":\"jobs@hubble.cafe\","
                                 + "\"applyLink\":\"https://hubble.cafe/jobs\",\"active\":true}"))
                 .andExpect(status().is2xxSuccessful());
@@ -94,7 +87,7 @@ class RequestHardeningTest {
 
     @Test
     void anUnknownBarOnAnEventSaysSoWithoutJavaClassNames() throws Exception {
-        mockMvc.perform(post("/api/admin/events").with(asAdmin())
+        mockMvc.perform(post("/api/admin/events").with(token("hardening-admin-oid"))
                         .contentType("application/json").content(event("ATLANTIS", null)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Unknown bar: ATLANTIS. Use HUBBLE or METEOR."));
@@ -102,7 +95,7 @@ class RequestHardeningTest {
 
     @Test
     void anUnknownBarOnAnUploadSaysSoWithoutJavaClassNames() throws Exception {
-        mockMvc.perform(multipart("/api/admin/media").with(asAdmin())
+        mockMvc.perform(multipart("/api/admin/media").with(token("hardening-admin-oid"))
                         .file(new MockMultipartFile("file", "logo.png", "image/png", TestImages.png(2, 2)))
                         .param("bar", "ATLANTIS"))
                 .andExpect(status().isBadRequest())
@@ -114,7 +107,7 @@ class RequestHardeningTest {
 
     @Test
     void theHealthCheckShowsNoDetailsEvenToASignedInUser() throws Exception {
-        mockMvc.perform(get("/actuator/health").with(asAdmin()))
+        mockMvc.perform(get("/actuator/health").with(token("hardening-admin-oid")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.status").value("UP"))
                 .andExpect(content().string(not(containsString("components"))))

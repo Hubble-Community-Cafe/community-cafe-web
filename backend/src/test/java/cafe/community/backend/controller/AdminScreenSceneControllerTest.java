@@ -4,8 +4,6 @@ import cafe.community.backend.aurora.AuroraClient;
 import cafe.community.backend.model.AccessLevel;
 import cafe.community.backend.model.AccessPreset;
 import cafe.community.backend.model.AdminModule;
-import cafe.community.backend.model.AdminRole;
-import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.ScreenScene;
 import cafe.community.backend.repository.AdminUserRepository;
 import cafe.community.backend.service.ScreenSceneService;
@@ -23,10 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
+import static cafe.community.backend.TestUsers.withAccess;
+import static cafe.community.backend.TestUsers.withPreset;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -58,32 +57,9 @@ class AdminScreenSceneControllerTest {
         userRepo.deleteAllInBatch();
     }
 
-    private RequestPostProcessor as(String oid, AccessPreset preset) {
-        AdminUser u = new AdminUser();
-        u.setAzureOid(oid);
-        u.setEmail(oid + "@test.invalid");
-        u.setDisplayName(oid);
-        preset.applyTo(u);
-        userRepo.saveAndFlush(u);
-        return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
-    }
-
-    /** Seed a user with exactly these permissions and no old-role extras. */
-    private RequestPostProcessor withAccess(String oid, Map<AdminModule, AccessLevel> permissions) {
-        AdminUser u = new AdminUser();
-        u.setAzureOid(oid);
-        u.setEmail(oid + "@test.invalid");
-        u.setRole(AdminRole.STAFF);
-        u.getPermissions().putAll(permissions);
-        // Flushed: the filter's last-seen update clears the persistence context, which would drop
-        // permission rows still waiting to be written.
-        userRepo.saveAndFlush(u);
-        return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
-    }
-
     @Test
     void screensView_readsTheStateButCannotSwitch() throws Exception {
-        RequestPostProcessor looker = withAccess("looker", Map.of(AdminModule.SCREENS, AccessLevel.VIEW));
+        RequestPostProcessor looker = withAccess(userRepo, "looker", Map.of(AdminModule.SCREENS, AccessLevel.VIEW));
 
         mockMvc.perform(get("/api/admin/screens/scene").with(looker)).andExpect(status().isOk());
         mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(looker)).andExpect(status().isForbidden());
@@ -92,13 +68,13 @@ class AdminScreenSceneControllerTest {
 
     @Test
     void withoutScreensAccess_theStateIsHidden() throws Exception {
-        mockMvc.perform(get("/api/admin/screens/scene").with(withAccess("nobody", Map.of())))
+        mockMvc.perform(get("/api/admin/screens/scene").with(withAccess(userRepo, "nobody", Map.of())))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void screenPostersAlone_setsPostersAndReadsTheStateButCannotSwitch() throws Exception {
-        RequestPostProcessor setup = withAccess("setup", Map.of(AdminModule.SCREEN_POSTERS, AccessLevel.EDIT));
+        RequestPostProcessor setup = withAccess(userRepo, "setup", Map.of(AdminModule.SCREEN_POSTERS, AccessLevel.EDIT));
 
         mockMvc.perform(put("/api/admin/screens/settings").with(setup)
                         .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
@@ -110,7 +86,7 @@ class AdminScreenSceneControllerTest {
     @Test
     void screensEdit_cannotSetPosters() throws Exception {
         mockMvc.perform(put("/api/admin/screens/settings")
-                        .with(withAccess("shift", Map.of(AdminModule.SCREENS, AccessLevel.EDIT)))
+                        .with(withAccess(userRepo, "shift", Map.of(AdminModule.SCREENS, AccessLevel.EDIT)))
                         .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
                 .andExpect(status().isForbidden());
     }
@@ -130,34 +106,34 @@ class AdminScreenSceneControllerTest {
 
     @Test
     void viewer_canReadStatus() throws Exception {
-        mockMvc.perform(get("/api/admin/screens/scene").with(as("viewer-1", AccessPreset.VIEWER)))
+        mockMvc.perform(get("/api/admin/screens/scene").with(withPreset(userRepo, "viewer-1", AccessPreset.VIEWER)))
                 .andExpect(status().isOk());
     }
 
     @Test
     void viewer_canApplyAScene() throws Exception {
-        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(as("viewer-2", AccessPreset.VIEWER)))
+        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(withPreset(userRepo, "viewer-2", AccessPreset.VIEWER)))
                 .andExpect(status().isNoContent());
         verify(sceneService).apply(ScreenScene.CLOSED);
     }
 
     @Test
     void viewer_cannotChangeThePosterMapping() throws Exception {
-        mockMvc.perform(put("/api/admin/screens/settings").with(as("viewer-3", AccessPreset.VIEWER))
+        mockMvc.perform(put("/api/admin/screens/settings").with(withPreset(userRepo, "viewer-3", AccessPreset.VIEWER))
                         .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void editor_canChangeThePosterMapping() throws Exception {
-        mockMvc.perform(put("/api/admin/screens/settings").with(as("editor-1", AccessPreset.EDITOR))
+        mockMvc.perform(put("/api/admin/screens/settings").with(withPreset(userRepo, "editor-1", AccessPreset.EDITOR))
                         .contentType(MediaType.APPLICATION_JSON).content(SETTINGS_BODY))
                 .andExpect(status().isOk());
     }
 
     @Test
     void unknownScene_isRejected() throws Exception {
-        mockMvc.perform(post("/api/admin/screens/scene/PARTY").with(as("viewer-4", AccessPreset.VIEWER)))
+        mockMvc.perform(post("/api/admin/screens/scene/PARTY").with(withPreset(userRepo, "viewer-4", AccessPreset.VIEWER)))
                 .andExpect(status().isBadRequest());
         verify(sceneService, never()).apply(any());
     }
@@ -167,7 +143,7 @@ class AdminScreenSceneControllerTest {
         org.mockito.Mockito.doThrow(new IllegalArgumentException("No poster is configured for the Closed scene."))
                 .when(sceneService).apply(ScreenScene.CLOSED);
 
-        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(as("viewer-5", AccessPreset.VIEWER)))
+        mockMvc.perform(post("/api/admin/screens/scene/CLOSED").with(withPreset(userRepo, "viewer-5", AccessPreset.VIEWER)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("No poster is configured for the Closed scene."));
     }
@@ -177,7 +153,7 @@ class AdminScreenSceneControllerTest {
         org.mockito.Mockito.doThrow(new cafe.community.backend.aurora.AuroraException("Could not reach Aurora"))
                 .when(sceneService).apply(ScreenScene.OPEN);
 
-        mockMvc.perform(post("/api/admin/screens/scene/OPEN").with(as("viewer-6", AccessPreset.VIEWER)))
+        mockMvc.perform(post("/api/admin/screens/scene/OPEN").with(withPreset(userRepo, "viewer-6", AccessPreset.VIEWER)))
                 .andExpect(status().isBadGateway())
                 .andExpect(jsonPath("$.message").value("Could not reach Aurora"));
     }

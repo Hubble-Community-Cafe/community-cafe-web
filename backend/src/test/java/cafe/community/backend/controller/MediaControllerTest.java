@@ -13,7 +13,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -54,8 +54,7 @@ class MediaControllerTest {
         mockMvc.perform(multipart("/api/admin/media")
                         .file(jpeg("event.jpg"))
                         .param("alt", "An event photo")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.filename").exists())
                 .andExpect(jsonPath("$.url").value(org.hamcrest.Matchers.containsString("/media/")))
@@ -69,8 +68,7 @@ class MediaControllerTest {
 
         mockMvc.perform(multipart("/api/admin/media")
                         .file(pdf)
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isBadRequest());
     }
 
@@ -78,13 +76,11 @@ class MediaControllerTest {
     void list_returnsUploadedAssets() throws Exception {
         mockMvc.perform(multipart("/api/admin/media")
                         .file(jpeg("a.jpg"))
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isCreated());
 
         mockMvc.perform(get("/api/admin/media")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
@@ -93,16 +89,14 @@ class MediaControllerTest {
     void delete_removesAsset() throws Exception {
         String response = mockMvc.perform(multipart("/api/admin/media")
                         .file(jpeg("b.jpg"))
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
 
         long id = com.jayway.jsonpath.JsonPath.parse(response).read("$.id", Long.class);
 
         mockMvc.perform(delete("/api/admin/media/" + id)
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
     }
 }

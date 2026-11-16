@@ -15,7 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -68,8 +68,7 @@ class BoardControllerTest {
     @Test
     void adminCreateTerm_returnsCreated() throws Exception {
         mockMvc.perform(post("/api/admin/board/terms")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"label":"2024-2025","type":"EXECUTIVE","current":true,"sortOrder":0}
@@ -85,8 +84,7 @@ class BoardControllerTest {
         var term = service.createTerm(new BoardTermRequest("2024-2025", "EXECUTIVE", null, true, 0, null, null));
 
         mockMvc.perform(post("/api/admin/board/terms/" + term.id() + "/members")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"Alice","role":"President","sortOrder":0}
@@ -101,8 +99,7 @@ class BoardControllerTest {
         var term = service.createTerm(new BoardTermRequest("Old", "EXECUTIVE", null, false, 0, null, null));
 
         mockMvc.perform(put("/api/admin/board/terms/" + term.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"label":"New","type":"EXECUTIVE","current":true,"sortOrder":0}
@@ -116,8 +113,7 @@ class BoardControllerTest {
         var term = service.createTerm(new BoardTermRequest("Gone", "EXECUTIVE", null, false, 0, null, null));
 
         mockMvc.perform(delete("/api/admin/board/terms/" + term.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
     }
 
@@ -128,8 +124,7 @@ class BoardControllerTest {
                 new cafe.community.backend.dto.BoardMemberRequest("Bob", "Treasurer", null, 0));
 
         mockMvc.perform(delete("/api/admin/board/members/" + member.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
     }
 }

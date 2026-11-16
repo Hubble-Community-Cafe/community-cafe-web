@@ -14,7 +14,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -65,8 +65,7 @@ class VacancyControllerTest {
     @Test
     void adminCreate_returnsCreated() throws Exception {
         mockMvc.perform(post("/api/admin/vacancies")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"title":"Manager","bar":"HUBBLE","active":true,"sortOrder":0}
@@ -81,8 +80,7 @@ class VacancyControllerTest {
         var v = service.create(req("Old", "HUBBLE", true));
 
         mockMvc.perform(put("/api/admin/vacancies/" + v.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"title":"New","bar":"HUBBLE","active":true,"sortOrder":0}
@@ -96,8 +94,7 @@ class VacancyControllerTest {
         var v = service.create(req("Gone", "HUBBLE", true));
 
         mockMvc.perform(delete("/api/admin/vacancies/" + v.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
     }
 }

@@ -9,10 +9,9 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -31,12 +30,6 @@ class OpeningHoursTimeValidationTest {
 
     @Autowired MockMvc mockMvc;
 
-    private RequestPostProcessor asAdmin() {
-        return jwt().jwt(j -> j.claim("oid", "hours-time-admin-oid")
-                .claim("preferred_username", "admin@hubble.cafe")
-                .claim("name", "Admin"));
-    }
-
     @ParameterizedTest
     @CsvSource({
             "open, 99:99", "open, 24:00", "close, 23:60", "close, 2300",
@@ -47,7 +40,7 @@ class OpeningHoursTimeValidationTest {
                 {"open":"10:00","close":"23:00","kitchenOpen":"17:00","kitchenClose":"21:00"}
                 """.replace("\"" + field + "\":\"" + original(field) + "\"", "\"" + field + "\":\"" + bad + "\"");
 
-        mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/MONDAY").with(asAdmin())
+        mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/MONDAY").with(token("hours-time-admin-oid"))
                         .contentType("application/json").content(body))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(field + " must be a time like 20:30"));
@@ -56,7 +49,7 @@ class OpeningHoursTimeValidationTest {
     @ParameterizedTest
     @ValueSource(strings = {"00:00", "23:59"})
     void weeklyHours_acceptTheWholeDay(String time) throws Exception {
-        mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/TUESDAY").with(asAdmin())
+        mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/TUESDAY").with(token("hours-time-admin-oid"))
                         .contentType("application/json")
                         .content("{\"open\":\"" + time + "\",\"close\":\"" + time + "\"}"))
                 .andExpect(status().isOk());
@@ -65,7 +58,7 @@ class OpeningHoursTimeValidationTest {
     @ParameterizedTest
     @CsvSource({"open, 10:61, 18:00", "close, 10:00, 24:00", "open, 99:99, 18:00"})
     void overrides_rejectATimeThatIsNotARealTime(String field, String open, String close) throws Exception {
-        mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides").with(asAdmin())
+        mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides").with(token("hours-time-admin-oid"))
                         .contentType("application/json")
                         .content("""
                                 {"date":"2026-12-24","closed":false,"open":"%s","close":"%s"}
@@ -77,7 +70,7 @@ class OpeningHoursTimeValidationTest {
     @ParameterizedTest
     @CsvSource({"10:00, 18:00", "18:00, 02:00"})
     void overrides_acceptRealTimes(String open, String close) throws Exception {
-        mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides").with(asAdmin())
+        mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides").with(token("hours-time-admin-oid"))
                         .contentType("application/json")
                         .content("""
                                 {"date":"2026-12-24","closed":false,"open":"%s","close":"%s"}

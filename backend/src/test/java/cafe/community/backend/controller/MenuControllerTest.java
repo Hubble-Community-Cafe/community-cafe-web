@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -102,13 +102,13 @@ class MenuControllerTest {
         MenuItemDto created = menuService.createItem(cat.id(), new MenuItemRequest(
                 "Burger", null, new BigDecimal("9.00"), null, List.of(), List.of(), List.of(), photo.getId(), 1, true));
 
-        mockMvc.perform(get("/api/admin/menu/categories/" + cat.id() + "/items").with(asAdmin()))
+        mockMvc.perform(get("/api/admin/menu/categories/" + cat.id() + "/items").with(token("menu-admin-oid")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].imageId").value(photo.getId()))
                 .andExpect(jsonPath("$[0].imageUrl").value("https://api.test/media/dish.jpg"));
 
         // What the admin form now sends on save: the same imageId back.
-        mockMvc.perform(put("/api/admin/menu/items/" + created.id()).with(asAdmin())
+        mockMvc.perform(put("/api/admin/menu/items/" + created.id()).with(token("menu-admin-oid"))
                         .contentType("application/json")
                         .content("""
                                 {"name":"Burger deluxe","regularPrice":9.5,"sizeOptions":[],"dietaryTags":[],
@@ -126,7 +126,7 @@ class MenuControllerTest {
                 LocalDate.now(), "Lasagna", null, new BigDecimal("9.00"), photo.getId()));
         org.junit.jupiter.api.Assertions.assertEquals(photo.getId(), created.imageId());
 
-        mockMvc.perform(put("/api/admin/daily-dish/" + created.id()).with(asAdmin())
+        mockMvc.perform(put("/api/admin/daily-dish/" + created.id()).with(token("menu-admin-oid"))
                         .contentType("application/json")
                         .content("""
                                 {"date":"%s","name":"Lasagna al forno","price":9.5,"imageId":%d}
@@ -145,19 +145,11 @@ class MenuControllerTest {
     @Test
     void adminMenu_allowedForAdmin() throws Exception {
         mockMvc.perform(get("/api/admin/menu/categories")
-                        .with(jwt().jwt(j -> j.claim("oid", "menu-admin-oid")
-                                .claim("preferred_username", "admin@hubble.cafe")
-                                .claim("name", "Admin"))))
+                        .with(token("menu-admin-oid")))
                 .andExpect(status().isOk());
     }
 
     // ===== Visibility toggle endpoints =====
-
-    private org.springframework.test.web.servlet.request.RequestPostProcessor asAdmin() {
-        return jwt().jwt(j -> j.claim("oid", "menu-admin-oid")
-                .claim("preferred_username", "admin@hubble.cafe")
-                .claim("name", "Admin"));
-    }
 
     @Test
     void toggleCategory_requiresAuth() throws Exception {
@@ -182,7 +174,7 @@ class MenuControllerTest {
         mockMvc.perform(get("/api/menu/HUBBLE")).andExpect(jsonPath("$.length()").value(1));
 
         mockMvc.perform(patch("/api/admin/menu/categories/" + tab.id() + "/active")
-                        .with(asAdmin())
+                        .with(token("menu-admin-oid"))
                         .contentType("application/json").content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
@@ -201,7 +193,7 @@ class MenuControllerTest {
                 List.of(), List.of(), List.of(), null, 1, true));
 
         mockMvc.perform(patch("/api/admin/menu/items/" + item.id() + "/active")
-                        .with(asAdmin())
+                        .with(token("menu-admin-oid"))
                         .contentType("application/json").content("{\"active\":false}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.active").value(false));
@@ -230,7 +222,7 @@ class MenuControllerTest {
         MenuItemDto item = seedItem("Mojito", "7.00");
 
         mockMvc.perform(patch("/api/admin/menu/items/bulk-price")
-                        .with(asAdmin())
+                        .with(token("menu-admin-oid"))
                         .contentType("application/json")
                         .content("{\"ids\":[" + item.id() + "],\"regularPrice\":7.50}"))
                 .andExpect(status().isOk())
@@ -250,7 +242,7 @@ class MenuControllerTest {
     @Test
     void bulkPrice_rejectsAnEmptySelection() throws Exception {
         mockMvc.perform(patch("/api/admin/menu/items/bulk-price")
-                        .with(asAdmin())
+                        .with(token("menu-admin-oid"))
                         .contentType("application/json")
                         .content("{\"ids\":[],\"regularPrice\":7.50}"))
                 .andExpect(status().isBadRequest());
@@ -265,7 +257,7 @@ class MenuControllerTest {
                 new MenuCategoryRequest("Shots", MenuKind.DRINK, null, 1, BarLocation.HUBBLE, tab.id()));
 
         mockMvc.perform(patch("/api/admin/menu/items/bulk-move")
-                        .with(asAdmin())
+                        .with(token("menu-admin-oid"))
                         .contentType("application/json")
                         .content("{\"ids\":[" + item.id() + "],\"categoryId\":" + target.id() + "}"))
                 .andExpect(status().isOk())

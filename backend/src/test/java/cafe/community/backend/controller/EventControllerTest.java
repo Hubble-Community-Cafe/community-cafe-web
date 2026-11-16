@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -76,8 +76,7 @@ class EventControllerTest {
                 """.formatted(LocalDate.now().plusDays(7));
 
         mockMvc.perform(post("/api/admin/events")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isCreated())
@@ -91,8 +90,7 @@ class EventControllerTest {
     @ValueSource(strings = {"8pm", "20.00", "25:00", "20:60", "99:99", "2000", "20:00:00", " 20:00"})
     void adminCreate_rejectsAStartTimeThatIsNotATime(String startTime) throws Exception {
         mockMvc.perform(post("/api/admin/events")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"bar":"HUBBLE","title":"Quiz Night","date":"%s","startTime":"%s","published":true}
@@ -106,8 +104,7 @@ class EventControllerTest {
     @ValueSource(strings = {"00:00", "09:05", "23:59", ""})
     void adminCreate_acceptsAnyRealTimeOrNone(String startTime) throws Exception {
         mockMvc.perform(post("/api/admin/events")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"bar":"HUBBLE","title":"Quiz Night","date":"%s","startTime":"%s","published":true}
@@ -126,8 +123,7 @@ class EventControllerTest {
                 """.formatted(LocalDate.now().plusDays(3));
 
         mockMvc.perform(put("/api/admin/events/" + created.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().isOk())
@@ -139,8 +135,7 @@ class EventControllerTest {
         var created = service.create(futureReq("HUBBLE", "To Delete"));
 
         mockMvc.perform(delete("/api/admin/events/" + created.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/events/HUBBLE"))
@@ -155,8 +150,7 @@ class EventControllerTest {
         service.create(futureReq("HUBBLE", "Future"));
 
         mockMvc.perform(get("/api/admin/events/HUBBLE")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }

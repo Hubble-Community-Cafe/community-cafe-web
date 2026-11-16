@@ -17,13 +17,12 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
 
+import static cafe.community.backend.TestUsers.token;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -61,7 +60,7 @@ class MediaDeleteIntegrationTest {
         event.setImage(asset);
         eventRepo.save(event);
 
-        mockMvc.perform(delete("/api/admin/media/" + asset.getId()).with(editor()))
+        mockMvc.perform(delete("/api/admin/media/" + asset.getId()).with(token("editor-oid")))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.message").value(
                         "This image is still used by the event 'Pub quiz'. Choose another image there first."));
@@ -75,7 +74,7 @@ class MediaDeleteIntegrationTest {
         MediaAsset asset = upload("old.jpg");
         assertThat(file(asset)).exists();
 
-        mockMvc.perform(delete("/api/admin/media/" + asset.getId()).with(editor()))
+        mockMvc.perform(delete("/api/admin/media/" + asset.getId()).with(token("editor-oid")))
                 .andExpect(status().isNoContent());
 
         assertThat(mediaRepo.existsById(asset.getId())).isFalse();
@@ -85,7 +84,7 @@ class MediaDeleteIntegrationTest {
     private MediaAsset upload(String name) throws Exception {
         String body = mockMvc.perform(multipart("/api/admin/media")
                         .file(new MockMultipartFile("file", name, "image/jpeg", TestImages.jpeg(8, 8)))
-                        .with(editor()))
+                        .with(token("editor-oid")))
                 .andExpect(status().isCreated())
                 .andReturn().getResponse().getContentAsString();
         long id = JsonPath.parse(body).read("$.id", Long.class);
@@ -96,7 +95,4 @@ class MediaDeleteIntegrationTest {
         return Path.of(env.getRequiredProperty("app.media-dir"), asset.getFilename());
     }
 
-    private static RequestPostProcessor editor() {
-        return jwt().jwt(j -> j.claim("oid", "editor-oid").claim("preferred_username", "editor@test.invalid"));
-    }
 }
