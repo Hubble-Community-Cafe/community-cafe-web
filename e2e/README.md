@@ -50,7 +50,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Status banner (Meteor) | n/a | ✅ | n/a | ✅ |
 | Events | ✅ | ✅ | ✅ | ✅ |
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
-| Vacancies | ✅ | n/a | ✅ | ✅ |
+| Vacancies | ✅ | ✅ | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Media library (upload, size limit, real file type) | n/a | n/a | ✅ | ⬜ |
 | Access per tab (hidden / view / edit, new account without access, old-role presets, Screens split) | n/a | n/a | ✅ | ✅ |

@@ -3,6 +3,7 @@ import { BACKEND_URL } from '../../playwright.config'
 import { resetBackend, seedAssociation, seedUser, setUiRole, SEEDER_OID } from '../../fixtures/backend'
 import { watchCspViolations, expectEnforcingCsp, expectNoCspViolations } from '../../fixtures/csp'
 import { expectSecurityHeadersEverywhere } from '../../fixtures/securityHeaders'
+import { ADMIN_ROUTES } from '../../fixtures/a11y'
 
 /** A valid 1x1 PNG, so the browser really decodes an image served from the API origin. */
 const PNG_1X1 = Buffer.from(
@@ -41,13 +42,13 @@ test('every admin page loads under the Content-Security-Policy', async ({ page, 
     BACKEND_URL,
   )
 
-  const routes = ['/menu', '/daily-dish', '/hours', '/events', '/board', '/vacancies', '/associations',
-    '/media', '/screens', '/users', '/audit']
-  for (const route of routes) {
+  for (const route of ADMIN_ROUTES.filter((r) => r !== '/')) {
     await page.goto(route)
     await expect(page.locator('main')).toBeVisible()
-    // Give the page's data requests, images and styles time to load, so a blocked one is reported.
-    await page.waitForTimeout(750)
+    // Let the page's data requests and images finish, so a blocked one is reported: every admin
+    // page shows "Loading…" until its data is in, and an image is complete once loaded or failed.
+    await expect(page.getByText('Loading…')).toHaveCount(0)
+    await page.waitForFunction(() => [...document.images].every((img) => img.complete))
   }
 
   // The uploaded logo, served from the API origin, really rendered (img-src allows it).

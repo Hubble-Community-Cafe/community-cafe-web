@@ -1,9 +1,7 @@
 import { test, expect } from '@playwright/test'
+import { MINIMAL_PDF } from '../../fixtures/files'
 import { clearMailpit, waitForMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
-
-// Minimal valid-enough PDF bytes; the backend checks the content type, not the contents.
-const PDF = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', 'utf8')
 
 test.describe('Hubble e-declaration form', () => {
   test.beforeEach(async ({ request }) => {
@@ -21,7 +19,7 @@ test.describe('Hubble e-declaration form', () => {
     await page.locator('#d-amount').fill('150,04')
     await page.locator('#d-cat').selectOption('Other')
     await page.locator('#d-desc').fill('SVH Exam')
-    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: PDF })
+    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: MINIMAL_PDF })
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Declaration submitted' })).toBeVisible()

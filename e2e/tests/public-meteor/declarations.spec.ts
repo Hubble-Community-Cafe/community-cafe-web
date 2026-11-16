@@ -1,10 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { MINIMAL_PDF } from '../../fixtures/files'
 import { clearMailpit, waitForMessageTo, expectNoMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
 import { MeteorPublic } from '../../pages/MeteorPublic'
-
-// Minimal valid-enough PDF bytes; the backend checks the content type, not the contents.
-const PDF = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', 'utf8')
 
 test.describe('Meteor e-declaration form', () => {
   test.beforeEach(async ({ request }) => {
@@ -22,7 +20,7 @@ test.describe('Meteor e-declaration form', () => {
     await page.locator('#d-amount').fill('40,00')
     await page.locator('#d-cat').selectOption('Bar Costs')
     await page.locator('#d-desc').fill('Ice for the terrace bar')
-    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: PDF })
+    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: MINIMAL_PDF })
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Declaration submitted' })).toBeVisible()

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { resetBackend, seedMenuCategory, seedMenuItem, setUiRole } from '../../fixtures/backend'
+import { resetBackend, seedCocktailMenu, seedMenuCategory, seedMenuItem, setUiRole } from '../../fixtures/backend'
 import { HUBBLE_BASE_URL } from '../../playwright.config'
 import { AdminApp } from '../../pages/AdminApp'
 
@@ -15,27 +15,10 @@ test.describe('Admin menu reordering', () => {
     await setUiRole(request, 'EDITOR')
   })
 
-  /** Tab > sub-heading > three items, seeded through the API so the spec starts at the drag. */
-  async function seedCocktails(request: Parameters<typeof seedMenuCategory>[0]) {
-    const tab = await seedMenuCategory(request, { name: 'E2E Drinks', bar: 'HUBBLE' })
-    const sub = await seedMenuCategory(request, { name: 'E2E Cocktails', bar: 'HUBBLE', parentId: tab.id })
-    for (const name of ['E2E Mojito', 'E2E Negroni', 'E2E Daiquiri']) {
-      await seedMenuItem(request, sub.id, { name, regularPrice: 7 })
-    }
-    return { tab, sub }
-  }
-
-  async function openCocktails(admin: AdminApp, page: import('@playwright/test').Page) {
-    await admin.goto('/menu')
-    await page.getByRole('button', { name: /^E2E Drinks/ }).click()
-    await page.getByRole('button', { name: /^E2E Cocktails/ }).click()
-    await expect(admin.dragHandle('E2E Mojito')).toBeVisible()
-  }
-
   test('dragging an item to the top reorders it on the public menu too', async ({ page, request }) => {
-    await seedCocktails(request)
+    await seedCocktailMenu(request)
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     expect(await admin.itemOrder()).toEqual(['E2E Mojito', 'E2E Negroni', 'E2E Daiquiri'])
 
@@ -59,9 +42,9 @@ test.describe('Admin menu reordering', () => {
 
   /** The handle is a button for a reason: reordering has to work without a pointer. */
   test('an item can be reordered from the keyboard', async ({ page, request }) => {
-    await seedCocktails(request)
+    await seedCocktailMenu(request)
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.reorderWithKeyboard('E2E Mojito', 'ArrowDown', 2)
 
@@ -71,9 +54,9 @@ test.describe('Admin menu reordering', () => {
   })
 
   test('escape abandons a keyboard reorder', async ({ page, request }) => {
-    await seedCocktails(request)
+    await seedCocktailMenu(request)
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.dragHandle('E2E Mojito').focus()
     await page.keyboard.press('Space')
@@ -104,7 +87,7 @@ test.describe('Admin menu reordering', () => {
   })
 
   test('a read-only viewer gets no drag handles', async ({ page, request }) => {
-    await seedCocktails(request)
+    await seedCocktailMenu(request)
     await setUiRole(request, 'VIEWER')
 
     const admin = new AdminApp(page)

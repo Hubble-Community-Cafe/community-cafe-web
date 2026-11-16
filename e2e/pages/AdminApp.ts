@@ -51,6 +51,17 @@ export class AdminApp {
 
   // ── Reordering ──────────────────────────────────────────────────────────────
 
+  /**
+   * Open the Menu page and expand one tab and one section in it, waiting until `firstItem` in
+   * that section can be dragged (so its rows have loaded).
+   */
+  async openMenuSection(tab: string, section: string, firstItem: string): Promise<void> {
+    await this.goto('/menu')
+    await this.page.getByRole('button', { name: new RegExp(`^${tab}`) }).click()
+    await this.page.getByRole('button', { name: new RegExp(`^${section}`) }).click()
+    await expect(this.dragHandle(firstItem)).toBeVisible()
+  }
+
   /** The drag handle of a row, by the name it was given ("Reorder Mojito"). */
   dragHandle(name: string): Locator {
     return this.page.getByRole('button', { name: `Reorder ${name}` })
