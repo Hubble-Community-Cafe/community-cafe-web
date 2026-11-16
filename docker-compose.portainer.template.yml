@@ -15,6 +15,9 @@
 # Every port is bound to 127.0.0.1, where the proxy reaches it. Without the address Docker
 # publishes on all interfaces (bypassing ufw), so anyone could talk plain HTTP to the containers
 # on the host IP, skipping TLS and the X-Real-IP header the backend rate limiter keys on.
+# The proxy must SET (overwrite) X-Real-IP to the client address, for example nginx
+# `proxy_set_header X-Real-IP $remote_addr;` or Caddy `header_up X-Real-IP {remote_host}`.
+# The backend trusts that header only from loopback/private peers such as this proxy.
 
 services:
   backend:
