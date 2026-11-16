@@ -1,19 +1,12 @@
 import { PublicClientApplication } from '@azure/msal-browser'
+import { runtimeConfig } from '@cafe/shared-web'
 import { getE2eAuth } from '../e2eAuth'
 import { ActionError, ForbiddenError } from '../actionError'
-// Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts.
+import { AZURE_CLIENT_ID } from '../authConfig'
 
-const getApiUrl = (): string => {
-  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL
-  if (runtimeUrl && !runtimeUrl.startsWith('__')) {
-    return runtimeUrl
-  }
-  // In containers the API_URL is injected at startup; locally default to the
-  // documented dev backend so the app loads without a .env.
-  return import.meta.env.VITE_API_URL || 'http://localhost:8080'
-}
-
-const API_BASE_URL = getApiUrl()
+// In containers the API_URL is injected at startup; locally default to the documented dev backend
+// so the app loads without a .env.
+const API_BASE_URL = runtimeConfig('API_URL') ?? (import.meta.env.VITE_API_URL || 'http://localhost:8080')
 
 export { ForbiddenError }
 
@@ -28,12 +21,8 @@ export const clearAuth = () => {
 }
 
 // Azure AD returns a token for ONE resource at a time, so we request only the
-// API scope here (never mixed with Graph scopes).
-const getApiScope = () => {
-  const clientId =
-    window.__RUNTIME_CONFIG__?.AZURE_CLIENT_ID || import.meta.env.VITE_AZURE_CLIENT_ID
-  return `api://${clientId}/access_as_user`
-}
+// API scope here (never mixed with Graph scopes). The same client id sign-in uses.
+const getApiScope = () => `api://${AZURE_CLIENT_ID}/access_as_user`
 
 const getAccessToken = async (): Promise<string | null> => {
   if (!msalInstance) {
