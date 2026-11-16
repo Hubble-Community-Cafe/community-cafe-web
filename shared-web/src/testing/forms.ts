@@ -19,3 +19,18 @@ export function expectHiddenHoneypot(container: HTMLElement): void {
 export function file(name: string, type: string, bytes = 3): File {
   return new File([new Uint8Array(bytes)], name, { type })
 }
+
+/** `{error && <p …>` or `{loadError && (\n <div …>`: an error shown only when something failed. */
+const ERROR_ELEMENT = /\{\s*(\w*(?:error|Error))\s*&&\s*\(?\s*<(\w+)\b([^>]*)>/g
+
+/**
+ * Error messages that appear without `role="alert"`, as "file:line". Screen readers only announce
+ * text that appears later when it is marked as an alert, so without it a failed load or save
+ * passes in silence. Pass the app's component sources, read with `import.meta.glob(…, '?raw')`.
+ */
+export function unannouncedErrors(sources: Record<string, string>): string[] {
+  return Object.entries(sources).flatMap(([file, source]) =>
+    [...source.matchAll(ERROR_ELEMENT)]
+      .filter((match) => !/\brole="alert"/.test(match[3]))
+      .map((match) => `${file}:${source.slice(0, match.index).split('\n').length}`))
+}

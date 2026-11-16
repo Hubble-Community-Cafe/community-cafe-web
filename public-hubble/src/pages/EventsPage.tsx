@@ -61,7 +61,7 @@ export function EventsPage() {
         <p className="text-sm text-hubble-700/70">Loading…</p>
       )}
       {error && (
-        <p className="text-sm text-red-600">Could not load the events. Please try again later.</p>
+        <p role="alert" className="text-sm text-red-600">Could not load the events. Please try again later.</p>
       )}
       {loaded && !error && events.length === 0 && (
         <p className="text-sm text-hubble-700/70">No upcoming events at the moment. Check back soon!</p>

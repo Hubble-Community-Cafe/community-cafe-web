@@ -100,7 +100,7 @@ export function MenuPage() {
 
       {isLoading && <MenuSkeleton />}
       {error && (
-        <p className="mt-8 text-sm text-red-700">Could not load the menu. Please try again later.</p>
+        <p role="alert" className="mt-8 text-sm text-red-700">Could not load the menu. Please try again later.</p>
       )}
 
       {!isLoading && !error && tabs.length > 0 && (

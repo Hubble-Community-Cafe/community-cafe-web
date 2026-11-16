@@ -108,7 +108,7 @@ export function VacanciesPage() {
             <p className="mt-10 text-sm text-hubble-700/70">Loading…</p>
           )}
           {error && (
-            <p className="mt-10 text-sm text-red-600">Could not load the open positions. Please try again later.</p>
+            <p role="alert" className="mt-10 text-sm text-red-600">Could not load the open positions. Please try again later.</p>
           )}
           {loaded && vacancies.length > 0 && (
             <div className="mt-10 space-y-4">

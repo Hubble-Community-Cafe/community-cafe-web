@@ -136,7 +136,7 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
       </div>
 
       {error && (
-        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
       {panel === 'price' && (

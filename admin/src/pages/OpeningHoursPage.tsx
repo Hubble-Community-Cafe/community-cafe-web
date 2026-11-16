@@ -122,7 +122,7 @@ function DayRow({
                 Mark closed
               </button>
             )}
-            {error && <span className="text-xs text-red-600">{error}</span>}
+            {error && <span role="alert" className="text-xs text-red-600">{error}</span>}
           </div>
         </td>
       </tr>
@@ -351,7 +351,7 @@ export function OpeningHoursPage() {
       </div>
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <>

@@ -48,7 +48,7 @@ describe('Hubble DailyDishPage', () => {
   it('shows an error and reports it when loading fails', async () => {
     mockGetDishes.mockRejectedValue(new Error('down'))
     renderDish()
-    expect(await screen.findByText("Could not load today's dish. Try again later.")).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent("Could not load today's dish. Try again later.")
     expect(mockReport).toHaveBeenCalledWith('daily-dish', expect.any(Error))
   })
 })

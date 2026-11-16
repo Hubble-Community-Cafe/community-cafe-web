@@ -73,7 +73,7 @@ export function BoardPage() {
       )}
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && terms.length === 0 && !creating && (
         <p className="text-sm text-slate-500">No board terms yet.</p>

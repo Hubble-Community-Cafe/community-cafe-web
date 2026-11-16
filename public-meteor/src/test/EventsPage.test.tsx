@@ -38,7 +38,7 @@ describe('Meteor EventsPage (agenda)', () => {
   it('shows an error instead of an empty agenda when loading fails, and reports it', async () => {
     getUpcomingEvents.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the events. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the events. Please try again later.')
     expect(screen.queryByText(/No upcoming events/)).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('events', expect.any(Error))
   })

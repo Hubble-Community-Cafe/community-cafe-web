@@ -30,7 +30,7 @@ describe('saving an event the backend refuses', () => {
     vi.mocked(createEvent).mockRejectedValue(new ActionError('Start time must be a time like 20:30'))
     await submitNewEvent()
 
-    expect(await screen.findByText('Start time must be a time like 20:30')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Start time must be a time like 20:30')
     expect(screen.queryByText('Failed to save event')).not.toBeInTheDocument()
   })
 
@@ -38,7 +38,7 @@ describe('saving an event the backend refuses', () => {
     vi.mocked(createEvent).mockRejectedValue(new Error('Request failed (500) for /api/admin/events'))
     await submitNewEvent()
 
-    expect(await screen.findByText('Failed to save event')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Failed to save event')
     expect(screen.queryByText(/Request failed/)).not.toBeInTheDocument()
   })
 })

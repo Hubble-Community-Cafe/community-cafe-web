@@ -204,7 +204,7 @@ export function MediaPage() {
       )}
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && assets.length === 0 && (
         <p className="text-sm text-slate-600">No images uploaded yet.</p>

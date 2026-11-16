@@ -76,7 +76,7 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
   return (
     <form onSubmit={submit} className="space-y-3">
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">

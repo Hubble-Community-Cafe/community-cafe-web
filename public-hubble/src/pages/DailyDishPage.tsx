@@ -37,7 +37,7 @@ export function DailyDishPage() {
         </div>
       )}
       {error && (
-        <p className="mt-6 text-sm text-red-600">Could not load today's dish. Try again later.</p>
+        <p role="alert" className="mt-6 text-sm text-red-600">Could not load today's dish. Try again later.</p>
       )}
 
       {!isLoading && !error && dishes.length === 0 && (

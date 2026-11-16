@@ -40,7 +40,7 @@ describe('Hubble VacanciesPage', () => {
   it('shows an error and reports it when loading fails', async () => {
     getVacancies.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the open positions. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the open positions. Please try again later.')
     expect(reportApiFailure).toHaveBeenCalledWith('vacancies', expect.any(Error))
   })
 

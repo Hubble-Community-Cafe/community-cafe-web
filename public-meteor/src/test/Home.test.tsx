@@ -37,7 +37,7 @@ describe('Meteor Home opening hours', () => {
   it('a failed load shows an error, never "All days: Closed", and is reported', async () => {
     getWeeklyHours.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the opening hours. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the opening hours. Please try again later.')
     expect(screen.queryByText('All days')).not.toBeInTheDocument()
     expect(screen.queryByText('Closed')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('opening-hours', expect.any(Error))

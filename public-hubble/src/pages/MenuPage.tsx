@@ -93,7 +93,7 @@ export function MenuPage() {
 
       {isLoading && <MenuSkeleton />}
       {error && (
-        <p className="text-sm text-red-600">Could not load the menu. Please try again later.</p>
+        <p role="alert" className="text-sm text-red-600">Could not load the menu. Please try again later.</p>
       )}
 
       {!isLoading && !error && tabs.length > 0 && (

@@ -30,7 +30,7 @@ export function AssociationsPage() {
       )}
 
       {error && (
-        <p className="mt-8 text-sm text-red-600">Could not load the associations. Please try again later.</p>
+        <p role="alert" className="mt-8 text-sm text-red-600">Could not load the associations. Please try again later.</p>
       )}
 
       {loaded && !error && associations.length === 0 && (

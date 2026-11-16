@@ -53,7 +53,7 @@ describe('Hubble Home opening times', () => {
   it('shows an error instead of "coming soon" when loading fails, and reports it', async () => {
     getWeeklyHours.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the opening times. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the opening times. Please try again later.')
     expect(screen.queryByText('Opening times coming soon.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('opening-hours', expect.any(Error))
   })

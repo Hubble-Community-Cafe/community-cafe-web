@@ -95,7 +95,7 @@ export function Home() {
           <p className="mt-6 text-center text-sm text-hubble-700/70">Loading…</p>
         )}
         {hoursError && (
-          <p className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
+          <p role="alert" className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
         )}
         {hoursLoaded && !hoursError && hours.length === 0 && (
           <p className="mt-6 text-center text-sm text-hubble-700/70">Opening times coming soon.</p>

@@ -41,7 +41,7 @@ describe('Meteor board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<CurrentBoardPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
     expect(screen.queryByText('Board information coming soon.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('board', expect.any(Error))
   })
@@ -60,6 +60,6 @@ describe('Meteor board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<PreviousBoardsPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
   })
 })

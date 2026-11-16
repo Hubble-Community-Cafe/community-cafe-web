@@ -57,7 +57,7 @@ function DishForm({
       className="rounded-xl border border-hubble-100 bg-hubble-50 p-4 space-y-3"
     >
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
@@ -191,7 +191,7 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
       {isLoading ? (
         <p className="text-sm text-slate-500">Loading…</p>

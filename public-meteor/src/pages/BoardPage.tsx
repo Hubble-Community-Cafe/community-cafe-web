@@ -85,7 +85,7 @@ export function CurrentBoardPage() {
               )}
             </>
           )}
-          {error && <p className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
+          {error && <p role="alert" className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
           {!error && (!term || term.members.length === 0) && (
             <p className="mt-4 text-sm text-meteor-700/70">Board information coming soon.</p>
           )}
@@ -107,7 +107,7 @@ export function PreviousBoardsPage() {
   return (
     <PageShell title="Previous boards">
       {!loaded && <BoardLinesSkeleton />}
-      {error && <p className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
+      {error && <p role="alert" className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
       {loaded && !error && previous.length === 0 && (
         <p className="text-sm text-meteor-700/70">No previous board information available.</p>
       )}

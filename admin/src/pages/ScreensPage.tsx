@@ -138,7 +138,7 @@ export function ScreensPage() {
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {error && (
-        <p className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
         </p>
       )}

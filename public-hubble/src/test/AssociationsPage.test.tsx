@@ -40,7 +40,7 @@ describe('Hubble AssociationsPage', () => {
   it('shows an error instead of the empty text when loading fails, and reports it', async () => {
     getAssociations.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the associations. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the associations. Please try again later.')
     expect(screen.queryByText('No associations listed yet.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('associations', expect.any(Error))
   })

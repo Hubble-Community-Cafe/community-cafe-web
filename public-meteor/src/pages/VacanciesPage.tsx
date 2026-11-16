@@ -52,7 +52,7 @@ export function VacanciesPage() {
         <p className="mt-4 text-sm text-meteor-700/70">Loading…</p>
       )}
       {error && (
-        <p className="mt-4 text-sm text-red-700">Could not load the open positions. Please try again later.</p>
+        <p role="alert" className="mt-4 text-sm text-red-700">Could not load the open positions. Please try again later.</p>
       )}
       {loaded && !error && vacancies.length === 0 && (
         <p className="mt-4 text-sm text-meteor-700/70">No open positions at the moment. Check back soon!</p>

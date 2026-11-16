@@ -124,7 +124,7 @@ export function TermCard({
 
       {expanded && (
         <div className="border-t border-slate-100 px-5 pb-4">
-          {reorderError && <p className="pt-2 text-xs text-red-600">{reorderError}</p>}
+          {reorderError && <p role="alert" className="pt-2 text-xs text-red-600">{reorderError}</p>}
           <SortableList
             items={members}
             getId={(m) => m.id}

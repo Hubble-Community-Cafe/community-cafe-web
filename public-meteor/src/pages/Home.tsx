@@ -111,7 +111,7 @@ export function Home() {
           )}
           {/* Without this, a failed load would list every day as closed. */}
           {hoursError && (
-            <p className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
+            <p role="alert" className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
           )}
           {hoursLoaded && !hoursError && (
             <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">

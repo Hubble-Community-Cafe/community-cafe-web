@@ -62,7 +62,7 @@ describe('Meteor VacanciesPage', () => {
   it('shows an error instead of the empty line when loading fails, and reports it', async () => {
     getVacancies.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the open positions. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the open positions. Please try again later.')
     expect(screen.queryByText(/No open positions/)).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('vacancies', expect.any(Error))
   })

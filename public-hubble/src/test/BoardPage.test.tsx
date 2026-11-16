@@ -45,7 +45,7 @@ describe('Hubble board pages', () => {
   it('current board: shows an error and reports it when loading fails', async () => {
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<CurrentBoardPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
     expect(screen.queryByText('Board information coming soon.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('board', expect.any(Error))
   })
@@ -66,7 +66,7 @@ describe('Hubble board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<PreviousBoardsPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
     expect(screen.queryByText('No previous board information available.')).not.toBeInTheDocument()
   })
 
@@ -83,6 +83,6 @@ describe('Hubble board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<SupervisoryBoardPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
   })
 })

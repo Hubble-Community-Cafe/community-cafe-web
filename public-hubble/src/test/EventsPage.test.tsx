@@ -49,7 +49,7 @@ describe('Hubble EventsPage', () => {
     const failure = new Error('network')
     getUpcomingEvents.mockRejectedValue(failure)
     renderPage()
-    expect(await screen.findByText('Could not load the events. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the events. Please try again later.')
     expect(screen.queryByText(/No upcoming events/)).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('events', failure)
   })
