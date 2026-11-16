@@ -4,8 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 public record WeeklyHoursRequest(
-        @NotNull @Pattern(regexp = "\\d{2}:\\d{2}") String open,
-        @NotNull @Pattern(regexp = "\\d{2}:\\d{2}") String close,
-        @Pattern(regexp = "\\d{2}:\\d{2}") String kitchenOpen,
-        @Pattern(regexp = "\\d{2}:\\d{2}") String kitchenClose
+        @NotNull @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String open,
+        @NotNull @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String close,
+        @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String kitchenOpen,
+        @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String kitchenClose
 ) {}

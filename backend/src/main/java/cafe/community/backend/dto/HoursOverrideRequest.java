@@ -8,7 +8,7 @@ import java.time.LocalDate;
 public record HoursOverrideRequest(
         @NotNull LocalDate date,
         @NotNull Boolean closed,
-        @Pattern(regexp = "\\d{2}:\\d{2}") String open,
-        @Pattern(regexp = "\\d{2}:\\d{2}") String close,
+        @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String open,
+        @Pattern(regexp = TimeOfDay.HH_MM, message = TimeOfDay.MESSAGE) String close,
         String note
 ) {}
