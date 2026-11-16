@@ -2,6 +2,7 @@ package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.AuroraException;
 import cafe.community.backend.service.MediaInUseException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +26,15 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /**
+     * Editing or deleting something that no longer exists, for example a stale admin tab after a
+     * colleague deleted the event. That is a 404, not a server error for Sentry.
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex) {
+        return body(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     /**
