@@ -10,6 +10,7 @@ import {
 } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 import { barToday } from '../../lib/barDate'
+import { useConfirmAction } from '../../lib/confirmAction'
 
 function DishForm({
   initial,
@@ -157,11 +158,16 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
     setEditing(null)
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this daily dish?')) return
-    await deleteDailyDish(id)
-    setDishes((prev) => prev.filter((d) => d.id !== id))
-  }
+  const confirmAction = useConfirmAction()
+  const handleDelete = (dish: DailyDish) => confirmAction({
+    title: 'Delete this daily dish?',
+    message: `"${dish.name}" on ${dish.date} will be removed from the website.`,
+    confirmLabel: 'Delete dish',
+    action: async () => {
+      await deleteDailyDish(dish.id)
+      setDishes((prev) => prev.filter((d) => d.id !== dish.id))
+    },
+  })
 
   return (
     <div>
@@ -222,7 +228,7 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(dish.id)}
+                        onClick={() => handleDelete(dish)}
                         className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                         aria-label="Delete"
                       >

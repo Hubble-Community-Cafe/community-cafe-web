@@ -1,5 +1,5 @@
 import type { BarLocation, Vacancy as SharedVacancy } from '@cafe/shared-web'
-import { fetchWithAuth, getJson, sendNoContent } from './client'
+import { getJson, sendNoContent, deleteResource } from './client'
 
 // ── Vacancy types ──────────────────────────────────────────────────────────────
 export interface Vacancy extends SharedVacancy {
@@ -37,7 +37,7 @@ export const updateVacancy = (id: number, req: VacancyRequest) =>
   })
 
 export const deleteVacancy = (id: number) =>
-  fetchWithAuth(`/api/admin/vacancies/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/vacancies/${id}`, 'the vacancy')
 
 /** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
 export const reorderVacancies = (orderedIds: number[]) =>

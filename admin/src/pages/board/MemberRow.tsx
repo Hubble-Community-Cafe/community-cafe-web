@@ -2,6 +2,7 @@ import { type ReactNode, useState } from 'react'
 import { Trash2, Pencil } from 'lucide-react'
 import { updateBoardMember, deleteBoardMember, type BoardMember } from '../../lib/api'
 import { MemberForm } from './MemberForm'
+import { useConfirmAction } from '../../lib/confirmAction'
 
 export function MemberRow({
   member,
@@ -20,7 +21,7 @@ export function MemberRow({
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
   const setEditingState = (value: boolean) => {
     setEditing(value)
@@ -64,12 +65,16 @@ export function MemberRow({
             className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-3.5 w-3.5" />
           </button>
-          <button onClick={async () => {
-            if (!confirm(`Remove "${member.name}"?`)) return
-            setDeleting(true)
-            try { await deleteBoardMember(member.id); onDeleted() }
-            catch { setDeleting(false) }
-          }} disabled={deleting} aria-label={`Remove ${member.name}`}
+          <button onClick={() => confirmAction({
+            title: 'Remove this board member?',
+            message: `"${member.name}" will be removed from this board term.`,
+            confirmLabel: 'Remove member',
+            busyLabel: 'Removing…',
+            action: async () => {
+              await deleteBoardMember(member.id)
+              onDeleted()
+            },
+          })} aria-label={`Remove ${member.name}`}
             className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
             <Trash2 className="h-3.5 w-3.5" />
           </button>

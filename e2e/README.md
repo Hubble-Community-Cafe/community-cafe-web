@@ -58,6 +58,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Audit log: what each change did (old to new on edits, values on create) | n/a | n/a | ✅ | ✅ |
 | Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Admin Content-Security-Policy (every page, no violations, security headers) | n/a | n/a | ✅ | n/a |
+| Admin delete confirmation (in-app dialog, refusal reason shown, try again or cancel) | n/a | n/a | ✅ | n/a |
 | Security headers on every response (document, assets, config.js, health; no nginx version) | ✅ | ✅ | ✅ | n/a |
 | Accessibility (axe, WCAG 2.2 AA: every page, forms with validation errors) | ✅ | ✅ | ✅ | ✅ |
 | Admin in-app help (a guide on every page, dialog accessible) | n/a | n/a | ✅ | n/a |

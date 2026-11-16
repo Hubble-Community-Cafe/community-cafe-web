@@ -1,5 +1,5 @@
 import type { BarLocation, Association } from '@cafe/shared-web'
-import { fetchWithAuth, getJson } from './client'
+import { getJson, deleteResource } from './client'
 
 // ── Association types ──────────────────────────────────────────────────────────
 
@@ -28,4 +28,4 @@ export const updateAssociation = (id: number, req: AssociationRequest) =>
   })
 
 export const deleteAssociation = (id: number) =>
-  fetchWithAuth(`/api/admin/associations/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/associations/${id}`, 'the association')

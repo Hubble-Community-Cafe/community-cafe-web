@@ -4,6 +4,7 @@ import { usePermissions } from '../lib/usePermissions'
 import { fetchAllMedia, uploadMedia, deleteMedia, type MediaAsset, type BarLocation } from '../lib/api'
 import { formatBytes, validateUploadFile, MAX_UPLOAD_LABEL } from '../lib/upload'
 import { PageHelp } from '../components/HelpGuide'
+import { useConfirmAction } from '../lib/confirmAction'
 
 const BARS: (BarLocation | '')[] = ['', 'HUBBLE', 'METEOR']
 const BAR_LABELS: Record<string, string> = { '': 'Shared', HUBBLE: 'Hubble', METEOR: 'Meteor' }
@@ -12,15 +13,13 @@ function AssetCard({
   asset,
   canEdit,
   onDeleted,
-  onDeleteFailed,
 }: {
   asset: MediaAsset
   canEdit: boolean
   onDeleted: () => void
-  onDeleteFailed: (message: string) => void
 }) {
   const [copied, setCopied] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
   const copyUrl = async () => {
     await navigator.clipboard.writeText(asset.url)
@@ -28,18 +27,16 @@ function AssetCard({
     setTimeout(() => setCopied(false), 1500)
   }
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete "${asset.filename}"? This cannot be undone.`)) return
-    setDeleting(true)
-    try {
+  // A refusal (usually: still used somewhere) stays in the dialog with the backend's reason.
+  const handleDelete = () => confirmAction({
+    title: 'Delete this image?',
+    message: `"${asset.filename}" will be deleted for good. This cannot be undone.`,
+    confirmLabel: 'Delete image',
+    action: async () => {
       await deleteMedia(asset.id)
       onDeleted()
-    } catch (err) {
-      // The image stays in the library; say why (usually what still uses it).
-      onDeleteFailed(err instanceof Error ? err.message : 'Could not delete the image. Please try again.')
-      setDeleting(false)
-    }
-  }
+    },
+  })
 
   return (
     <div className="group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
@@ -61,9 +58,8 @@ function AssetCard({
           {canEdit && (
             <button
               onClick={handleDelete}
-              disabled={deleting}
               title="Delete"
-              className="rounded-full bg-white p-2 text-red-500 hover:bg-red-50 disabled:opacity-50"
+              className="rounded-full bg-white p-2 text-red-500 hover:bg-red-50"
             >
               <Trash2 className="h-4 w-4" />
             </button>
@@ -95,7 +91,6 @@ export function MediaPage() {
   const [error, setError] = useState<string | null>(null)
   const [uploading, setUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
-  const [deleteError, setDeleteError] = useState<string | null>(null)
   const [alt, setAlt] = useState('')
   const [bar, setBar] = useState<BarLocation | ''>('')
   const fileRef = useRef<HTMLInputElement>(null)
@@ -215,12 +210,6 @@ export function MediaPage() {
         <p className="text-sm text-slate-600">No images uploaded yet.</p>
       )}
 
-      {deleteError && (
-        <p role="alert" className="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
-          {deleteError}
-        </p>
-      )}
-
       {!loading && assets.length > 0 && (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {assets.map((asset) => (
@@ -228,11 +217,7 @@ export function MediaPage() {
               key={asset.id}
               asset={asset}
               canEdit={canEditContent}
-              onDeleted={() => {
-                setDeleteError(null)
-                setAssets((prev) => prev.filter((a) => a.id !== asset.id))
-              }}
-              onDeleteFailed={setDeleteError}
+              onDeleted={() => setAssets((prev) => prev.filter((a) => a.id !== asset.id))}
             />
           ))}
         </div>

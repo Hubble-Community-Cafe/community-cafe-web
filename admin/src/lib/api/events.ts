@@ -1,5 +1,5 @@
 import type { BarLocation, CafeEvent } from '@cafe/shared-web'
-import { fetchWithAuth, getJson } from './client'
+import { getJson, deleteResource } from './client'
 
 // ── Event types ─────────────────────────────────────────────────────────────────
 
@@ -32,4 +32,4 @@ export const updateEvent = (id: number, req: EventRequest) =>
   })
 
 export const deleteEvent = (id: number) =>
-  fetchWithAuth(`/api/admin/events/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/events/${id}`, 'the event')

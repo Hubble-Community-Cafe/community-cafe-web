@@ -20,6 +20,7 @@ import {
   type MenuItem,
   type MenuItemRequest,
 } from '../../lib/api'
+import { useConfirmAction } from '../../lib/confirmAction'
 
 /**
  * Everything the Menu page knows and does: the selected bar, the category tree, loaded items,
@@ -28,6 +29,7 @@ import {
  * back on failure; see the comments on each handler.
  */
 export function useMenuEditor() {
+  const confirmAction = useConfirmAction()
   const [selectedBar, setSelectedBar] = useState<BarLocation>('HUBBLE')
   const [allCategories, setAllCategories] = useState<MenuCategory[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -245,14 +247,18 @@ export function useMenuEditor() {
     }
   }
 
-  const handleDeleteCategory = async (id: number) => {
-    if (!confirm('Delete this category and all its items?')) return
-    await deleteMenuCategory(id)
-    setAllCategories((prev) => prev.filter((c) => c.id !== id && c.parentId !== id))
-    setItemsByCategory((prev) => { const n = { ...prev }; delete n[id]; return n })
-    if (expandedTabId === id) setExpandedTabId(null)
-    if (expandedCatId === id) setExpandedCatId(null)
-  }
+  const handleDeleteCategory = (id: number) => confirmAction({
+    title: 'Delete this category?',
+    message: `"${allCategories.find((c) => c.id === id)?.name ?? 'This category'}" and everything in it will be removed from the menu.`,
+    confirmLabel: 'Delete category',
+    action: async () => {
+      await deleteMenuCategory(id)
+      setAllCategories((prev) => prev.filter((c) => c.id !== id && c.parentId !== id))
+      setItemsByCategory((prev) => { const n = { ...prev }; delete n[id]; return n })
+      if (expandedTabId === id) setExpandedTabId(null)
+      if (expandedCatId === id) setExpandedCatId(null)
+    },
+  })
 
   const handleCreateItem = async (categoryId: number, req: MenuItemRequest) => {
     const item = await createMenuItem(categoryId, req)
@@ -273,14 +279,18 @@ export function useMenuEditor() {
     setEditingItem(null)
   }
 
-  const handleDeleteItem = async (item: MenuItem) => {
-    if (!confirm('Delete this item?')) return
-    await deleteMenuItem(item.id)
-    setItemsByCategory((prev) => ({
-      ...prev,
-      [item.categoryId]: (prev[item.categoryId] ?? []).filter((i) => i.id !== item.id),
-    }))
-  }
+  const handleDeleteItem = (item: MenuItem) => confirmAction({
+    title: 'Delete this item?',
+    message: `"${item.name}" will be removed from the menu.`,
+    confirmLabel: 'Delete item',
+    action: async () => {
+      await deleteMenuItem(item.id)
+      setItemsByCategory((prev) => ({
+        ...prev,
+        [item.categoryId]: (prev[item.categoryId] ?? []).filter((i) => i.id !== item.id),
+      }))
+    },
+  })
 
   return {
     selectedBar,

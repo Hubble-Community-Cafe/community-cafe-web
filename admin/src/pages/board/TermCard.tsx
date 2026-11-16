@@ -13,6 +13,7 @@ import { TYPE_LABELS, termScope } from './labels'
 import { MemberForm } from './MemberForm'
 import { MemberRow } from './MemberRow'
 import { TermForm } from './TermForm'
+import { useConfirmAction } from '../../lib/confirmAction'
 
 export function TermCard({
   term,
@@ -33,7 +34,7 @@ export function TermCard({
   const [addingMember, setAddingMember] = useState(false)
   const [members, setMembers] = useState<BoardMember[]>(term.members)
   const [editingMemberId, setEditingMemberId] = useState<number | null>(null)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
   const [reorderError, setReorderError] = useState<string | null>(null)
 
   /** Optimistic, rolled back on failure, like the menu lists. */
@@ -49,12 +50,15 @@ export function TermCard({
     }
   }
 
-  const handleDeleteTerm = async () => {
-    if (!confirm(`Delete term "${term.label}" and all its members?`)) return
-    setDeleting(true)
-    try { await deleteBoardTerm(term.id); onDeleted() }
-    catch { setDeleting(false) }
-  }
+  const handleDeleteTerm = () => confirmAction({
+    title: 'Delete this board term?',
+    message: `"${term.label}" and all its members will be removed. This cannot be undone.`,
+    confirmLabel: 'Delete term',
+    action: async () => {
+      await deleteBoardTerm(term.id)
+      onDeleted()
+    },
+  })
 
   if (editingTerm && canEdit) {
     return (
@@ -110,7 +114,7 @@ export function TermCard({
               className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
               <Pencil className="h-4 w-4" />
             </button>
-            <button onClick={handleDeleteTerm} disabled={deleting} aria-label={`Delete ${term.label}`}
+            <button onClick={handleDeleteTerm} aria-label={`Delete ${term.label}`}
               className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
               <Trash2 className="h-4 w-4" />
             </button>

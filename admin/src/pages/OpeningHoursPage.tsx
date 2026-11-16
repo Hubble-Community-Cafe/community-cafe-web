@@ -9,6 +9,7 @@ import {
 import { DAY_LABELS } from '@cafe/shared-web'
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
@@ -271,6 +272,7 @@ export function OpeningHoursPage() {
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [slots, setSlots] = useState<WeeklyHours[]>([])
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
+  const confirmAction = useConfirmAction()
   const [editingOverride, setEditingOverride] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -310,14 +312,15 @@ export function OpeningHoursPage() {
     setEditingOverride(null)
   }
 
-  const handleDeleteOverride = async (id: number) => {
-    try {
-      await deleteOverride(id)
-      setOverrides((prev) => prev.filter((o) => o.id !== id))
-    } catch {
-      // silently ignore, the user can retry
-    }
-  }
+  const handleDeleteOverride = (o: HoursOverride) => confirmAction({
+    title: 'Delete this override?',
+    message: `${o.date} goes back to the regular weekly opening hours on the website.`,
+    confirmLabel: 'Delete override',
+    action: async () => {
+      await deleteOverride(o.id)
+      setOverrides((prev) => prev.filter((existing) => existing.id !== o.id))
+    },
+  })
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
@@ -410,7 +413,7 @@ export function OpeningHoursPage() {
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDeleteOverride(o.id)} aria-label={`Delete the override for ${o.date}`}
+                        <button onClick={() => handleDeleteOverride(o)} aria-label={`Delete the override for ${o.date}`}
                           className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>

@@ -1,5 +1,5 @@
 import type { BarLocation, MenuKind, DailyDish as SharedDailyDish, MenuCategory as SharedMenuCategory, MenuItem as SharedMenuItem } from '@cafe/shared-web'
-import { fetchWithAuth, getJson, sendNoContent } from './client'
+import { getJson, sendNoContent, deleteResource } from './client'
 
 // ── Menu types ─────────────────────────────────────────────────────────────────
 export interface MenuCategory extends SharedMenuCategory {
@@ -68,7 +68,7 @@ export const updateMenuCategory = (id: number, req: MenuCategoryRequest) =>
   })
 
 export const deleteMenuCategory = (id: number) =>
-  fetchWithAuth(`/api/admin/menu/categories/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/menu/categories/${id}`, 'the category')
 
 /**
  * Show or hide a category (and everything under it) on the public site. Separate from
@@ -96,7 +96,7 @@ export const updateMenuItem = (id: number, req: MenuItemRequest) =>
   })
 
 export const deleteMenuItem = (id: number) =>
-  fetchWithAuth(`/api/admin/menu/items/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/menu/items/${id}`, 'the item')
 
 /** Show or hide a single item on the public site. */
 export const setMenuItemActive = (id: number, active: boolean) =>
@@ -164,4 +164,4 @@ export const updateDailyDish = (id: number, req: DailyDishRequest) =>
   })
 
 export const deleteDailyDish = (id: number) =>
-  fetchWithAuth(`/api/admin/daily-dish/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/daily-dish/${id}`, 'the daily dish')

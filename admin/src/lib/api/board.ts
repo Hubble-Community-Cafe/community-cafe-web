@@ -1,5 +1,5 @@
 import type { BarLocation, BoardMember, BoardType, BoardTerm as SharedBoardTerm } from '@cafe/shared-web'
-import { fetchWithAuth, getJson, sendNoContent } from './client'
+import { getJson, sendNoContent, deleteResource } from './client'
 
 // ── Board types ─────────────────────────────────────────────────────────────────
 export interface BoardTerm extends SharedBoardTerm {
@@ -42,7 +42,7 @@ export const updateBoardTerm = (id: number, req: BoardTermRequest) =>
   })
 
 export const deleteBoardTerm = (id: number) =>
-  fetchWithAuth(`/api/admin/board/terms/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/board/terms/${id}`, 'the board term')
 
 export const createBoardMember = (termId: number, req: BoardMemberRequest) =>
   getJson<BoardMember>(`/api/admin/board/terms/${termId}/members`, {
@@ -57,7 +57,7 @@ export const updateBoardMember = (id: number, req: BoardMemberRequest) =>
   })
 
 export const deleteBoardMember = (id: number) =>
-  fetchWithAuth(`/api/admin/board/members/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/board/members/${id}`, 'the board member')
 
 /** Apply a dragged order. See reorderMenuCategories for why this is its own call. */
 export const reorderBoardTerms = (orderedIds: number[]) =>

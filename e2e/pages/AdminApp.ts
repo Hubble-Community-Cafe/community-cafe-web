@@ -40,6 +40,16 @@ export class AdminApp {
   }
 
   /** The "Discard unsaved changes?" question shown when leaving a page with unsaved input. */
+  /** The confirmation shown before a delete, by its question ("Delete this image?"). */
+  confirmDialog(title: string): Locator {
+    return this.page.getByRole('alertdialog', { name: title })
+  }
+
+  /** Answer the open confirmation with its confirm button ("Delete image"). */
+  async confirm(title: string, confirmLabel: string): Promise<void> {
+    await this.confirmDialog(title).getByRole('button', { name: confirmLabel }).click()
+  }
+
   unsavedChangesDialog(): Locator {
     return this.page.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
   }

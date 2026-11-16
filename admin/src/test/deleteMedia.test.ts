@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { deleteMedia } from '../lib/api'
+import { deleteEvent, deleteMedia } from '../lib/api'
+import { ActionError } from '../lib/actionError'
 
 /**
  * deleteMedia must reject when the backend refuses, so the page does not drop an image from the
@@ -34,8 +35,35 @@ describe('deleteMedia', () => {
     await expect(deleteMedia(7)).rejects.toThrow("This image is still used by the event 'Pub quiz'.")
   })
 
-  it('rejects with a general message when there is no explanation', async () => {
+  it('rejects with a plain message, without the status code, when there is no explanation', async () => {
     respondWith(500)
-    await expect(deleteMedia(7)).rejects.toThrow('Could not delete the image (500). Please try again.')
+    await expect(deleteMedia(7)).rejects.toThrow('Could not delete the image. Please try again.')
+  })
+
+  /** Every admin delete goes through the same helper (deleteResource), so this covers them all. */
+  it('rejects with an ActionError, whose message the confirmation dialog shows to staff', async () => {
+    respondWith(500)
+    await expect(deleteMedia(7)).rejects.toBeInstanceOf(ActionError)
+  })
+
+  it('treats an image that is already gone (404) as deleted, so it leaves the library', async () => {
+    respondWith(404)
+    await expect(deleteMedia(7)).resolves.toBeUndefined()
+  })
+})
+
+describe('the other deletes', () => {
+  beforeEach(() => {
+    window.__RUNTIME_CONFIG__ = { E2E_AUTH_OID: 'test-oid' }
+  })
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    delete window.__RUNTIME_CONFIG__
+  })
+
+  /** They used to resolve whatever the backend answered, so a failed delete removed the row anyway. */
+  it('reject when the backend fails instead of pretending the delete worked', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: false, status: 500, json: () => Promise.resolve({}) }))
+    await expect(deleteEvent(3)).rejects.toThrow('Could not delete the event. Please try again.')
   })
 })

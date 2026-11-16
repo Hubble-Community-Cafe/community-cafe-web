@@ -6,6 +6,7 @@ import { cn } from '@cafe/shared-web'
 import { BrandLogos } from './BrandLogos'
 import { SkipLink } from './SkipLink'
 import { UnsavedChangesProvider } from './UnsavedChangesProvider'
+import { ConfirmActionProvider } from './ConfirmActionProvider'
 import { MAIN_CONTENT_ID, useFocusMainOnNavigate } from '@cafe/shared-web'
 import { NAV, canSee } from '../navigation'
 import { useRole } from '../lib/RoleContext'
@@ -121,45 +122,47 @@ export function Layout() {
 
   return (
     <UnsavedChangesProvider>
-      <div className="flex h-screen overflow-hidden bg-slate-100">
-        <SkipLink />
-        {/* Desktop sidebar: fixed, does not scroll with the content */}
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
-          {brand}
-          {nav}
-          {footer}
-        </aside>
-
-        {/* Mobile top bar */}
-        <div className="flex flex-1 flex-col overflow-hidden">
-          <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+      <ConfirmActionProvider>
+        <div className="flex h-screen overflow-hidden bg-slate-100">
+          <SkipLink />
+          {/* Desktop sidebar: fixed, does not scroll with the content */}
+          <aside className="hidden w-64 shrink-0 flex-col border-r border-slate-200 bg-white lg:flex">
             {brand}
-            <button
-              type="button"
-              aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-              aria-expanded={mobileOpen}
-              onClick={() => setMobileOpen((v) => !v)}
-              className="rounded-md p-2 text-slate-600"
-            >
-              {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </header>
+            {nav}
+            {footer}
+          </aside>
 
-          {mobileOpen && (
-            <div className="flex max-h-[calc(100vh-3.5rem)] flex-col overflow-y-auto border-b border-slate-200 bg-white lg:hidden">
-              {nav}
-              {footer}
-            </div>
-          )}
+          {/* Mobile top bar */}
+          <div className="flex flex-1 flex-col overflow-hidden">
+            <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-3 lg:hidden">
+              {brand}
+              <button
+                type="button"
+                aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
+                aria-expanded={mobileOpen}
+                onClick={() => setMobileOpen((v) => !v)}
+                className="rounded-md p-2 text-slate-600"
+              >
+                {mobileOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </header>
 
-          <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 overflow-y-auto p-4 focus:outline-none md:p-8">
-            {/* Editors load on demand: keep the sidebar while one downloads. */}
-            <Suspense fallback={null}>
-              <Outlet />
-            </Suspense>
-          </main>
+            {mobileOpen && (
+              <div className="flex max-h-[calc(100vh-3.5rem)] flex-col overflow-y-auto border-b border-slate-200 bg-white lg:hidden">
+                {nav}
+                {footer}
+              </div>
+            )}
+
+            <main id={MAIN_CONTENT_ID} tabIndex={-1} className="flex-1 overflow-y-auto p-4 focus:outline-none md:p-8">
+              {/* Editors load on demand: keep the sidebar while one downloads. */}
+              <Suspense fallback={null}>
+                <Outlet />
+              </Suspense>
+            </main>
+          </div>
         </div>
-      </div>
+      </ConfirmActionProvider>
     </UnsavedChangesProvider>
   )
 }

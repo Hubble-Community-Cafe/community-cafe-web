@@ -1,5 +1,6 @@
 import { PublicClientApplication } from '@azure/msal-browser'
 import { getE2eAuth } from '../e2eAuth'
+import { ActionError, ForbiddenError } from '../actionError'
 // Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts.
 
 const getApiUrl = (): string => {
@@ -14,12 +15,7 @@ const getApiUrl = (): string => {
 
 const API_BASE_URL = getApiUrl()
 
-export class ForbiddenError extends Error {
-  constructor(message: string) {
-    super(message)
-    this.name = 'ForbiddenError'
-  }
-}
+export { ForbiddenError }
 
 let msalInstance: PublicClientApplication | null = null
 
@@ -100,6 +96,18 @@ export async function getJson<T>(url: string, options: RequestInit = {}): Promis
     throw new Error(`Request failed (${response.status}) for ${url}`)
   }
   return response.json() as Promise<T>
+}
+
+/**
+ * Delete something. It being gone already (404, a colleague deleted it first) counts as done, so
+ * the row can go. Any other failure throws an ActionError with the backend's own reason when it
+ * gives one (an image still in use, say), or a plain "Could not delete …" otherwise.
+ */
+export async function deleteResource(url: string, what: string): Promise<void> {
+  const response = await fetchWithAuth(url, { method: 'DELETE' })
+  if (response.ok || response.status === 404) return
+  const body = await response.json().catch(() => ({})) as { message?: string }
+  throw new ActionError(body.message || `Could not delete ${what}. Please try again.`)
 }
 
 /**

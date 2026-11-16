@@ -1,5 +1,5 @@
 import type { BarLocation } from '@cafe/shared-web'
-import { fetchWithAuth, getJson } from './client'
+import { deleteResource, fetchWithAuth, getJson } from './client'
 import { MAX_UPLOAD_LABEL } from '../upload'
 
 // ── Media types ─────────────────────────────────────────────────────────────────
@@ -44,10 +44,5 @@ export const uploadMedia = async (file: File, alt?: string, bar?: BarLocation | 
  * Delete an image. Rejects with the backend's message when that refuses, for example a 409 naming
  * the event or item that still shows the image, so the page can tell staff what to change first.
  */
-export async function deleteMedia(id: number): Promise<void> {
-  const response = await fetchWithAuth(`/api/admin/media/${id}`, { method: 'DELETE' })
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({})) as { message?: string }
-    throw new Error(err.message ?? `Could not delete the image (${response.status}). Please try again.`)
-  }
-}
+export const deleteMedia = (id: number) =>
+  deleteResource(`/api/admin/media/${id}`, 'the image')

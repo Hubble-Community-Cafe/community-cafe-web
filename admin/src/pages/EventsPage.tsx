@@ -7,6 +7,7 @@ import {
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 
@@ -133,18 +134,17 @@ function EventRow({
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete "${event.title}"?`)) return
-    setDeleting(true)
-    try {
+  const handleDelete = () => confirmAction({
+    title: 'Delete this event?',
+    message: `"${event.title}" will be removed from the website.`,
+    confirmLabel: 'Delete event',
+    action: async () => {
       await deleteEvent(event.id)
       onDeleted()
-    } catch {
-      setDeleting(false)
-    }
-  }
+    },
+  })
 
   if (editing && canEdit) {
     return (
@@ -189,8 +189,8 @@ function EventRow({
             className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${event.title}`}
-            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
+          <button onClick={handleDelete} aria-label={`Delete ${event.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>

@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { BACKEND_URL } from '../../playwright.config'
 import { inDays, resetBackend, SEEDER_OID, seedEvent, seedUser, setUiRole } from '../../fixtures/backend'
+import { captureScreenshot } from '../../fixtures/evidence'
 import { AdminApp } from '../../pages/AdminApp'
 
 /** A JPEG of a chosen size: real header bytes, padded out to length. Only for the client-side size check. */
@@ -91,7 +92,7 @@ test.describe('Admin media uploads', () => {
     await expect(alert).toContainText('This file is not a JPEG, PNG, WebP or GIF image.')
   })
 
-  test('an image an event still shows cannot be deleted, and the admin says which event', async ({ page, request }) => {
+  test('an image an event still shows cannot be deleted, and the admin says which event', async ({ page, request }, testInfo) => {
     // Upload two images through the API; the event gets the first one.
     await seedUser(request, { oid: SEEDER_OID, role: 'ADMIN' })
     const upload = async (name: string) => {
@@ -110,19 +111,25 @@ test.describe('Admin media uploads', () => {
         subscribeLink: null, imageId: used.id, published: true },
     })
 
-    page.on('dialog', (dialog) => dialog.accept())
     const admin = new AdminApp(page)
     await admin.goto('/media')
     const card = (filename: string) => page.locator('div.group').filter({ hasText: filename })
 
     await card(used.filename).hover()
     await card(used.filename).getByTitle('Delete').click()
-    await expect(page.getByRole('alert')).toContainText(
+    await admin.confirm('Delete this image?', 'Delete image')
+    // Refused: the reason stays in the dialog, which offers to try again or cancel.
+    const dialog = admin.confirmDialog('Delete this image?')
+    await expect(dialog.getByRole('alert')).toContainText(
       "This image is still used by the event 'Pub quiz'. Choose another image there first.")
+    await expect(dialog.getByRole('button', { name: 'Try again' })).toBeVisible()
+    await captureScreenshot(testInfo, page, 'admin-delete-refused')
+    await dialog.getByRole('button', { name: 'Cancel' }).click()
     await expect(card(used.filename)).toBeVisible()
 
     await card(unused.filename).hover()
     await card(unused.filename).getByTitle('Delete').click()
+    await admin.confirm('Delete this image?', 'Delete image')
     await expect(card(unused.filename)).toHaveCount(0)
     const images = await request.get(`${BACKEND_URL}/api/admin/media`, { headers: { 'X-Test-Oid': SEEDER_OID } })
     expect(((await images.json()) as { filename: string }[]).map((m) => m.filename)).toEqual([used.filename])

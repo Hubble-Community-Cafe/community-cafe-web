@@ -1,5 +1,5 @@
 import type { BarLocation, DayOfWeek, HoursOverride, WeeklyHours } from '@cafe/shared-web'
-import { fetchWithAuth, getJson } from './client'
+import { fetchWithAuth, getJson, deleteResource } from './client'
 
 export interface WeeklyHoursRequest {
   open: string
@@ -27,7 +27,7 @@ export const upsertDay = (bar: BarLocation, day: DayOfWeek, req: WeeklyHoursRequ
   })
 
 export const closeDay = (bar: BarLocation, day: DayOfWeek) =>
-  fetchWithAuth(`/api/admin/opening-hours/${bar}/${day}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/opening-hours/${bar}/${day}`, 'the opening hours')
 
 export const fetchOverrides = (bar: BarLocation) =>
   getJson<HoursOverride[]>(`/api/admin/opening-hours/${bar}/overrides`)
@@ -54,4 +54,4 @@ export const updateOverride = (id: number, req: HoursOverrideRequest) =>
   sendOverride(`/api/admin/opening-hours/overrides/${id}`, 'PUT', req)
 
 export const deleteOverride = (id: number) =>
-  fetchWithAuth(`/api/admin/opening-hours/overrides/${id}`, { method: 'DELETE' })
+  deleteResource(`/api/admin/opening-hours/overrides/${id}`, 'the special day')

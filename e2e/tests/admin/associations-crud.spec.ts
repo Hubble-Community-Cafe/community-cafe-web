@@ -31,11 +31,13 @@ test.describe('Admin associations CRUD round-trip', () => {
     await page.goto(`${HUBBLE_BASE_URL}/community/associations`)
     await expect(page.getByText('E2E Society')).toBeVisible()
 
-    // Back in the admin, delete it (accept the confirm dialog).
+    // Back in the admin, delete it: the admin asks first, in its own dialog.
     await admin.goto('/associations')
-    page.once('dialog', (d) => d.accept())
     await page.getByRole('listitem').filter({ hasText: 'E2E Society' })
       .getByRole('button').last().click()
+    await expect(admin.confirmDialog('Delete this association?')).toContainText('"E2E Society"')
+    await captureScreenshot(testInfo, page, 'admin-delete-confirmation')
+    await admin.confirm('Delete this association?', 'Delete association')
 
     await expect(page.getByRole('listitem').filter({ hasText: 'E2E Society' })).toHaveCount(0)
   })
