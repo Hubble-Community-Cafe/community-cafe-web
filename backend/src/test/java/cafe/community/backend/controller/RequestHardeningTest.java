@@ -47,7 +47,7 @@ class RequestHardeningTest {
         mockMvc.perform(post("/api/admin/events").with(token("hardening-admin-oid"))
                         .contentType("application/json").content(event("HUBBLE", link)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("subscribeLink must start with https:// or http://"));
+                .andExpect(jsonPath("$.message").value("Sign-up link must start with https:// or http://"));
     }
 
     @ParameterizedTest
@@ -66,7 +66,7 @@ class RequestHardeningTest {
         mockMvc.perform(post("/api/admin/vacancies").with(token("hardening-admin-oid")).contentType("application/json")
                         .content("{\"title\":\"Bartender\",\"applyLink\":\"javascript:alert(1)\",\"active\":true}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("applyLink must start with https:// or http://"));
+                .andExpect(jsonPath("$.message").value("Apply link must start with https:// or http://"));
     }
 
     @Test
@@ -75,7 +75,7 @@ class RequestHardeningTest {
                         .content("{\"title\":\"Bartender\",\"applyEmail\":\"jobs@hubble.cafe?bcc=x@evil.example\","
                                 + "\"active\":true}"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("applyEmail must be an e-mail address"));
+                .andExpect(jsonPath("$.message").value("Apply e-mail must be an e-mail address"));
 
         mockMvc.perform(post("/api/admin/vacancies").with(token("hardening-admin-oid")).contentType("application/json")
                         .content("{\"title\":\"Bartender\",\"applyEmail\":\"jobs@hubble.cafe\","

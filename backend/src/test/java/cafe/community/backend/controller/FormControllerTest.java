@@ -328,6 +328,19 @@ class FormControllerTest {
      * The treasurer must never receive a visitor's HTML page dressed up as a receipt: the type is
      * read from the bytes, so the declared type and the double extension change nothing.
      */
+    /** The site shows this message as it is, so it names the field the way the form does. */
+    @Test
+    void declaration_invalidIban_isNamedLikeTheFormLabel() throws Exception {
+        mockMvc.perform(multipart("/api/forms/declaration").file(pdf())
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "not an iban").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("IBAN must be a valid IBAN"));
+        verify(mail, never()).send(any());
+    }
+
     @Test
     void declaration_htmlDisguisedAsAPdf_isRejected() throws Exception {
         MockMultipartFile disguised = new MockMultipartFile("file", "receipt.pdf.html", "application/pdf",

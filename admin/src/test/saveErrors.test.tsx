@@ -27,10 +27,10 @@ describe('saving an event the backend refuses', () => {
   })
 
   it("shows the backend's reason instead of a bare 'Failed to save'", async () => {
-    vi.mocked(createEvent).mockRejectedValue(new ActionError('startTime must be a time like 20:30'))
+    vi.mocked(createEvent).mockRejectedValue(new ActionError('Start time must be a time like 20:30'))
     await submitNewEvent()
 
-    expect(await screen.findByText('startTime must be a time like 20:30')).toBeInTheDocument()
+    expect(await screen.findByText('Start time must be a time like 20:30')).toBeInTheDocument()
     expect(screen.queryByText('Failed to save event')).not.toBeInTheDocument()
   })
 

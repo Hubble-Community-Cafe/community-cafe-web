@@ -64,13 +64,13 @@ describe('Hubble DeclarationsPage', () => {
   })
 
   it('shows the backend validation message, or a general one for other failures', async () => {
-    submitDeclarationForm.mockRejectedValueOnce(new FormError('iban is not a valid IBAN'))
+    submitDeclarationForm.mockRejectedValueOnce(new FormError('IBAN must be a valid IBAN'))
     const user = userEvent.setup()
     renderPage()
     await fillRequired(user)
     await user.upload(screen.getByLabelText('Receipt *'), file('receipt.pdf', 'application/pdf'))
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('iban is not a valid IBAN')
+    expect(await screen.findByRole('alert')).toHaveTextContent('IBAN must be a valid IBAN')
 
     submitDeclarationForm.mockRejectedValueOnce(new Error('boom'))
     await send(user)

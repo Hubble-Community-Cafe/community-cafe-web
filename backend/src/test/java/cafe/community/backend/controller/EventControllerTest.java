@@ -96,7 +96,7 @@ class EventControllerTest {
                                 {"bar":"HUBBLE","title":"Quiz Night","date":"%s","startTime":"%s","published":true}
                                 """.formatted(LocalDate.now().plusDays(7), startTime)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("startTime must be a time like 20:30"));
+                .andExpect(jsonPath("$.message").value("Start time must be a time like 20:30"));
         org.assertj.core.api.Assertions.assertThat(repo.count()).isZero();
     }
 

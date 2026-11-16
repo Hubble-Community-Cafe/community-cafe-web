@@ -44,11 +44,11 @@ describe('Meteor ComplaintsPage', () => {
   })
 
   it('shows the backend validation message and keeps the form', async () => {
-    submitComplaint.mockRejectedValue(new FormError('message must not be blank'))
+    submitComplaint.mockRejectedValue(new FormError('Message must not be blank'))
     const user = userEvent.setup()
     renderPage()
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('message must not be blank')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Message must not be blank')
     expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()
   })
 

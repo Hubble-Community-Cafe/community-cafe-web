@@ -125,13 +125,13 @@ describe('Hubble ScreensPage', () => {
   })
 
   it('shows the backend validation message', async () => {
-    submitScreenForm.mockRejectedValue(new FormError('association must not be blank'))
+    submitScreenForm.mockRejectedValue(new FormError('Association must not be blank'))
     const user = userEvent.setup()
     renderPage()
     await fillDates(user, '2030-10-01', '2030-10-14')
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('association must not be blank')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Association must not be blank')
   })
 
   it('shows a generic message for an unexpected error', async () => {

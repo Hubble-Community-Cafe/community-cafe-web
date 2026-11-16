@@ -38,11 +38,11 @@ describe('Hubble InformationPage', () => {
   })
 
   it('shows the backend validation message, or a general one for other failures', async () => {
-    submitInformation.mockRejectedValueOnce(new FormError('message must not be blank'))
+    submitInformation.mockRejectedValueOnce(new FormError('Message must not be blank'))
     const user = userEvent.setup()
     renderPage()
     await user.click(screen.getByRole('button', { name: 'Send' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('message must not be blank')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Message must not be blank')
 
     submitInformation.mockRejectedValueOnce(new Error('boom'))
     await user.click(screen.getByRole('button', { name: 'Send' }))

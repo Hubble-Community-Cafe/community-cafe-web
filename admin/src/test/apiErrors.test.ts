@@ -26,11 +26,11 @@ describe('a save the backend refuses', () => {
   })
 
   it("carries the backend's reason, for the form to show", async () => {
-    respondWith(400, { message: 'subscribeLink must start with https:// or http://' })
+    respondWith(400, { message: 'Sign-up link must start with https:// or http://' })
     const failure = await createEvent(event).catch((e: unknown) => e)
 
     expect(failure).toBeInstanceOf(ActionError)
-    expect(messageFor(failure, 'Failed to save event')).toBe('subscribeLink must start with https:// or http://')
+    expect(messageFor(failure, 'Failed to save event')).toBe('Sign-up link must start with https:// or http://')
   })
 
   it('carries it for writes without a response body too', async () => {

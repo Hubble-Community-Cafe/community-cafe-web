@@ -124,8 +124,8 @@ describe('submitScreenForm without progress', () => {
 
   it("surfaces the backend's message", async () => {
     globalThis.fetch = vi.fn().mockResolvedValue(
-      new Response(JSON.stringify({ message: 'association must not be blank' }), { status: 400 }),
+      new Response(JSON.stringify({ message: 'Association must not be blank' }), { status: 400 }),
     ) as typeof fetch
-    await expect(submitScreenForm(new FormData())).rejects.toThrow('association must not be blank')
+    await expect(submitScreenForm(new FormData())).rejects.toThrow('Association must not be blank')
   })
 })

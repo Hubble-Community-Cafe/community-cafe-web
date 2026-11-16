@@ -68,11 +68,12 @@ public class GlobalExceptionHandler {
                 "That file is too large. The maximum upload size is " + maxFileSize.toMegabytes() + " MB.");
     }
 
+    /** The first broken field, named the way the form labels it, since staff and visitors read this. */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
         String message = ex.getBindingResult().getFieldErrors().stream()
                 .findFirst()
-                .map(e -> e.getField() + " " + e.getDefaultMessage())
+                .map(e -> FieldLabels.of(e.getField()) + " " + e.getDefaultMessage())
                 .orElse("Validation failed");
         return body(HttpStatus.BAD_REQUEST, message);
     }

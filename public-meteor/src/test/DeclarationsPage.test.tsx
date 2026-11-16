@@ -95,13 +95,13 @@ describe('Meteor DeclarationsPage', () => {
   })
 
   it('shows the backend validation message, or a general one for other failures', async () => {
-    submitDeclarationForm.mockRejectedValueOnce(new FormError('iban is not a valid IBAN'))
+    submitDeclarationForm.mockRejectedValueOnce(new FormError('IBAN must be a valid IBAN'))
     const user = userEvent.setup()
     renderPage()
     await fillRequiredFields(user)
     await user.upload(screen.getByLabelText('Receipt *'), file('receipt.pdf', 'application/pdf'))
     await user.click(screen.getByRole('button', { name: 'Send' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('iban is not a valid IBAN')
+    expect(await screen.findByRole('alert')).toHaveTextContent('IBAN must be a valid IBAN')
 
     submitDeclarationForm.mockRejectedValueOnce(new Error('boom'))
     await user.click(screen.getByRole('button', { name: 'Send' }))

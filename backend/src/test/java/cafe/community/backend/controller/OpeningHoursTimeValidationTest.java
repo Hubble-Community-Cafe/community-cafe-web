@@ -32,10 +32,10 @@ class OpeningHoursTimeValidationTest {
 
     @ParameterizedTest
     @CsvSource({
-            "open, 99:99", "open, 24:00", "close, 23:60", "close, 2300",
-            "kitchenOpen, 25:30", "kitchenClose, 7:00",
+            "open, 99:99, Opens", "open, 24:00, Opens", "close, 23:60, Closes", "close, 2300, Closes",
+            "kitchenOpen, 25:30, Kitchen opens", "kitchenClose, 7:00, Kitchen closes",
     })
-    void weeklyHours_rejectAnyFieldThatIsNotARealTime(String field, String bad) throws Exception {
+    void weeklyHours_rejectAnyFieldThatIsNotARealTime(String field, String bad, String label) throws Exception {
         String body = """
                 {"open":"10:00","close":"23:00","kitchenOpen":"17:00","kitchenClose":"21:00"}
                 """.replace("\"" + field + "\":\"" + original(field) + "\"", "\"" + field + "\":\"" + bad + "\"");
@@ -43,7 +43,7 @@ class OpeningHoursTimeValidationTest {
         mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/MONDAY").with(token("hours-time-admin-oid"))
                         .contentType("application/json").content(body))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(field + " must be a time like 20:30"));
+                .andExpect(jsonPath("$.message").value(label + " must be a time like 20:30"));
     }
 
     @ParameterizedTest
@@ -56,15 +56,15 @@ class OpeningHoursTimeValidationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"open, 10:61, 18:00", "close, 10:00, 24:00", "open, 99:99, 18:00"})
-    void overrides_rejectATimeThatIsNotARealTime(String field, String open, String close) throws Exception {
+    @CsvSource({"Opens, 10:61, 18:00", "Closes, 10:00, 24:00", "Opens, 99:99, 18:00"})
+    void overrides_rejectATimeThatIsNotARealTime(String label, String open, String close) throws Exception {
         mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides").with(token("hours-time-admin-oid"))
                         .contentType("application/json")
                         .content("""
                                 {"date":"2026-12-24","closed":false,"open":"%s","close":"%s"}
                                 """.formatted(open, close)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(field + " must be a time like 20:30"));
+                .andExpect(jsonPath("$.message").value(label + " must be a time like 20:30"));
     }
 
     @ParameterizedTest
