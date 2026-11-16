@@ -36,9 +36,12 @@ test.describe('Hubble loan equipment form', () => {
     expect(mail.text).toContain('Pick-up: 2026-07-01 at 14:00')
     expect(mail.text).toContain('Return: 2026-07-03 at 12:00')
 
+    // The submitter's confirmation does not echo their own text back.
     const ack = await waitForMessageTo(request, 'lotte@example.com')
     expect(ack.from).toBe('noreply@hubble.cafe')
     expect(ack.subject).toBe('We received your loan request')
-    expect(ack.text).toContain('Doppio')
+    expect(ack.text).toContain('not a confirmed booking')
+    expect(ack.text).not.toContain('Doppio')
+    expect(ack.text).not.toContain('cantus tables')
   })
 })

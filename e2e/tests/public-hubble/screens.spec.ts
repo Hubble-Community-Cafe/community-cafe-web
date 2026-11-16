@@ -58,11 +58,15 @@ test.describe('Hubble poster screens form', () => {
     expect(mail.text).toContain('File: poster.png')
     expect(mail.attachments).toHaveLength(0)
 
-    // The submitter also receives a confirmation (no attachment echoed back).
+    // The submitter also receives a confirmation: only the parsed dates, never their own text
+    // or attachment echoed back.
     const ack = await waitForMessageTo(request, 'anke@example.com')
     expect(ack.from).toBe('noreply@hubble.cafe')
     expect(ack.subject).toBe('We received your poster screen request')
-    expect(ack.text).toContain('Doppio')
+    expect(ack.text).toContain(`Start date: ${inDays(2)}`)
+    expect(ack.text).toContain(`End date: ${inDays(16)}`)
+    expect(ack.text).not.toContain('Doppio')
+    expect(ack.text).not.toContain('For our borrel')
     expect(ack.attachments).toHaveLength(0)
   })
 
