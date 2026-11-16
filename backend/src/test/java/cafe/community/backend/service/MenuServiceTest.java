@@ -112,8 +112,10 @@ class MenuServiceTest {
 
     @Test
     void updateCategory_unknownIdThrows() {
+        // Not found, not a bad request: the API answers 404 for it (GlobalExceptionHandler).
         assertThatThrownBy(() -> menuService.updateCategory(999L, hubbleBeerCategory()))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(jakarta.persistence.EntityNotFoundException.class)
+                .hasMessage("Category not found: 999");
     }
 
     @Test

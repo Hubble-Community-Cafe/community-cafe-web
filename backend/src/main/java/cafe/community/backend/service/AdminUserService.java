@@ -8,6 +8,7 @@ import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
 import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.repository.AdminUserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,7 +73,7 @@ public class AdminUserService {
     public AdminUser updateAccess(Long userId, boolean admin, Map<AdminModule, AccessLevel> permissions,
                                   String requestingUserOid) {
         AdminUser target = adminUserRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
 
         if (target.getAzureOid().equals(requestingUserOid)) {
             throw new IllegalArgumentException("Cannot change your own access");

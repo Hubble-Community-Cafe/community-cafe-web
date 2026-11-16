@@ -6,6 +6,7 @@ import cafe.community.backend.repository.*;
 import cafe.community.backend.service.audit.AuditSnapshots;
 import cafe.community.backend.service.audit.Snapshot;
 import cafe.community.backend.util.SortOrders;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -100,7 +101,7 @@ public class MenuService {
 
     public MenuCategoryDto updateCategory(Long id, MenuCategoryRequest req) {
         MenuCategory cat = categoryRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));
         Snapshot before = AuditSnapshots.of(cat);
         applyCategory(cat, req);
         MenuCategory saved = categoryRepo.save(cat);
@@ -116,7 +117,7 @@ public class MenuService {
      */
     public MenuCategoryDto setCategoryActive(Long id, boolean active) {
         MenuCategory cat = categoryRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));
         cat.setActive(active);
         MenuCategory saved = categoryRepo.save(cat);
         auditService.recordAction(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
@@ -156,7 +157,7 @@ public class MenuService {
 
     public void deleteCategory(Long id) {
         MenuCategory cat = categoryRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));
         Snapshot lastValues = AuditSnapshots.of(cat);
         // Items and sub-headings reference this category through foreign keys, so the
         // database refuses the delete while they exist. Remove them first, as the admin
@@ -181,7 +182,7 @@ public class MenuService {
 
     public MenuItemDto createItem(Long categoryId, MenuItemRequest req) {
         MenuCategory cat = categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + categoryId));
         MenuItem item = new MenuItem();
         item.setCategory(cat);
         applyItem(item, req);
@@ -196,7 +197,7 @@ public class MenuService {
 
     public MenuItemDto updateItem(Long id, MenuItemRequest req) {
         MenuItem item = itemRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
         Snapshot before = AuditSnapshots.of(item);
         applyItem(item, req);
         MenuItem saved = itemRepo.save(item);
@@ -208,7 +209,7 @@ public class MenuService {
     /** Show or hide a single item. See {@link #setCategoryActive} for why this is its own path. */
     public MenuItemDto setItemActive(Long id, boolean active) {
         MenuItem item = itemRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
         item.setActive(active);
         MenuItem saved = itemRepo.save(item);
         auditService.recordAction(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
@@ -322,7 +323,7 @@ public class MenuService {
     /** Re-number the items of one sub-heading from a dragged order. See {@link #reorderCategories}. */
     public void reorderItems(Long categoryId, List<Long> orderedIds) {
         MenuCategory cat = categoryRepo.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+                .orElseThrow(() -> new EntityNotFoundException("Category not found: " + categoryId));
         List<MenuItem> items = itemRepo.findByCategoryOrderBySortOrderAsc(cat);
         SortOrders.apply(items, orderedIds, MenuItem::getId, MenuItem::setSortOrder);
         itemRepo.saveAll(items);
@@ -333,7 +334,7 @@ public class MenuService {
 
     public void deleteItem(Long id) {
         MenuItem item = itemRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
         Snapshot lastValues = AuditSnapshots.of(item);
         itemRepo.delete(item);
         auditService.recordDelete(AuditEntityType.MENU_ITEM, id, item.getName(),
@@ -359,7 +360,7 @@ public class MenuService {
 
     public DailyDishDto updateDish(Long id, DailyDishRequest req) {
         DailyDish dish = dishRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Daily dish not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Daily dish not found: " + id));
         Snapshot before = AuditSnapshots.of(dish);
         applyDish(dish, req);
         DailyDish saved = dishRepo.save(dish);
@@ -370,7 +371,7 @@ public class MenuService {
 
     public void deleteDish(Long id) {
         DailyDish dish = dishRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Daily dish not found: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Daily dish not found: " + id));
         Snapshot lastValues = AuditSnapshots.of(dish);
         dishRepo.delete(dish);
         auditService.recordDelete(AuditEntityType.DAILY_DISH, id, dish.getName(),

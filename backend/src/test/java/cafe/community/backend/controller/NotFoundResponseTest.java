@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,11 +50,32 @@ class NotFoundResponseTest {
             "/api/admin/board/members/",
             "/api/admin/opening-hours/overrides/",
             "/api/admin/media/",
+            "/api/admin/menu/categories/",
+            "/api/admin/menu/items/",
+            "/api/admin/daily-dish/",
     })
     void deletingSomethingThatIsGone_isA404WithAMessage(String path) throws Exception {
         mockMvc.perform(delete(path + MISSING).with(asAdmin()))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.message").value(containsString("not found: " + MISSING)));
+    }
+
+    @Test
+    void changingAccessOfAUserWhoIsGone_isA404() throws Exception {
+        mockMvc.perform(put("/api/admin/users/" + MISSING + "/access").with(asAdmin())
+                        .contentType("application/json").content("{\"admin\":false,\"permissions\":{}}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("User not found: " + MISSING));
+    }
+
+    /** A missing record named in the body is a bad reference in the request, so it stays a 400. */
+    @Test
+    void aMissingParentCategoryInTheBody_staysA400() throws Exception {
+        mockMvc.perform(post("/api/admin/menu/categories").with(asAdmin())
+                        .contentType("application/json")
+                        .content("{\"name\":\"Beers\",\"kind\":\"DRINK\",\"bar\":\"HUBBLE\",\"parentId\":" + MISSING + "}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Parent category not found: " + MISSING));
     }
 }
