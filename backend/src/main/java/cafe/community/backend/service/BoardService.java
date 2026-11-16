@@ -155,7 +155,7 @@ public class BoardService {
     private void applyTerm(BoardTerm term, BoardTermRequest req) {
         term.setLabel(req.label());
         term.setType(BoardType.valueOf(req.type()));
-        term.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
+        term.setBar(BarLocation.parseOrShared(req.bar()));
         term.setCurrent(req.current());
         // Omitting the position leaves it where it is; createTerm appends instead.
         if (req.sortOrder() != null) {

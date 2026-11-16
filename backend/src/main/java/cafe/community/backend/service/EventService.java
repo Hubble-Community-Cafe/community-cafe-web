@@ -81,7 +81,8 @@ public class EventService {
     }
 
     private void apply(Event event, EventRequest req) {
-        event.setBar(BarLocation.valueOf(req.bar()));
+        // Never null here: EventRequest.bar is @NotBlank, events always belong to one bar.
+        event.setBar(BarLocation.parseOrShared(req.bar()));
         event.setTitle(req.title());
         event.setDescription(req.description());
         event.setDate(req.date());

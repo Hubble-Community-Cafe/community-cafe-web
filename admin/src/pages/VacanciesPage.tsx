@@ -103,7 +103,8 @@ function VacancyForm({
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600">Apply link</label>
-          <input value={applyLink} onChange={(e) => setApplyLink(e.target.value)}
+          <input type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+            value={applyLink} onChange={(e) => setApplyLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>

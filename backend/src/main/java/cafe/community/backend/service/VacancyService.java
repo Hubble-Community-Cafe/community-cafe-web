@@ -96,7 +96,7 @@ public class VacancyService {
         v.setType(req.type());
         v.setApplyEmail(req.applyEmail());
         v.setApplyLink(req.applyLink());
-        v.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
+        v.setBar(BarLocation.parseOrShared(req.bar()));
         v.setActive(req.active());
         // Omitting the position leaves it where it is; create appends instead.
         if (req.sortOrder() != null) {

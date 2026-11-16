@@ -115,6 +115,13 @@ public class SecurityConfig {
      * fetching Microsoft's signing keys.
      */
     static OAuth2TokenValidator<Jwt> tokenValidator(String azureTenantId, String azureClientId) {
+        // Without a client id there is no audience to check, and any token of the tenant, issued
+        // for any app, would pass. Refuse to start instead of quietly skipping that check.
+        if (azureClientId == null || azureClientId.isBlank()) {
+            throw new IllegalStateException(
+                    "azure.client-id (AZURE_CLIENT_ID) must be set when azure.tenant-id is: "
+                            + "without it the token audience cannot be checked");
+        }
         // Azure AD issues v1.0 or v2.0 issuers depending on accessTokenAcceptedVersion.
         String issuerV1 = "https://sts.windows.net/" + azureTenantId + "/";
         String issuerV2 = "https://login.microsoftonline.com/" + azureTenantId + "/v2.0";
@@ -123,9 +130,6 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<>(
                 JwtClaimNames.AUD, aud -> {
-            if (azureClientId == null || azureClientId.isEmpty()) {
-                return true;
-            }
             String expected = "api://" + azureClientId;
             if (aud instanceof String single) {
                 return expected.equals(single) || azureClientId.equals(single);

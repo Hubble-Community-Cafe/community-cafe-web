@@ -79,13 +79,17 @@ class SecurityConfigTokenValidationTest {
                 .hasMessageContaining("expired");
     }
 
+    /**
+     * A tenant without a client id used to skip the audience check, so a token the tenant issued
+     * for any other app was accepted. That misconfiguration now stops the backend from starting.
+     */
     @Test
-    void withoutAClientIdAnyAudienceIsAcceptedButTheIssuerStillCounts() throws JOSEException {
-        NimbusJwtDecoder noClient = decoder("");
-
-        assertThat(noClient.decode(token(ISSUER_V2, "api://whatever", 3600))).isNotNull();
-        assertThatThrownBy(() -> noClient.decode(token("https://evil.example/", "api://whatever", 3600)))
-                .isInstanceOf(JwtValidationException.class);
+    void refusesToValidateWithoutAClientId() {
+        for (String missing : new String[]{null, "", "  "}) {
+            assertThatThrownBy(() -> SecurityConfig.tokenValidator(TENANT, missing))
+                    .isInstanceOf(IllegalStateException.class)
+                    .hasMessageContaining("AZURE_CLIENT_ID");
+        }
     }
 
     private NimbusJwtDecoder decoder(String clientId) {

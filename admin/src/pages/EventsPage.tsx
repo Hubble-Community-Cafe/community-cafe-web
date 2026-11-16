@@ -90,7 +90,8 @@ function EventForm({
         </div>
         <div>
           <label className="block text-xs font-medium text-slate-600">Sign-up link</label>
-          <input value={subscribeLink} onChange={(e) => setSubscribeLink(e.target.value)}
+          <input type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+            value={subscribeLink} onChange={(e) => setSubscribeLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>

@@ -69,7 +69,7 @@ public class AssociationService {
 
     private void apply(Association a, AssociationRequest req) {
         a.setName(req.name());
-        a.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
+        a.setBar(BarLocation.parseOrShared(req.bar()));
         MediaAsset logo = req.logoId() != null
                 ? mediaRepo.findById(req.logoId()).orElse(null) : null;
         a.setLogo(logo);

@@ -42,7 +42,7 @@ public class MediaController {
             @RequestParam("file") MultipartFile file,
             @RequestParam(required = false) String alt,
             @RequestParam(required = false) String bar) {
-        BarLocation barLocation = bar != null && !bar.isBlank() ? BarLocation.valueOf(bar) : null;
+        BarLocation barLocation = BarLocation.parseOrShared(bar);
         return service.upload(file, alt, barLocation);
     }
 

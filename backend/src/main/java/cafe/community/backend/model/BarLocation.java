@@ -17,4 +17,19 @@ public enum BarLocation {
     public String getDisplayName() {
         return displayName;
     }
+
+    /**
+     * A bar from a request field: blank means shared (null). Use this instead of {@code valueOf},
+     * whose error message names the Java class and would be shown to the client as is.
+     */
+    public static BarLocation parseOrShared(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        try {
+            return valueOf(value);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Unknown bar: " + value + ". Use HUBBLE or METEOR.");
+        }
+    }
 }
