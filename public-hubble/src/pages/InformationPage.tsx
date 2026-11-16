@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { submitInformation, formsChallengeUrl, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { usePageSeo } from '../lib/seo'
 
 const field =

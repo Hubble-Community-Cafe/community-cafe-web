@@ -3,7 +3,7 @@ import {
   submitDeclarationForm, formsChallengeUrl, checkUpload, RECEIPT_UPLOAD, useFormSubmit,
 } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { usePageSeo } from '../lib/seo'
 
 const CATEGORIES = ['Board Costs', 'Committee Costs', 'Event Costs', 'Bar Costs', 'Other']

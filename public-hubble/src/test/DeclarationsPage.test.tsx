@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { DeclarationsPage } from '../pages/DeclarationsPage'
-import { expectHiddenHoneypot, file } from './formTestUtils'
+import { expectHiddenHoneypot, file } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitDeclarationForm = vi.hoisted(() => vi.fn())

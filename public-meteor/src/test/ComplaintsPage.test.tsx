@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { ComplaintsPage } from '../pages/ComplaintsPage'
-import { expectHiddenHoneypot, pending } from './formTestUtils'
+import { expectHiddenHoneypot, pending } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitComplaint = vi.hoisted(() => vi.fn())

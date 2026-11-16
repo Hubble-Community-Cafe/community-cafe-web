@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { DeclarationsPage } from '../pages/DeclarationsPage'
-import { expectHiddenHoneypot } from './formTestUtils'
+import { expectHiddenHoneypot } from '@cafe/shared-web/testing/forms'
 
 // The widget registers web workers and auto-fetches on mount; the page only needs its callback.
 vi.mock('altcha', () => ({}))

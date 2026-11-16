@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { submitTip, formsChallengeUrl, type ComplaintType, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { usePageSeo } from '../lib/seo'
 
 const TYPES: { value: ComplaintType; label: string }[] = [

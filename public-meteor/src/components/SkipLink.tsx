@@ -1,5 +1,5 @@
 import type { MouseEvent } from 'react'
-import { MAIN_CONTENT_ID } from '../lib/mainContent'
+import { MAIN_CONTENT_ID } from '@cafe/shared-web'
 
 /**
  * "Skip to content": the first focusable element on the page, so keyboard and screen reader users

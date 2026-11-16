@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { render } from '@testing-library/react'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from './AltchaWidget'
 
 // Don't load the real custom element: it registers web workers and auto-fetches on mount.
 vi.mock('altcha', () => ({}))

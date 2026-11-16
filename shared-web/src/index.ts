@@ -16,6 +16,7 @@ export {
   type TipInput, type InformationInput, type LoanInput, type UploadProgress,
 } from './api/forms'
 export { cn } from './lib/cn'
+export { MAIN_CONTENT_ID, useFocusMainOnNavigate } from './lib/mainContent'
 export { useApiResource, type ApiResource } from './lib/useApiResource'
 export { useFormSubmit, type FormStatus } from './lib/useFormSubmit'
 export { checkUpload, RECEIPT_UPLOAD, type UploadRule } from './lib/upload'

@@ -4,7 +4,7 @@ import {
 } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { UploadProgressPanel } from '../components/UploadProgressPanel'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { ColourField } from '../components/ColourField'
 import { usePageSeo } from '../lib/seo'
 

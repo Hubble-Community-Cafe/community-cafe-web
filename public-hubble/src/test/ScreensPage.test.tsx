@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError, type UploadProgress } from '@cafe/shared-web'
 import { ScreensPage } from '../pages/ScreensPage'
-import { expectHiddenHoneypot, file, pending } from './formTestUtils'
+import { expectHiddenHoneypot, file, pending } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitScreenForm = vi.hoisted(() => vi.fn())
