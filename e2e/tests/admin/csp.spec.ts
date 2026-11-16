@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test'
 import { BACKEND_URL } from '../../playwright.config'
 import { resetBackend, seedAssociation, seedUser, setUiRole, SEEDER_OID } from '../../fixtures/backend'
 import { watchCspViolations, expectEnforcingCsp, expectNoCspViolations } from '../../fixtures/csp'
+import { expectSecurityHeadersEverywhere } from '../../fixtures/securityHeaders'
 
 /** A valid 1x1 PNG, so the browser really decodes an image served from the API origin. */
 const PNG_1X1 = Buffer.from(
@@ -64,4 +65,8 @@ test('the admin document keeps its security headers next to the CSP', async ({ p
   expect(headers['x-frame-options']).toBe('DENY')
   expect(headers['x-content-type-options']).toBe('nosniff')
   expect(headers['x-robots-tag']).toBe('noindex, nofollow')
+})
+
+test('every admin response carries the security headers, without the nginx version', async ({ request }) => {
+  await expectSecurityHeadersEverywhere(request, { robots: 'noindex, nofollow' })
 })
