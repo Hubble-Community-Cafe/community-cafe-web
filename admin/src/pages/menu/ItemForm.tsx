@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import type { MenuItem, MenuItemRequest } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { messageFor } from '../../lib/actionError'
 
 interface Props {
   initial?: MenuItem
@@ -66,8 +67,8 @@ export function ItemForm({ initial, onSave, onCancel }: Props) {
         // existing one where it is.
         active,
       })
-    } catch {
-      setError('Could not save item.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not save item.'))
       setSaving(false)
     }
   }

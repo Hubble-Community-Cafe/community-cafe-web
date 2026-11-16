@@ -8,6 +8,7 @@ import {
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 
@@ -59,8 +60,8 @@ function EventForm({
         imageId: initial?.imageId ?? null,
         published,
       })
-    } catch {
-      setError('Failed to save event')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save event'))
       setSaving(false)
     }
   }

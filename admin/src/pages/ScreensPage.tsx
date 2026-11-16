@@ -6,6 +6,7 @@ import {
   type CurrentScene, type ScreenScene, type ScreenScenePoster, type ScreenSceneStatus,
 } from '../lib/api'
 import { PageHelp } from '../components/HelpGuide'
+import { messageFor } from '../lib/actionError'
 
 const SCENES: { scene: ScreenScene; label: string; hint: string; icon: typeof Monitor }[] = [
   { scene: 'OPEN', label: 'Open', hint: 'Back to the poster carousel', icon: PlayCircle },
@@ -115,8 +116,8 @@ export function ScreensPage() {
     setError(null)
     try {
       setStatus(await updateScreenSceneSettings({ closedPosterId, lastCallPosterId }))
-    } catch {
-      setError('Failed to save the poster choices')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save the poster choices'))
     } finally {
       setSavingSettings(false)
     }

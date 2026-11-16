@@ -1,4 +1,5 @@
 import { fetchWithAuth, getJson } from './client'
+import { ActionError } from '../actionError'
 
 // ── Screen scene types ─────────────────────────────────────────────────────────
 /** The scenes the bar can put the Aurora screens into. */
@@ -44,7 +45,7 @@ export const applyScreenScene = async (scene: ScreenScene): Promise<void> => {
   const response = await fetchWithAuth(`/api/admin/screens/scene/${scene}`, { method: 'POST' })
   if (!response.ok) {
     const err = await response.json().catch(() => ({})) as { message?: string }
-    throw new Error(err.message ?? `Could not switch the screens (${response.status})`)
+    throw new ActionError(err.message ?? 'Could not switch the screens. Please try again.')
   }
 }
 

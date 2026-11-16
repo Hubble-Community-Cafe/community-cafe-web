@@ -9,6 +9,7 @@ import {
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 function AssociationForm({
   initial,
@@ -40,8 +41,8 @@ function AssociationForm({
     setError(null)
     try {
       await onSave({ name: name.trim(), logoId: logo?.id ?? null, bar: bar || null })
-    } catch {
-      setError('Failed to save association')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save association'))
       setSaving(false)
     }
   }

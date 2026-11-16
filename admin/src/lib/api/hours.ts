@@ -1,5 +1,6 @@
 import type { BarLocation, DayOfWeek, HoursOverride, WeeklyHours } from '@cafe/shared-web'
 import { fetchWithAuth, getJson, deleteResource } from './client'
+import { ActionError } from '../actionError'
 
 export interface WeeklyHoursRequest {
   open: string
@@ -41,7 +42,7 @@ async function sendOverride(url: string, method: 'POST' | 'PUT', req: HoursOverr
   })
   if (!response.ok) {
     const err = await response.json().catch(() => ({})) as { message?: string }
-    throw new Error(err.message ?? `Could not save the override (${response.status}). Please try again.`)
+    throw new ActionError(err.message ?? 'Could not save the override. Please try again.')
   }
   return response.json() as Promise<HoursOverride>
 }

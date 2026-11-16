@@ -11,6 +11,7 @@ import {
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 import { barToday } from '../../lib/barDate'
 import { useConfirmAction } from '../../lib/confirmAction'
+import { messageFor } from '../../lib/actionError'
 
 function DishForm({
   initial,
@@ -44,8 +45,8 @@ function DishForm({
         // No image picker yet: keep whatever image the dish already has.
         imageId: initial?.imageId ?? null,
       })
-    } catch {
-      setError('Could not save daily dish.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not save daily dish.'))
       setSaving(false)
     }
   }

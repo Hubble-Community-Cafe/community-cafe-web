@@ -3,6 +3,7 @@ import { Check, X } from 'lucide-react'
 import { MediaPicker } from '../../components/MediaPicker'
 import type { BoardTerm, BoardTermRequest, BarLocation, BoardType, MediaAsset } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { messageFor } from '../../lib/actionError'
 
 export function TermForm({
   initial,
@@ -43,8 +44,8 @@ export function TermForm({
         groupPhotoId: groupPhoto?.id ?? null,
         photoCredit: photoCredit || null,
       })
-    } catch {
-      setError('Failed to save term')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save term'))
       setSaving(false)
     }
   }

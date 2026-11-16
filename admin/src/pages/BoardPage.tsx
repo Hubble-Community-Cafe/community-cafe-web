@@ -6,6 +6,7 @@ import { fetchBoardTerms, createBoardTerm, reorderBoardTerms, type BoardTerm } f
 import { PageHelp } from '../components/HelpGuide'
 import { TermForm } from './board/TermForm'
 import { TermCard } from './board/TermCard'
+import { messageFor } from '../lib/actionError'
 
 // ── Page ─────────────────────────────────────────────────────────────────────
 
@@ -30,9 +31,9 @@ export function BoardPage() {
     setError(null)
     try {
       await reorderBoardTerms(next.map((t) => t.id))
-    } catch {
+    } catch (err) {
       setTerms(previous)
-      setError('Could not save the new order. Please try again.')
+      setError(messageFor(err, 'Could not save the new order. Please try again.'))
     }
   }
 

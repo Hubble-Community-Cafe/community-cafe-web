@@ -1,5 +1,6 @@
 import type { BarLocation } from '@cafe/shared-web'
 import { deleteResource, fetchWithAuth, getJson } from './client'
+import { ActionError } from '../actionError'
 import { MAX_UPLOAD_LABEL } from '../upload'
 
 // ── Media types ─────────────────────────────────────────────────────────────────
@@ -26,16 +27,16 @@ export const uploadMedia = async (file: File, alt?: string, bar?: BarLocation | 
   const response = await fetchWithAuth('/api/admin/media', { method: 'POST', body: form })
   if (!response.ok) {
     const err = await response.json().catch(() => ({})) as { message?: string }
-    if (err.message) throw new Error(err.message)
+    if (err.message) throw new ActionError(err.message)
     // A proxy in front of the backend can reject an oversize body before Spring sees it, in
     // which case there is no JSON message to show. Say something human anyway.
     if (response.status === 413) {
-      throw new Error(
+      throw new ActionError(
         `That image is too large to upload. The maximum is ${MAX_UPLOAD_LABEL}. `
         + 'Please resize or compress it and try again.',
       )
     }
-    throw new Error(`Upload failed (${response.status}). Please try again.`)
+    throw new ActionError('The upload did not work. Please try again.')
   }
   return response.json() as Promise<MediaAsset>
 }

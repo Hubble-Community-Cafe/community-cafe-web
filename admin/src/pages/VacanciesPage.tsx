@@ -10,6 +10,7 @@ import {
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BAR_LABELS: Record<string, string> = { HUBBLE: 'Hubble', METEOR: 'Meteor' }
 
@@ -61,8 +62,8 @@ function VacancyForm({
         // Position is set by dragging: omitting it appends a new vacancy and leaves an
         // existing one where it is.
       })
-    } catch {
-      setError('Failed to save vacancy')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save vacancy'))
       setSaving(false)
     }
   }
@@ -257,9 +258,9 @@ export function VacanciesPage() {
     setError(null)
     try {
       await reorderVacancies(next.map((v) => v.id))
-    } catch {
+    } catch (err) {
       setVacancies(previous)
-      setError('Could not save the new order. Please try again.')
+      setError(messageFor(err, 'Could not save the new order. Please try again.'))
     }
   }
 

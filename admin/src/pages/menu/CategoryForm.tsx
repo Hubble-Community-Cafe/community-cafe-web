@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import type { BarLocation, MenuCategory, MenuCategoryRequest, MenuKind } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { messageFor } from '../../lib/actionError'
 
 interface Props {
   initial?: MenuCategory
@@ -40,8 +41,8 @@ export function CategoryForm({ initial, defaultBar, fixedParentId, onSave, onCan
         // quietly put it back on the site. Visibility is changed with the toggle.
         active: initial?.active ?? true,
       })
-    } catch {
-      setError('Could not save category.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not save category.'))
       setSaving(false)
     }
   }

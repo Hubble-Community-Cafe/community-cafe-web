@@ -3,6 +3,7 @@ import { Check, X } from 'lucide-react'
 import { MediaPicker } from '../../components/MediaPicker'
 import type { BoardMember, BoardMemberRequest, MediaAsset } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { messageFor } from '../../lib/actionError'
 
 // ── Member form ──────────────────────────────────────────────────────────────
 
@@ -38,8 +39,8 @@ export function MemberForm({
       // Position is set by dragging: omitting it appends a new member and leaves an
       // existing one where they are.
       await onSave({ name, role: role || null, photoId: photo?.id ?? null })
-    } catch {
-      setError('Failed to save member')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save member'))
       setSaving(false)
     }
   }

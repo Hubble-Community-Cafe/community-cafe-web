@@ -45,6 +45,6 @@ describe('uploadMedia error messages', () => {
   it('does not leave a bare status code as the whole message', async () => {
     respondWith(500, {})
 
-    await expect(uploadMedia(file)).rejects.toThrow('Upload failed (500). Please try again.')
+    await expect(uploadMedia(file)).rejects.toThrow('The upload did not work. Please try again.')
   })
 })

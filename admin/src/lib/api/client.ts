@@ -90,10 +90,27 @@ export async function fetchWithAuth(url: string, options: RequestInit = {}): Pro
   return response
 }
 
+/**
+ * The error for a failed request. A 4xx answer carries a message written for people (a field that
+ * is not valid, a date that already has an override, missing access): that becomes an ActionError,
+ * which the admin shows as is. A 5xx or an answer without a message is not for staff to read, so it
+ * stays a technical error and the form shows its own plain text instead.
+ */
+async function failureFrom(response: Response, url: string): Promise<Error> {
+  let message: string | undefined
+  try {
+    message = ((await response.json()) as { message?: string }).message
+  } catch {
+    // No JSON body (a proxy error page, say): nothing to show.
+  }
+  if (response.status < 500 && message) return new ActionError(message)
+  return new Error(`Request failed (${response.status}) for ${url}`)
+}
+
 export async function getJson<T>(url: string, options: RequestInit = {}): Promise<T> {
   const response = await fetchWithAuth(url, options)
   if (!response.ok) {
-    throw new Error(`Request failed (${response.status}) for ${url}`)
+    throw await failureFrom(response, url)
   }
   return response.json() as Promise<T>
 }
@@ -117,6 +134,6 @@ export async function deleteResource(url: string, what: string): Promise<void> {
 export async function sendNoContent(url: string, options: RequestInit): Promise<void> {
   const response = await fetchWithAuth(url, options)
   if (!response.ok) {
-    throw new Error(`Request failed (${response.status}) for ${url}`)
+    throw await failureFrom(response, url)
   }
 }

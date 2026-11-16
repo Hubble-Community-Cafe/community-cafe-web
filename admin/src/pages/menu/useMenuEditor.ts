@@ -21,6 +21,7 @@ import {
   type MenuItemRequest,
 } from '../../lib/api'
 import { useConfirmAction } from '../../lib/confirmAction'
+import { messageFor } from '../../lib/actionError'
 
 /**
  * Everything the Menu page knows and does: the selected bar, the category tree, loaded items,
@@ -188,9 +189,9 @@ export function useMenuEditor() {
     try {
       const saved = await setMenuCategoryActive(id, active)
       setAllCategories((prev) => prev.map((c) => (c.id === id ? saved : c)))
-    } catch {
+    } catch (err) {
       setAllCategories((prev) => prev.map((c) => (c.id === id ? { ...c, active: !active } : c)))
-      setError('Could not change visibility. Please try again.')
+      setError(messageFor(err, 'Could not change visibility. Please try again.'))
     }
   }
 
@@ -203,9 +204,9 @@ export function useMenuEditor() {
     patch(active)
     try {
       await setMenuItemActive(id, active)
-    } catch {
+    } catch (err) {
       patch(!active)
-      setError('Could not change visibility. Please try again.')
+      setError(messageFor(err, 'Could not change visibility. Please try again.'))
     }
   }
 
@@ -226,9 +227,9 @@ export function useMenuEditor() {
     try {
       await reorderMenuCategories(scope, next.map((c) => c.id))
       setError(null)
-    } catch {
+    } catch (err) {
       setAllCategories(previous)
-      setError('Could not save the new order. Please try again.')
+      setError(messageFor(err, 'Could not save the new order. Please try again.'))
     }
   }
 
@@ -241,9 +242,9 @@ export function useMenuEditor() {
     try {
       await reorderMenuItems(categoryId, next.map((i) => i.id))
       setError(null)
-    } catch {
+    } catch (err) {
       setItemsByCategory((prev) => ({ ...prev, [categoryId]: previous }))
-      setError('Could not save the new order. Please try again.')
+      setError(messageFor(err, 'Could not save the new order. Please try again.'))
     }
   }
 

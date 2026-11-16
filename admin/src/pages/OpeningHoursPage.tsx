@@ -10,6 +10,7 @@ import { DAY_LABELS } from '@cafe/shared-web'
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
@@ -66,8 +67,8 @@ function DayRow({
       })
       onSaved(updated)
       setEditing(false)
-    } catch {
-      setError('Failed to save')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
@@ -80,8 +81,8 @@ function DayRow({
       await closeDay(bar, day)
       onSaved(null)
       setEditing(false)
-    } catch {
-      setError('Failed to save')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
