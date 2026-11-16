@@ -6,15 +6,12 @@ import {
   fetchOverrides, createOverride, updateOverride, deleteOverride,
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
+import { DAY_LABELS } from '@cafe/shared-web'
 import { PageHelp } from '../components/HelpGuide'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
-  THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
-}
 
 function TimeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (

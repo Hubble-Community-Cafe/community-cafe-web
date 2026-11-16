@@ -1,4 +1,9 @@
 import { PublicClientApplication } from '@azure/msal-browser'
+import type {
+  BarLocation, BoardMember, BoardType, CafeEvent, DayOfWeek, HoursOverride, MenuKind, WeeklyHours, Association,
+  BoardTerm as SharedBoardTerm, DailyDish as SharedDailyDish, MenuCategory as SharedMenuCategory,
+  MenuItem as SharedMenuItem, Vacancy as SharedVacancy,
+} from '@cafe/shared-web'
 import { getE2eAuth } from './e2eAuth'
 import { MAX_UPLOAD_LABEL } from './upload'
 // Window.__RUNTIME_CONFIG__ type is declared in authConfig.ts.
@@ -183,49 +188,28 @@ export const fetchAuditLog = (page = 0, size = 50, filters: AuditLogFilters = {}
   return getJson<Page<AuditLogEntry>>(`/api/admin/audit?${params.toString()}`)
 }
 
-// ── Menu types ─────────────────────────────────────────────────────────────────
-export type MenuKind = 'DRINK' | 'FOOD'
-export type BarLocation = 'HUBBLE' | 'METEOR'
+// ── Shared content types ─────────────────────────────────────────────────────────
+// The API shapes the public sites read too come from shared-web; the admin only adds the fields
+// its own endpoints return on top (ids of attached images, hidden-from-public flags).
+export type {
+  BarLocation, DayOfWeek, MenuKind, WeeklyHours, HoursOverride, CafeEvent, BoardType,
+  BoardMember, Association,
+} from '@cafe/shared-web'
 
-export interface MenuCategory {
-  id: number
-  name: string
-  kind: MenuKind
-  availabilityNote: string | null
-  sortOrder: number
-  bar: BarLocation | null
-  /** null when this category is a top-level tab; set when it is a sub-heading within a tab. */
-  parentId: number | null
+// ── Menu types ─────────────────────────────────────────────────────────────────
+export interface MenuCategory extends SharedMenuCategory {
   /** When false the category and everything under it is hidden from the public site. */
   active: boolean
 }
 
-export interface MenuItem {
-  id: number
-  categoryId: number
-  name: string
-  description: string | null
-  regularPrice: number
-  studentPrice: number | null
-  sizeOptions: string[]
-  dietaryTags: string[]
-  allergens: string[]
+export interface MenuItem extends SharedMenuItem {
   /** No picker for it yet: the form sends it back unchanged so a save keeps the image. */
   imageId: number | null
-  imageUrl: string | null
-  sortOrder: number
-  active: boolean
 }
 
-export interface DailyDish {
-  id: number
-  date: string
-  name: string
-  description: string | null
-  price: number | null
+export interface DailyDish extends SharedDailyDish {
   /** No picker for it yet: the form sends it back unchanged so a save keeps the image. */
   imageId: number | null
-  imageUrl: string | null
 }
 
 export interface MenuCategoryRequest {
@@ -377,33 +361,11 @@ export const updateDailyDish = (id: number, req: DailyDishRequest) =>
 export const deleteDailyDish = (id: number) =>
   fetchWithAuth(`/api/admin/daily-dish/${id}`, { method: 'DELETE' })
 
-export type DayOfWeek = 'MONDAY' | 'TUESDAY' | 'WEDNESDAY' | 'THURSDAY' | 'FRIDAY' | 'SATURDAY' | 'SUNDAY'
-
-export interface WeeklyHours {
-  id: number
-  bar: BarLocation
-  dayOfWeek: DayOfWeek
-  open: string
-  close: string
-  kitchenOpen: string | null
-  kitchenClose: string | null
-}
-
 export interface WeeklyHoursRequest {
   open: string
   close: string
   kitchenOpen: string | null
   kitchenClose: string | null
-}
-
-export interface HoursOverride {
-  id: number
-  bar: BarLocation
-  date: string
-  closed: boolean
-  open: string | null
-  close: string | null
-  note: string | null
 }
 
 export interface HoursOverrideRequest {
@@ -455,20 +417,6 @@ export const deleteOverride = (id: number) =>
   fetchWithAuth(`/api/admin/opening-hours/overrides/${id}`, { method: 'DELETE' })
 
 // ── Event types ─────────────────────────────────────────────────────────────────
-export interface CafeEvent {
-  id: number
-  bar: BarLocation
-  title: string
-  date: string
-  startTime: string | null
-  price: string | null
-  description: string | null
-  imageId: number | null
-  imageUrl: string | null
-  imageAlt: string | null
-  subscribeLink: string | null
-  published: boolean
-}
 
 export interface EventRequest {
   bar: BarLocation
@@ -502,31 +450,8 @@ export const deleteEvent = (id: number) =>
   fetchWithAuth(`/api/admin/events/${id}`, { method: 'DELETE' })
 
 // ── Board types ─────────────────────────────────────────────────────────────────
-export type BoardType = 'EXECUTIVE' | 'SUPERVISORY'
-
-export interface BoardMember {
-  id: number
-  termId: number
-  name: string
-  role: string | null
-  photoId: number | null
-  photoUrl: string | null
-  photoAlt: string | null
-  sortOrder: number
-}
-
-export interface BoardTerm {
-  id: number
-  label: string
-  type: BoardType
-  bar: BarLocation | null
-  current: boolean
-  sortOrder: number
+export interface BoardTerm extends SharedBoardTerm {
   groupPhotoId: number | null
-  groupPhotoUrl: string | null
-  groupPhotoAlt: string | null
-  photoCredit: string | null
-  members: BoardMember[]
 }
 
 export interface BoardTermRequest {
@@ -596,20 +521,8 @@ export const reorderBoardMembers = (termId: number, orderedIds: number[]) =>
   })
 
 // ── Vacancy types ──────────────────────────────────────────────────────────────
-export interface Vacancy {
-  id: number
-  title: string
-  description: string | null
-  hours: string | null
-  type: string | null
-  applyEmail: string | null
-  applyLink: string | null
+export interface Vacancy extends SharedVacancy {
   imageId: number | null
-  imageUrl: string | null
-  imageAlt: string | null
-  bar: BarLocation | null
-  active: boolean
-  sortOrder: number
 }
 
 export interface VacancyRequest {
@@ -653,14 +566,6 @@ export const reorderVacancies = (orderedIds: number[]) =>
   })
 
 // ── Association types ──────────────────────────────────────────────────────────
-export interface Association {
-  id: number
-  name: string
-  logoId: number | null
-  logoUrl: string | null
-  logoAlt: string | null
-  bar: BarLocation | null
-}
 
 export interface AssociationRequest {
   name: string
