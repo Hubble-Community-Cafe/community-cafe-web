@@ -33,7 +33,8 @@ describe('Hubble EventsPage', () => {
       cafeEvent({ title: 'Pub quiz', date: '2030-10-05', startTime: '20:00', price: '€2', subscribeLink: 'https://example.com/signup' }),
     ])
     renderPage()
-    expect(await screen.findByRole('heading', { name: 'Pub quiz' })).toBeInTheDocument()
+    // h2: the page title is the h1, so a card title skipping to h3 broke the outline.
+    expect(await screen.findByRole('heading', { level: 2, name: 'Pub quiz' })).toBeInTheDocument()
     expect(screen.getByText('Saturday, 5 October 2030, 20:00')).toBeInTheDocument()
     expect(screen.getByText('€2')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Sign up/ })).toHaveAttribute('href', 'https://example.com/signup')

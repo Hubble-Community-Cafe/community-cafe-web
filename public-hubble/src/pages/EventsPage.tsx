@@ -26,7 +26,7 @@ function EventCard({ event }: { event: CafeEvent }) {
         <p className="text-xs font-semibold uppercase tracking-widest text-hubble-500">
           {formatEventDate(event.date, event.startTime)}
         </p>
-        <h3 className="mt-2 font-title text-lg font-bold text-hubble-800">{event.title}</h3>
+        <h2 className="mt-2 font-title text-lg font-bold text-hubble-800">{event.title}</h2>
         {event.price && (
           <p className="mt-1 text-sm font-medium text-hubble-600">{event.price}</p>
         )}

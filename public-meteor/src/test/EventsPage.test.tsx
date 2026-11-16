@@ -24,7 +24,8 @@ describe('Meteor EventsPage (agenda)', () => {
     getUpcomingEvents.mockResolvedValue([cafeEvent({ bar: 'METEOR', title: 'Poetry night', date: '2030-10-05' })])
     renderPage()
     expect(screen.getByText('Loading…')).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { name: 'Poetry night' })).toBeInTheDocument()
+    // h2: the page title is the h1, so a card title skipping to h3 broke the outline.
+    expect(await screen.findByRole('heading', { level: 2, name: 'Poetry night' })).toBeInTheDocument()
     expect(screen.getByText(/5 October 2030/)).toBeInTheDocument()
     expect(getUpcomingEvents).toHaveBeenCalledWith('METEOR')
   })

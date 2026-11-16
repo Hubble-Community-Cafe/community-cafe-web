@@ -80,7 +80,7 @@ export function Layout() {
         {user && (
           <span
             className={cn(
-              'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide',
+              'mt-1 inline-flex items-center rounded-full px-2 py-0.5 text-xs font-bold uppercase tracking-wide',
               user.admin ? 'bg-hubble-100 text-hubble-700' : 'bg-slate-100 text-slate-600',
             )}
           >

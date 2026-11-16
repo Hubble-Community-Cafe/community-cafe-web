@@ -37,7 +37,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
 function BarBadge({ bar }: { bar: BarLocation }) {
   const cls = bar === 'HUBBLE' ? 'bg-hubble-50 text-hubble-700' : 'bg-emerald-50 text-emerald-700'
   return (
-    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${cls}`}>
+    <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold uppercase ${cls}`}>
       {bar === 'HUBBLE' ? 'Hubble' : 'Meteor'}
     </span>
   )
@@ -118,7 +118,7 @@ function EventsWidget() {
               <span className="min-w-0 flex-1 truncate font-medium text-slate-700">{e.title}</span>
               <span className="shrink-0 text-xs text-slate-500">{formatDate(e.date)}</span>
               {!e.published && (
-                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
+                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-semibold uppercase text-amber-700">
                   draft
                 </span>
               )}

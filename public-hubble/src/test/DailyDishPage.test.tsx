@@ -45,6 +45,14 @@ describe('Hubble DailyDishPage', () => {
     expect(screen.queryByTestId('dish-skeleton')).not.toBeInTheDocument()
   })
 
+  it('colours the card with the theme tokens, not copied hex values', async () => {
+    mockGetDishes.mockResolvedValue(DISH)
+    renderDish()
+    const card = (await screen.findByText('Pasta Pesto')).closest('.rounded-2xl') as HTMLElement
+    expect(card).toHaveClass('from-hubble-700', 'to-hubble-600')
+    expect(card.getAttribute('style')).toBeNull()
+  })
+
   it('shows an error and reports it when loading fails', async () => {
     mockGetDishes.mockRejectedValue(new Error('down'))
     renderDish()

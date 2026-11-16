@@ -48,12 +48,13 @@ function MemberCard({ member, index }: { member: BoardMember; index: number }) {
       {member.photoUrl ? (
         <img
           src={member.photoUrl}
-          alt={member.photoAlt ?? member.name}
+          // The name is printed right below: repeating it in the alt text makes screen readers say it twice.
+          alt={member.photoAlt ?? ''}
           loading="lazy"
           className="h-24 w-24 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-meteor-100 text-2xl font-bold text-meteor-400">
+        <div aria-hidden="true" className="flex h-24 w-24 items-center justify-center rounded-full bg-meteor-100 text-2xl font-bold text-meteor-400">
           {member.name.charAt(0).toUpperCase()}
         </div>
       )}

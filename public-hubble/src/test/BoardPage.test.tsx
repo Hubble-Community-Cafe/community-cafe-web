@@ -85,4 +85,18 @@ describe('Hubble board pages', () => {
     renderWith(<SupervisoryBoardPage />)
     expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
   })
+
+  it("does not read a member's name twice: photos without their own alt text are decorative", async () => {
+    getBoard.mockResolvedValue([boardTerm({ id: 1, current: true, members: [
+      boardMember({ id: 1, name: 'Robin Bestuur', photoUrl: '/media/1' }),
+      boardMember({ id: 2, name: 'Sam Oud', photoUrl: '/media/2', photoAlt: 'Sam on the terrace' }),
+      boardMember({ id: 3, name: 'Kim Zonder' }),
+    ] })])
+    const { container } = renderWith(<CurrentBoardPage />)
+    await screen.findByText('Robin Bestuur')
+
+    expect(container.querySelector('img[src="/media/1"]')).toHaveAttribute('alt', '')
+    expect(screen.getByRole('img', { name: 'Sam on the terrace' })).toBeInTheDocument()
+    expect(screen.getByText('K')).toHaveAttribute('aria-hidden', 'true')
+  })
 })

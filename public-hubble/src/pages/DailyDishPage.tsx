@@ -49,8 +49,7 @@ export function DailyDishPage() {
           {dishes.map((dish) => (
             <div
               key={dish.id}
-              className="rounded-2xl px-6 py-5 text-white shadow-lg"
-              style={{ background: 'linear-gradient(150deg, #0c3d50, #0f4d64)' }}
+              className="rounded-2xl bg-linear-150 from-hubble-700 to-hubble-600 px-6 py-5 text-white shadow-lg"
             >
               <TodayTag />
               <div className="mt-3 flex items-baseline justify-between gap-4">
