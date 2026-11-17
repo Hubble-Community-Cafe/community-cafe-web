@@ -3,7 +3,7 @@ import { Plus } from 'lucide-react'
 import { SortableList } from '../components/SortableList'
 import { usePermissions } from '../lib/usePermissions'
 import { fetchBoardTerms, createBoardTerm, reorderBoardTerms, type BoardTerm } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { TermForm } from './board/TermForm'
 import { TermCard } from './board/TermCard'
 import { messageFor } from '../lib/actionError'
@@ -39,16 +39,10 @@ export function BoardPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Board</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage board terms and members. The current executive board is shared across both bars;
-          previous terms are per bar.
-        </p>
-      </div>
+      <PageHeader
+        title="Board"
+        description="Manage board terms and members. The current executive board is shared across both bars; previous terms are per bar."
+      />
 
       {canEditContent && (
         <div className="flex justify-end">

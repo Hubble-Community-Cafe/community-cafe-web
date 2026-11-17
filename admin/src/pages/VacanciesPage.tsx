@@ -7,7 +7,7 @@ import {
   fetchVacancies, createVacancy, updateVacancy, deleteVacancy, reorderVacancies,
   type Vacancy, type VacancyRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
 import { messageFor } from '../lib/actionError'
@@ -266,15 +266,10 @@ export function VacanciesPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Vacancies</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage open positions. Active vacancies appear on the public site. Bar left blank means shown on both sites.
-        </p>
-      </div>
+      <PageHeader
+        title="Vacancies"
+        description="Manage open positions. Active vacancies appear on the public site. Bar left blank means shown on both sites."
+      />
 
       {canEditContent && (
         <div className="flex justify-end">

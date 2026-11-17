@@ -3,7 +3,7 @@ import { Trash2, Upload, Copy, Check } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import { fetchAllMedia, uploadMedia, deleteMedia, type MediaAsset, type BarLocation } from '../lib/api'
 import { formatBytes, validateUploadFile, MAX_UPLOAD_LABEL } from '../lib/upload'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useConfirmAction } from '../lib/confirmAction'
 
 const BARS: (BarLocation | '')[] = ['', 'HUBBLE', 'METEOR']
@@ -135,16 +135,10 @@ export function MediaPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Media library</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Upload images for events, board members, and menu items.
-          JPEG, PNG, WebP and GIF, max {MAX_UPLOAD_LABEL} each.
-        </p>
-      </div>
+      <PageHeader
+        title="Media library"
+        description={`Upload images for events, board members, and menu items. JPEG, PNG, WebP and GIF, max ${MAX_UPLOAD_LABEL} each.`}
+      />
 
       {/* Upload panel */}
       {canEditContent && (

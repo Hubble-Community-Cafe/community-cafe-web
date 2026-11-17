@@ -7,7 +7,7 @@ import {
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
 import { DAY_LABELS } from '@cafe/shared-web'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
 import { useConfirmAction } from '../lib/confirmAction'
 import { messageFor } from '../lib/actionError'
@@ -326,15 +326,10 @@ export function OpeningHoursPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Opening Hours</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Set the regular weekly schedule and add one-off date overrides for closures or special hours.
-        </p>
-      </div>
+      <PageHeader
+        title="Opening Hours"
+        description="Set the regular weekly schedule and add one-off date overrides for closures or special hours."
+      />
 
       {/* Bar selector */}
       <div className="flex gap-2">
