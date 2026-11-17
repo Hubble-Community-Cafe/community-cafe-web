@@ -14,3 +14,11 @@ it('gives every admin page the shared PageHeader', () => {
   expect(Object.keys(pages).length).toBeGreaterThan(10)
   expect(ownTitles).toEqual([])
 })
+
+/** Seven pages also sat in their own narrower, centred column with extra padding; <main> already pads. */
+it('lets every admin page use the full content width', () => {
+  const ownColumn = Object.entries(pages)
+    .filter(([, source]) => /className="[^"]*\bmx-auto\b[^"]*\bmax-w-/.test(source))
+    .map(([file]) => file)
+  expect(ownColumn).toEqual([])
+})

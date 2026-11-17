@@ -134,7 +134,7 @@ export function MediaPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Media library"
         description={`Upload images for events, board members, and menu items. JPEG, PNG, WebP and GIF, max ${MAX_UPLOAD_LABEL} each.`}

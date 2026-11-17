@@ -173,7 +173,7 @@ export function AssociationsPage() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Associations"
         description="Manage connected study associations. Sorted alphabetically on the public site. Bar left blank means shown on both sites."

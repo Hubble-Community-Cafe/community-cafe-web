@@ -325,7 +325,7 @@ export function OpeningHoursPage() {
   })
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Opening Hours"
         description="Set the regular weekly schedule and add one-off date overrides for closures or special hours."

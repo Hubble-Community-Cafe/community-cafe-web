@@ -124,7 +124,7 @@ export function ScreensPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Screens"
         description="Switch every Aurora screen between the poster carousel and the closed or last call slide."

@@ -38,7 +38,7 @@ export function BoardPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Board"
         description="Manage board terms and members. The current executive board is shared across both bars; previous terms are per bar."

@@ -228,7 +228,7 @@ export function EventsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
+    <div className="space-y-8">
       <PageHeader
         title="Events"
         description="Manage upcoming events for each bar. Published events appear on the public site."
