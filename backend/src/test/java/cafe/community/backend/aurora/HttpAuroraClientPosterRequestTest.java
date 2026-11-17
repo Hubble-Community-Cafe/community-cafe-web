@@ -32,7 +32,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  * Pins the poster request contract with Aurora: the multipart fields, the file part, the key
  * header, and how each error status is classified (refused content versus Aurora being unusable).
  */
-class AuroraClientPosterRequestTest {
+class HttpAuroraClientPosterRequestTest {
 
     private static final String BASE = "https://aurora.test";
     private static final String API_KEY = "test-key";
@@ -49,7 +49,7 @@ class AuroraClientPosterRequestTest {
         server = MockRestServiceServer.bindTo(builder).build();
         RestClient.Builder uploadBuilder = RestClient.builder();
         uploadServer = MockRestServiceServer.bindTo(uploadBuilder).build();
-        client = new AuroraClient(
+        client = new HttpAuroraClient(
                 builder.baseUrl(BASE + "/api").defaultHeader("x-api-key", API_KEY).build(),
                 uploadBuilder.baseUrl(BASE + "/api").defaultHeader("x-api-key", API_KEY).build(),
                 true, BASE, API_KEY);
@@ -185,7 +185,7 @@ class AuroraClientPosterRequestTest {
 
     @Test
     void disabledClient_failsWithoutCallingAurora() {
-        AuroraClient off = new AuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
+        AuroraClient off = new HttpAuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
 
         assertThatThrownBy(() -> off.createPosterRequest(dated()))
                 .isInstanceOf(AuroraException.class)

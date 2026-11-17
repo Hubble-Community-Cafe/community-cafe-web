@@ -23,7 +23,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
  * Pins the wire contract with Aurora: exact paths under /api, the x-api-key header, and the
  * request body shape. These are the details that silently break a scene switch if they drift.
  */
-class AuroraClientTest {
+class HttpAuroraClientTest {
 
     private static final String BASE = "https://aurora.test";
     private static final String API_KEY = "test-key";
@@ -39,7 +39,7 @@ class AuroraClientTest {
                 .baseUrl(BASE + "/api")
                 .defaultHeader("x-api-key", API_KEY)
                 .build();
-        client = new AuroraClient(restClient, true, BASE, API_KEY);
+        client = new HttpAuroraClient(restClient, true, BASE, API_KEY);
     }
 
     @Test
@@ -49,19 +49,19 @@ class AuroraClientTest {
 
     @Test
     void isDisabled_whenApiKeyMissing() {
-        AuroraClient unconfigured = new AuroraClient(RestClient.builder().build(), true, BASE, "");
+        AuroraClient unconfigured = new HttpAuroraClient(RestClient.builder().build(), true, BASE, "");
         assertThat(unconfigured.isEnabled()).isFalse();
     }
 
     @Test
     void isDisabled_whenFlagOff() {
-        AuroraClient off = new AuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
+        AuroraClient off = new HttpAuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
         assertThat(off.isEnabled()).isFalse();
     }
 
     @Test
     void disabledClient_failsWithoutCallingAurora() {
-        AuroraClient off = new AuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
+        AuroraClient off = new HttpAuroraClient(RestClient.builder().build(), false, BASE, API_KEY);
         assertThatThrownBy(off::getScreenHandlers)
                 .isInstanceOf(AuroraException.class)
                 .hasMessageContaining("not configured");

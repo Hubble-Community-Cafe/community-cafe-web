@@ -1,9 +1,7 @@
 package cafe.community.backend.aurora;
 
-import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -17,15 +15,14 @@ import java.util.Map;
  *
  * <p>The Playwright suite needs the screen panel to be operable without a real Aurora. Swapping
  * the client keeps that stub out of the HTTP path entirely: no mock container, no security hole
- * for the backend to call itself. The real wire format is covered by {@code AuroraClientTest}
+ * for the backend to call itself. The real wire format is covered by {@code HttpAuroraClientTest}
  * against {@code MockRestServiceServer}.
  *
  * <p>Screens and posters mirror the live instance so the suite exercises realistic names.
  */
 @Component
-@Primary
 @Profile("e2e")
-public class FakeAuroraClient extends AuroraClient {
+public class FakeAuroraClient implements AuroraClient {
 
     private static final String CAROUSEL = "CarouselPosterHandler";
 
@@ -51,7 +48,6 @@ public class FakeAuroraClient extends AuroraClient {
     private volatile PosterRequestMode posterRequestMode = PosterRequestMode.ACCEPT;
 
     public FakeAuroraClient() {
-        super(RestClient.builder().build(), false, "", "");
         screenNames.put(1L, "HubbleGeneralScreen");
         screenNames.put(2L, "PlazaScreen");
         screenNames.put(3L, "FoyerScreen");
