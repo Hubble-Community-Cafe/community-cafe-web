@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -69,7 +70,12 @@ public class AdminUserService {
      * every module); anyone else becomes STAFF with exactly the given levels, hidden ones left out.
      * Refuses changing your own access, so there is always another admin involved, and a view-only
      * level on Screen posters, which is a yes/no setting.
+     *
+     * <p>One transaction with its audit entry: an access change never sticks without a record of
+     * who changed it. (getOrCreateUser stays outside one on purpose: it swallows a lost concurrent
+     * write, which inside a transaction would still roll the request back.)
      */
+    @Transactional
     public AdminUser updateAccess(Long userId, boolean admin, Map<AdminModule, AccessLevel> permissions,
                                   String requestingUserOid) {
         AdminUser target = adminUserRepository.findById(userId)
