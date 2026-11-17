@@ -9,6 +9,7 @@ import cafe.community.backend.dto.InformationRequest;
 import cafe.community.backend.dto.LoanRequest;
 import cafe.community.backend.dto.ScreenRequest;
 import cafe.community.backend.dto.TipRequest;
+import cafe.community.backend.mail.FormMailAddresses;
 import cafe.community.backend.mail.FormMailService;
 import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.repository.FormSubmissionRepository;
@@ -47,10 +48,10 @@ class FormServiceAnalyticsTest {
         when(altcha.verify(any())).thenReturn(true);
         FormSubmissionRepository repo = mock(FormSubmissionRepository.class);
 
-        service = new FormService(mail, altcha, mock(AuroraClient.class), repo,
-                "complaints@hubble.cafe", "screens@hubble.cafe", "finance@hubble.cafe", "",
-                "finance@meteor.cafe", "", "info@hubble.cafe", "loan@hubble.cafe",
-                "noreply@hubble.cafe", "noreply@meteor.cafe");
+        service = new FormService(mail, altcha, mock(AuroraClient.class), repo, new FormMailAddresses(
+                new FormMailAddresses.From("noreply@hubble.cafe", "noreply@meteor.cafe"),
+                new FormMailAddresses.Forms("complaints@hubble.cafe", "screens@hubble.cafe", "finance@hubble.cafe", "",
+                        "finance@meteor.cafe", "", "info@hubble.cafe", "loan@hubble.cafe")));
 
         analyticsLogger = (Logger) LoggerFactory.getLogger("APP_ANALYTICS");
         analyticsLogger.setLevel(Level.INFO);

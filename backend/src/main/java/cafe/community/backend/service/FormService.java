@@ -11,6 +11,7 @@ import cafe.community.backend.dto.LoanRequest;
 import cafe.community.backend.dto.ScreenRequest;
 import cafe.community.backend.dto.TipRequest;
 import cafe.community.backend.mail.FormEmail;
+import cafe.community.backend.mail.FormMailAddresses;
 import cafe.community.backend.mail.FormMailService;
 import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.model.FormSubmission;
@@ -18,7 +19,6 @@ import cafe.community.backend.model.FormType;
 import cafe.community.backend.repository.FormSubmissionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -55,46 +55,21 @@ public class FormService {
     private final AltchaService altcha;
     private final AuroraClient aurora;
     private final FormSubmissionRepository repo;
-    private final String complaintsTo;
-    private final String screensTo;
-    private final String declarationsTo;
-    private final String declarationsCc;
-    private final String declarationsMeteorTo;
-    private final String declarationsMeteorCc;
-    private final String informationTo;
-    private final String loanTo;
-    private final String hubbleFrom;
-    private final String meteorFrom;
+    private final FormMailAddresses.Forms recipients;
+    private final FormMailAddresses.From senders;
 
     public FormService(
             FormMailService mail,
             AltchaService altcha,
             AuroraClient aurora,
             FormSubmissionRepository repo,
-            @Value("${app.mail.forms.complaints:nuisance@hubble.cafe}") String complaintsTo,
-            @Value("${app.mail.forms.screens:screens@hubble.cafe}") String screensTo,
-            @Value("${app.mail.forms.declarations:finance@hubble.cafe}") String declarationsTo,
-            @Value("${app.mail.forms.declarations-cc:}") String declarationsCc,
-            @Value("${app.mail.forms.declarations-meteor:finance@meteor.cafe}") String declarationsMeteorTo,
-            @Value("${app.mail.forms.declarations-meteor-cc:}") String declarationsMeteorCc,
-            @Value("${app.mail.forms.information:info@hubble.cafe}") String informationTo,
-            @Value("${app.mail.forms.loan:loan@hubble.cafe}") String loanTo,
-            @Value("${app.mail.from.hubble:noreply@hubble.cafe}") String hubbleFrom,
-            @Value("${app.mail.from.meteor:noreply@meteor.cafe}") String meteorFrom) {
+            FormMailAddresses addresses) {
         this.mail = mail;
         this.altcha = altcha;
         this.aurora = aurora;
         this.repo = repo;
-        this.complaintsTo = complaintsTo;
-        this.screensTo = screensTo;
-        this.declarationsTo = declarationsTo;
-        this.declarationsCc = declarationsCc;
-        this.declarationsMeteorTo = declarationsMeteorTo;
-        this.declarationsMeteorCc = declarationsMeteorCc;
-        this.informationTo = informationTo;
-        this.loanTo = loanTo;
-        this.hubbleFrom = hubbleFrom;
-        this.meteorFrom = meteorFrom;
+        this.recipients = addresses.forms();
+        this.senders = addresses.from();
     }
 
     // ── Complaint / tip / idea (Meteor) ──────────────────────────────────────────
@@ -117,7 +92,7 @@ public class FormService {
                 + "Message:\n" + req.message() + "\n";
 
         record(FormType.COMPLAINT, false);
-        mail.send(new FormEmail(meteorFrom, complaintsTo, null, req.email(),
+        mail.send(new FormEmail(senders.meteor(), recipients.complaints(), null, req.email(),
                 "Meteor " + label + " from " + req.name(), body, List.of()));
         logSubmission("complaint", null);
 
@@ -126,7 +101,7 @@ public class FormService {
                         + " and the team will look into it.",
                 "Type: " + label + "\n",
                 "Meteor Community Cafe");
-        sendConfirmation(meteorFrom, req.email(),
+        sendConfirmation(senders.meteor(), req.email(),
                 "We received your " + label.toLowerCase(), confirmation);
     }
 
@@ -180,7 +155,7 @@ public class FormService {
                     + "File: " + poster.filename() + "\n\n"
                     + message;
             try {
-                mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
+                mail.send(new FormEmail(senders.hubble(), recipients.screens(), null, req.getEmail(),
                         "Poster request from " + req.getName() + " - " + req.getAssociation()
                                 + ": review in Aurora",
                         body, List.of()));
@@ -195,7 +170,7 @@ public class FormService {
                     + "Personal Details:\n"
                     + details + "\n"
                     + message;
-            mail.send(new FormEmail(hubbleFrom, screensTo, null, req.getEmail(),
+            mail.send(new FormEmail(senders.hubble(), recipients.screens(), null, req.getEmail(),
                     "Screen Request from " + req.getName() + " - " + req.getAssociation(),
                     body, List.of(poster)));
         }
@@ -208,7 +183,7 @@ public class FormService {
                         ? "Type: Permanent association poster (general, no fixed dates)\n"
                         : "Start date: " + start + "\nEnd date: " + end + "\n",
                 "Hubble Community Cafe");
-        sendConfirmation(hubbleFrom, req.getEmail(),
+        sendConfirmation(senders.hubble(), req.getEmail(),
                 "We received your poster screen request", confirmation);
     }
 
@@ -252,9 +227,9 @@ public class FormService {
         // Absent bar means Hubble: that form predates the Meteor one and posts no bar field.
         BarLocation bar = req.getBar() != null ? req.getBar() : BarLocation.HUBBLE;
         boolean meteor = bar == BarLocation.METEOR;
-        String from = meteor ? meteorFrom : hubbleFrom;
-        String to = meteor ? declarationsMeteorTo : declarationsTo;
-        String cc = meteor ? declarationsMeteorCc : declarationsCc;
+        String from = meteor ? senders.meteor() : senders.hubble();
+        String to = meteor ? recipients.declarationsMeteor() : recipients.declarations();
+        String cc = meteor ? recipients.declarationsMeteorCc() : recipients.declarationsCc();
 
         BigDecimal amount = parseAmount(req.getAmount());
         FormEmail.Attachment receipt = FormAttachments.require(req.getFile(), RECEIPT_TYPES,
@@ -307,7 +282,7 @@ public class FormService {
                 + "Message:\n" + req.message() + "\n";
 
         record(FormType.COMPLAINT, false);
-        mail.send(new FormEmail(hubbleFrom, complaintsTo, null, req.email(),
+        mail.send(new FormEmail(senders.hubble(), recipients.complaints(), null, req.email(),
                 "Hubble " + label + " from " + req.name(), body, List.of()));
         logSubmission("tips", null);
 
@@ -316,7 +291,7 @@ public class FormService {
                         + " and the team will look into it.",
                 "Type: " + label + "\n",
                 "Hubble Community Cafe");
-        sendConfirmation(hubbleFrom, req.email(),
+        sendConfirmation(senders.hubble(), req.email(),
                 "We received your " + label.toLowerCase(), confirmation);
     }
 
@@ -333,7 +308,7 @@ public class FormService {
                 + "Message:\n" + req.message() + "\n";
 
         record(FormType.INFORMATION, false);
-        mail.send(new FormEmail(hubbleFrom, informationTo, null, req.email(),
+        mail.send(new FormEmail(senders.hubble(), recipients.information(), null, req.email(),
                 "Hubble information request from " + req.name(), body, List.of()));
         logSubmission("information", null);
 
@@ -341,7 +316,7 @@ public class FormService {
                 "Thanks for contacting Hubble. We have received your message and will get back to you.",
                 null,
                 "Hubble Community Cafe");
-        sendConfirmation(hubbleFrom, req.email(), "We received your message", confirmation);
+        sendConfirmation(senders.hubble(), req.email(), "We received your message", confirmation);
     }
 
     // ── Loan equipment (Hubble) ───────────────────────────────────────────────────
@@ -359,7 +334,7 @@ public class FormService {
                 + "Message:\n" + req.message() + "\n";
 
         record(FormType.LOAN, false);
-        mail.send(new FormEmail(hubbleFrom, loanTo, null, req.email(),
+        mail.send(new FormEmail(senders.hubble(), recipients.loan(), null, req.email(),
                 "Hubble loan request from " + req.name() + " - " + req.association(),
                 body, List.of()));
         logSubmission("loan", null);
@@ -369,7 +344,7 @@ public class FormService {
                         + "review it. This is a request, not a confirmed booking.",
                 null,
                 "Hubble Community Cafe");
-        sendConfirmation(hubbleFrom, req.email(), "We received your loan request", confirmation);
+        sendConfirmation(senders.hubble(), req.email(), "We received your loan request", confirmation);
     }
 
     // ── Helpers ──────────────────────────────────────────────────────────────────
