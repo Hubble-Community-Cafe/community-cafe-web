@@ -1,5 +1,6 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.MutableClock;
 import cafe.community.backend.dto.RootStatusDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,22 +48,5 @@ class RootControllerTest {
         RootStatusDto later = controller.root();
         assertThat(later.startedAt()).isEqualTo(start);
         assertThat(later.uptimeSeconds()).isEqualTo(42);
-    }
-
-    /** A clock the test can move forward, so uptime does not depend on wall-clock timing. */
-    private static final class MutableClock extends Clock {
-        private Instant now;
-
-        MutableClock(Instant now) {
-            this.now = now;
-        }
-
-        void advance(Duration amount) {
-            now = now.plus(amount);
-        }
-
-        @Override public Instant instant() { return now; }
-        @Override public java.time.ZoneId getZone() { return ZoneOffset.UTC; }
-        @Override public Clock withZone(java.time.ZoneId zone) { return this; }
     }
 }

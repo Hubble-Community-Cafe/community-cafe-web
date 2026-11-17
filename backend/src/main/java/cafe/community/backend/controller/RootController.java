@@ -22,12 +22,8 @@ public class RootController {
     private final Clock clock;
     private final Instant startedAt;
 
-    public RootController() {
-        this(Clock.systemUTC());
-    }
-
-    /** Package-private: lets tests pin the clock so uptime is deterministic. */
-    RootController(Clock clock) {
+    /** Tests pin the clock so uptime is deterministic. */
+    public RootController(Clock clock) {
         this.clock = clock;
         this.startedAt = clock.instant();
     }

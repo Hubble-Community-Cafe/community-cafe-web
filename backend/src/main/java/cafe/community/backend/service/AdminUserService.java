@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.FieldChange;
 import cafe.community.backend.model.AccessLevel;
 import cafe.community.backend.model.AdminModule;
@@ -36,14 +37,17 @@ public class AdminUserService {
     private final AdminUserRepository adminUserRepository;
     private final AuditService auditService;
     private final String initialAdminOid;
+    private final Clock clock;
 
     public AdminUserService(
             AdminUserRepository adminUserRepository,
             AuditService auditService,
-            @Value("${app.initial-admin-oid:}") String initialAdminOid) {
+            @Value("${app.initial-admin-oid:}") String initialAdminOid,
+            Clock clock) {
         this.adminUserRepository = adminUserRepository;
         this.auditService = auditService;
         this.initialAdminOid = initialAdminOid;
+        this.clock = clock;
     }
 
     /** Find by Azure OID or create a new user (STAFF without access, or ADMIN for the initial admin). */
@@ -127,7 +131,7 @@ public class AdminUserService {
         user.setAzureOid(azureOid);
         user.setEmail(email);
         user.setDisplayName(displayName);
-        user.setLastSeenAt(LocalDateTime.now());
+        user.setLastSeenAt(LocalDateTime.now(clock));
 
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
@@ -164,7 +168,7 @@ public class AdminUserService {
         }
 
         try {
-            adminUserRepository.updateIdentity(user.getId(), newEmail, newDisplayName, LocalDateTime.now());
+            adminUserRepository.updateIdentity(user.getId(), newEmail, newDisplayName, LocalDateTime.now(clock));
             user.setEmail(newEmail);
             user.setDisplayName(newDisplayName);
         } catch (DataAccessException e) {
@@ -180,7 +184,7 @@ public class AdminUserService {
      * a moment later.
      */
     private void touchLastSeen(AdminUser user) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if (user.getLastSeenAt() != null && user.getLastSeenAt().isAfter(now.minusDays(1))) {
             return;
         }

@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.EventDto;
 import cafe.community.backend.dto.EventRequest;
 import cafe.community.backend.model.*;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -21,28 +21,29 @@ import java.util.List;
 @Transactional
 public class EventService {
 
-    private static final ZoneId TZ = ZoneId.of("Europe/Amsterdam");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final EventRepository eventRepo;
     private final MediaService media;
     private final AuditService auditService;
+    private final Clock clock;
 
     /** Summaries name the bar and date too: two bars can run an event with the same title. */
     private static final Audited<Event> EVENT = new Audited<>(AuditEntityType.EVENT, "event", Event::getId, Event::getTitle,
             e -> e.getTitle() + " (" + e.getBar().name() + ", " + e.getDate() + ")", AuditSnapshots::of);
 
 
-    public EventService(EventRepository eventRepo, MediaService media, AuditService auditService) {
+    public EventService(EventRepository eventRepo, MediaService media, AuditService auditService, Clock clock) {
         this.eventRepo = eventRepo;
         this.media = media;
         this.auditService = auditService;
+        this.clock = clock;
     }
 
     /** Upcoming published events for a bar, from today onwards. */
     @Transactional(readOnly = true)
     public List<EventDto> getUpcoming(BarLocation bar) {
-        LocalDate today = LocalDate.now(TZ);
+        LocalDate today = LocalDate.now(clock);
         return eventRepo.findUpcoming(bar, today).stream().map(EventDto::from).toList();
     }
 

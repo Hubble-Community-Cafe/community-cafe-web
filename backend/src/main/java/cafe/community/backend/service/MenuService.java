@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.*;
@@ -29,6 +30,7 @@ public class MenuService {
     private final DailyDishRepository dishRepo;
     private final MediaService media;
     private final AuditService auditService;
+    private final Clock clock;
 
     private static final Audited<MenuCategory> CATEGORY =
             new Audited<>(AuditEntityType.MENU_CATEGORY, "category", MenuCategory::getId, MenuCategory::getName,
@@ -45,12 +47,14 @@ public class MenuService {
             MenuItemRepository itemRepo,
             DailyDishRepository dishRepo,
             MediaService media,
-            AuditService auditService) {
+            AuditService auditService,
+            Clock clock) {
         this.categoryRepo = categoryRepo;
         this.itemRepo = itemRepo;
         this.dishRepo = dishRepo;
         this.media = media;
         this.auditService = auditService;
+        this.clock = clock;
     }
 
     // ===== Public =====
@@ -85,7 +89,7 @@ public class MenuService {
 
     @Transactional(readOnly = true)
     public List<DailyDishDto> getTodaysDishes() {
-        return dishRepo.findAllByDateOrderByIdAsc(LocalDate.now())
+        return dishRepo.findAllByDateOrderByIdAsc(LocalDate.now(clock))
                 .stream().map(DailyDishDto::from).toList();
     }
 
@@ -347,7 +351,7 @@ public class MenuService {
 
     @Transactional(readOnly = true)
     public List<DailyDishDto> getUpcomingDishes() {
-        return dishRepo.findByDateGreaterThanEqualOrderByDateAsc(LocalDate.now().minusDays(1))
+        return dishRepo.findByDateGreaterThanEqualOrderByDateAsc(LocalDate.now(clock).minusDays(1))
                 .stream().map(DailyDishDto::from).toList();
     }
 

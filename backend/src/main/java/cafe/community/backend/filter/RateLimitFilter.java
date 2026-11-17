@@ -46,12 +46,8 @@ public class RateLimitFilter extends OncePerRequestFilter {
     private final Clock clock;
     private volatile long lastCleanup;
 
-    public RateLimitFilter() {
-        this(Clock.systemUTC());
-    }
-
-    /** Package-private: lets tests drive the sliding window with a controllable clock. */
-    RateLimitFilter(Clock clock) {
+    /** Tests drive the sliding window with a controllable clock. */
+    public RateLimitFilter(Clock clock) {
         this.clock = clock;
         this.lastCleanup = clock.millis();
     }

@@ -1,5 +1,6 @@
 package cafe.community.backend.filter;
 
+import cafe.community.backend.MutableClock;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -40,7 +41,7 @@ class RateLimitFilterTest {
     /** The Docker bridge gateway: what the backend sees when the proxy uses the published port. */
     private static final String PROXY = "172.18.0.1";
 
-    private final TestClock clock = new TestClock(Instant.parse("2026-06-21T12:00:00Z"));
+    private final MutableClock clock = new MutableClock(Instant.parse("2026-06-21T12:00:00Z"));
 
     @Test
     void allowsTenPostsThenBlocksTheEleventhWithJsonBody() throws Exception {
@@ -228,39 +229,6 @@ class RateLimitFilterTest {
             } catch (IOException e) {
                 throw new IllegalStateException(e);
             }
-        }
-    }
-
-    /** A clock the test can advance by hand. */
-    private static final class TestClock extends Clock {
-        private Instant now;
-
-        TestClock(Instant start) {
-            this.now = start;
-        }
-
-        void advance(Duration d) {
-            now = now.plus(d);
-        }
-
-        @Override
-        public Instant instant() {
-            return now;
-        }
-
-        @Override
-        public long millis() {
-            return now.toEpochMilli();
-        }
-
-        @Override
-        public ZoneId getZone() {
-            return ZoneOffset.UTC;
-        }
-
-        @Override
-        public Clock withZone(ZoneId zone) {
-            return this;
         }
     }
 }
