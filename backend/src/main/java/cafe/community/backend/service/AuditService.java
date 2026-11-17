@@ -5,6 +5,8 @@ import cafe.community.backend.model.AuditAction;
 import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.model.AuditLog;
 import cafe.community.backend.repository.AuditLogRepository;
+import cafe.community.backend.service.audit.Audited;
+import cafe.community.backend.service.audit.Snapshot;
 import cafe.community.backend.util.AuditActorResolver;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,8 +21,10 @@ import java.util.List;
  * internally from the security context, so callers do not thread a principal
  * through their signatures.
  *
- * <p>All writes are defensive: a failure to record an audit entry is logged but
- * never propagated, so it can never break the underlying business operation.
+ * <p>Writes join the caller's transaction, so a change and its entry are saved together. A
+ * failure here is logged rather than thrown, but a database that refuses the entry still marks
+ * that transaction for rollback: the change is then not saved either, rather than saved without
+ * a record of who made it.
  */
 @Service
 public class AuditService {
@@ -32,6 +36,24 @@ public class AuditService {
 
     public AuditService(AuditLogRepository auditLogRepository) {
         this.auditLogRepository = auditLogRepository;
+    }
+
+    /** Record a plain creation: "Created vacancy: Barista", with the fields it was created with. */
+    public <T> void created(Audited<T> kind, T saved) {
+        recordCreate(kind.type(), kind.id().apply(saved), kind.label().apply(saved),
+                kind.snapshot(saved).asCreated(), "Created " + kind.noun() + ": " + kind.describe().apply(saved));
+    }
+
+    /** Record a plain update, from the fields taken before it ({@link Audited#snapshot}). */
+    public <T> void updated(Audited<T> kind, Snapshot before, T saved) {
+        recordUpdate(kind.type(), kind.id().apply(saved), kind.label().apply(saved),
+                before.changesTo(kind.snapshot(saved)), "Updated " + kind.noun() + ": " + kind.describe().apply(saved));
+    }
+
+    /** Record a plain deletion, keeping its last values. Call it before deleting the entity. */
+    public <T> void deleted(Audited<T> kind, T entity) {
+        recordDelete(kind.type(), kind.id().apply(entity), kind.label().apply(entity),
+                kind.snapshot(entity).asDeleted(), "Deleted " + kind.noun() + ": " + kind.describe().apply(entity));
     }
 
     /** Record a creation. {@code snapshot} may carry the initial field values, or be empty. */

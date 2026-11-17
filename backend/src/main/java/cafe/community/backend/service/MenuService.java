@@ -4,6 +4,7 @@ import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.*;
 import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Audited;
 import cafe.community.backend.service.audit.Snapshot;
 import cafe.community.backend.util.SortOrders;
 import jakarta.persistence.EntityNotFoundException;
@@ -28,6 +29,16 @@ public class MenuService {
     private final DailyDishRepository dishRepo;
     private final MediaService media;
     private final AuditService auditService;
+
+    private static final Audited<MenuCategory> CATEGORY =
+            new Audited<>(AuditEntityType.MENU_CATEGORY, "category", MenuCategory::getId, MenuCategory::getName,
+                    AuditSnapshots::of);
+    private static final Audited<MenuItem> ITEM =
+            new Audited<>(AuditEntityType.MENU_ITEM, "item", MenuItem::getId, MenuItem::getName, AuditSnapshots::of);
+    private static final Audited<DailyDish> DISH =
+            new Audited<>(AuditEntityType.DAILY_DISH, "daily dish", DailyDish::getId, DailyDish::getName,
+                    AuditSnapshots::of);
+
 
     public MenuService(
             MenuCategoryRepository categoryRepo,
@@ -93,19 +104,17 @@ public class MenuService {
             cat.setSortOrder(nextCategorySortOrder(cat.getParent()));
         }
         MenuCategory saved = categoryRepo.save(cat);
-        auditService.recordCreate(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
-                AuditSnapshots.of(saved).asCreated(), "Created category: " + saved.getName());
+        auditService.created(CATEGORY, saved);
         return MenuCategoryDto.from(saved);
     }
 
     public MenuCategoryDto updateCategory(Long id, MenuCategoryRequest req) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));
-        Snapshot before = AuditSnapshots.of(cat);
+        Snapshot before = CATEGORY.snapshot(cat);
         applyCategory(cat, req);
         MenuCategory saved = categoryRepo.save(cat);
-        auditService.recordUpdate(AuditEntityType.MENU_CATEGORY, saved.getId(), saved.getName(),
-                before.changesTo(AuditSnapshots.of(saved)), "Updated category: " + saved.getName());
+        auditService.updated(CATEGORY, before, saved);
         return MenuCategoryDto.from(saved);
     }
 
@@ -157,7 +166,7 @@ public class MenuService {
     public void deleteCategory(Long id) {
         MenuCategory cat = categoryRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Category not found: " + id));
-        Snapshot lastValues = AuditSnapshots.of(cat);
+        auditService.deleted(CATEGORY, cat);
         // Items and sub-headings reference this category through foreign keys, so the
         // database refuses the delete while they exist. Remove them first, as the admin
         // confirm ("and all its items") promises.
@@ -167,8 +176,6 @@ public class MenuService {
         }
         itemRepo.deleteAll(itemRepo.findByCategoryOrderBySortOrderAsc(cat));
         categoryRepo.delete(cat);
-        auditService.recordDelete(AuditEntityType.MENU_CATEGORY, id, cat.getName(),
-                lastValues.asDeleted(), "Deleted category: " + cat.getName());
     }
 
     // ===== Admin: items =====
@@ -189,19 +196,17 @@ public class MenuService {
             item.setSortOrder(nextItemSortOrder(cat));
         }
         MenuItem saved = itemRepo.save(item);
-        auditService.recordCreate(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
-                AuditSnapshots.of(saved).asCreated(), "Created item: " + saved.getName());
+        auditService.created(ITEM, saved);
         return MenuItemDto.from(saved);
     }
 
     public MenuItemDto updateItem(Long id, MenuItemRequest req) {
         MenuItem item = itemRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
-        Snapshot before = AuditSnapshots.of(item);
+        Snapshot before = ITEM.snapshot(item);
         applyItem(item, req);
         MenuItem saved = itemRepo.save(item);
-        auditService.recordUpdate(AuditEntityType.MENU_ITEM, saved.getId(), saved.getName(),
-                before.changesTo(AuditSnapshots.of(saved)), "Updated item: " + saved.getName());
+        auditService.updated(ITEM, before, saved);
         return MenuItemDto.from(saved);
     }
 
@@ -334,10 +339,8 @@ public class MenuService {
     public void deleteItem(Long id) {
         MenuItem item = itemRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Item not found: " + id));
-        Snapshot lastValues = AuditSnapshots.of(item);
+        auditService.deleted(ITEM, item);
         itemRepo.delete(item);
-        auditService.recordDelete(AuditEntityType.MENU_ITEM, id, item.getName(),
-                lastValues.asDeleted(), "Deleted item: " + item.getName());
     }
 
     // ===== Admin: daily dish =====
@@ -352,29 +355,25 @@ public class MenuService {
         DailyDish dish = new DailyDish();
         applyDish(dish, req);
         DailyDish saved = dishRepo.save(dish);
-        auditService.recordCreate(AuditEntityType.DAILY_DISH, saved.getId(), saved.getName(),
-                AuditSnapshots.of(saved).asCreated(), "Created daily dish: " + saved.getName());
+        auditService.created(DISH, saved);
         return DailyDishDto.from(saved);
     }
 
     public DailyDishDto updateDish(Long id, DailyDishRequest req) {
         DailyDish dish = dishRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Daily dish not found: " + id));
-        Snapshot before = AuditSnapshots.of(dish);
+        Snapshot before = DISH.snapshot(dish);
         applyDish(dish, req);
         DailyDish saved = dishRepo.save(dish);
-        auditService.recordUpdate(AuditEntityType.DAILY_DISH, saved.getId(), saved.getName(),
-                before.changesTo(AuditSnapshots.of(saved)), "Updated daily dish: " + saved.getName());
+        auditService.updated(DISH, before, saved);
         return DailyDishDto.from(saved);
     }
 
     public void deleteDish(Long id) {
         DailyDish dish = dishRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Daily dish not found: " + id));
-        Snapshot lastValues = AuditSnapshots.of(dish);
+        auditService.deleted(DISH, dish);
         dishRepo.delete(dish);
-        auditService.recordDelete(AuditEntityType.DAILY_DISH, id, dish.getName(),
-                lastValues.asDeleted(), "Deleted daily dish: " + dish.getName());
     }
 
     // ===== Helpers =====
