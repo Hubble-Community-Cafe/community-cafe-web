@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { boardMember, boardTerm } from '@cafe/shared-web/testing'
 import { CurrentBoardPage, PreviousBoardsPage } from '../pages/BoardPage'
@@ -29,7 +30,7 @@ describe('Meteor board pages', () => {
   it('current board: skeleton, then the current members', async () => {
     getBoard.mockResolvedValue(TERMS)
     renderWith(<CurrentBoardPage />)
-    expect(screen.getByTestId('board-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('board-skeleton')
     expect(await screen.findByText('Robin Bestuur')).toBeInTheDocument()
   })
 

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { hoursOverride, weeklyHours } from '@cafe/shared-web/testing'
 import { Home } from '../pages/Home'
@@ -28,7 +29,7 @@ describe('Hubble Home opening times', () => {
   it('shows loading, then the grouped hours with the days without hours as closed', async () => {
     getWeeklyHours.mockResolvedValue(WEEKDAYS.map((day, i) => weeklyHours({ id: i + 1, dayOfWeek: day })))
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('hours-skeleton')
 
     expect(await screen.findByText('12:00 – 23:00')).toBeInTheDocument()
     const saturday = screen.getByText('Saturday').closest('div')!

@@ -1,4 +1,4 @@
-import { getAssociations, reportApiFailure, type Association, useApiResource } from '@cafe/shared-web'
+import { getAssociations, reportApiFailure, type Association, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -16,17 +16,14 @@ export function AssociationsPage() {
       intro="Hubble is home to many student associations that were formerly resident in the Bunker. We provide a place for like-minded people to connect, organise events, and enjoy campus life together."
     >
       {!loaded && (
-        <ul
-          className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4"
-          data-testid="associations-skeleton"
-        >
+        <LoadingSkeleton className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4" testId="associations-skeleton">
           {Array.from({ length: 8 }).map((_, i) => (
-            <li key={i} className="flex flex-col items-center gap-3">
+            <div key={i} className="flex flex-col items-center gap-3">
               <Shimmer className="h-24 w-full rounded-xl" />
               <Shimmer className="h-3 w-20" />
-            </li>
+            </div>
           ))}
-        </ul>
+        </LoadingSkeleton>
       )}
 
       {error && (

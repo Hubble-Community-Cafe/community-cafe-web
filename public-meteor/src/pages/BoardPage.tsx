@@ -1,4 +1,4 @@
-import { getBoard, reportApiFailure, type BoardTerm, type BoardMember, useApiResource } from '@cafe/shared-web'
+import { getBoard, reportApiFailure, type BoardTerm, type BoardMember, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -14,7 +14,7 @@ function useBoard() {
 /** Placeholder grid mirroring the member cards while the board loads. */
 function BoardGridSkeleton() {
   return (
-    <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3" testId="board-skeleton">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex flex-col items-center border border-meteor-200 bg-white p-5">
           <Shimmer className="h-24 w-24 rounded-full" />
@@ -22,18 +22,18 @@ function BoardGridSkeleton() {
           <Shimmer className="mt-1.5 h-3 w-16" />
         </div>
       ))}
-    </div>
+    </LoadingSkeleton>
   )
 }
 
 /** A few shimmer lines for the text-only previous-boards page. */
 function BoardLinesSkeleton() {
   return (
-    <div className="mt-6 space-y-2 text-center" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-6 space-y-2 text-center" testId="board-skeleton">
       <Shimmer className="mx-auto h-5 w-40" />
       <Shimmer className="mx-auto h-3 w-32" />
       <Shimmer className="mx-auto h-3 w-28" />
-    </div>
+    </LoadingSkeleton>
   )
 }
 

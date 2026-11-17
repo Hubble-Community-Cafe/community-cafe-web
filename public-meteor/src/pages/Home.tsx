@@ -2,8 +2,9 @@ import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, reportApiFailure, type WeeklyHours, type HoursOverride,
-  useApiResource,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
 
@@ -107,7 +108,14 @@ export function Home() {
             Opening hours
           </h2>
           {!hoursLoaded && (
-            <p className="mt-6 text-sm text-meteor-700/70">Loading…</p>
+            <LoadingSkeleton className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100" testId="hours-skeleton">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-3.5">
+                  <Shimmer className="h-4 w-28" />
+                  <Shimmer className="h-4 w-24" />
+                </div>
+              ))}
+            </LoadingSkeleton>
           )}
           {/* Without this, a failed load would list every day as closed. */}
           {hoursError && (

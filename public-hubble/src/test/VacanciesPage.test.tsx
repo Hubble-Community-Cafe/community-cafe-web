@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { vacancy } from '@cafe/shared-web/testing'
 import { VacanciesPage } from '../pages/VacanciesPage'
@@ -20,10 +21,10 @@ describe('Hubble VacanciesPage', () => {
     reportApiFailure.mockReset()
   })
 
-  it('shows a loading line, then the open positions with their apply link', async () => {
+  it('shows a loading skeleton, then the open positions with their apply link', async () => {
     getVacancies.mockResolvedValue([vacancy({ title: 'Bartender', applyEmail: 'jobs@hubble.cafe' })])
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('vacancies-skeleton')
     expect(await screen.findByRole('heading', { name: 'Open positions' })).toBeInTheDocument()
     expect(screen.getByText('Bartender')).toBeInTheDocument()
     expect(getVacancies).toHaveBeenCalledWith('HUBBLE')
@@ -32,7 +33,7 @@ describe('Hubble VacanciesPage', () => {
   it('without vacancies it shows only the general text, no list', async () => {
     getVacancies.mockResolvedValue([])
     renderPage()
-    await vi.waitFor(() => expect(screen.queryByText('Loading…')).not.toBeInTheDocument())
+    await vi.waitFor(() => expect(screen.queryByTestId('vacancies-skeleton')).not.toBeInTheDocument())
     expect(screen.queryByRole('heading', { name: 'Open positions' })).not.toBeInTheDocument()
     expect(screen.queryByText(/Could not load/)).not.toBeInTheDocument()
   })

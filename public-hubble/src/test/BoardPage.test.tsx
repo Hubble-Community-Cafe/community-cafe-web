@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { boardMember, boardTerm } from '@cafe/shared-web/testing'
 import { CurrentBoardPage, PreviousBoardsPage, SupervisoryBoardPage } from '../pages/BoardPage'
@@ -30,7 +31,7 @@ describe('Hubble board pages', () => {
   it('current board: shows a skeleton, then the current executive members', async () => {
     getBoard.mockResolvedValue(TERMS)
     renderWith(<CurrentBoardPage />)
-    expect(screen.getByTestId('board-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('board-skeleton')
     expect(await screen.findByText('Robin Bestuur')).toBeInTheDocument()
     expect(screen.getByText('President')).toBeInTheDocument()
     expect(screen.queryByText('Sam Oud')).not.toBeInTheDocument()

@@ -5,7 +5,7 @@ import {
   type MenuTab,
   type MenuCategoryWithItems,
   type MenuItem,
-  useApiResource,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
@@ -21,14 +21,14 @@ const SKELETON_WIDTHS = ['58%', '42%', '66%', '38%', '52%']
 
 function MenuSkeleton() {
   return (
-    <div className="mt-8 max-w-md" data-testid="menu-skeleton">
+    <LoadingSkeleton className="mt-8 max-w-md" testId="menu-skeleton">
       {SKELETON_WIDTHS.map((width, i) => (
         <div key={i} className="flex items-center justify-between py-[11px]">
           <Shimmer className="h-[13px]" style={{ width }} />
           <Shimmer className="h-[13px] w-[46px]" />
         </div>
       ))}
-    </div>
+    </LoadingSkeleton>
   )
 }
 

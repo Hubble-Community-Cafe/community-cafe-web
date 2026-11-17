@@ -1,5 +1,6 @@
-import { getVacancies, reportApiFailure, type Vacancy, useApiResource } from '@cafe/shared-web'
+import { getVacancies, reportApiFailure, type Vacancy, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 const applyClass =
@@ -49,7 +50,15 @@ export function VacanciesPage() {
 
       <h2 className="mt-10 font-title text-xl font-bold uppercase text-meteor-900">Open positions</h2>
       {!loaded && (
-        <p className="mt-4 text-sm text-meteor-700/70">Loading…</p>
+        <LoadingSkeleton className="mt-4 space-y-4" testId="vacancies-skeleton">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="space-y-2 border border-meteor-200 bg-white p-5">
+              <Shimmer className="h-5 w-1/2" />
+              <Shimmer className="h-3 w-full" />
+              <Shimmer className="h-3 w-3/4" />
+            </div>
+          ))}
+        </LoadingSkeleton>
       )}
       {error && (
         <p role="alert" className="mt-4 text-sm text-red-700">Could not load the open positions. Please try again later.</p>

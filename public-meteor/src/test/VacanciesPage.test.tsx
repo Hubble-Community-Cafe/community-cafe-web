@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { vacancy } from '@cafe/shared-web/testing'
 import { VacanciesPage } from '../pages/VacanciesPage'
@@ -20,10 +21,10 @@ describe('Meteor VacanciesPage', () => {
     reportApiFailure.mockReset()
   })
 
-  it('asks for the Meteor vacancies and lists them after a loading line', async () => {
+  it('asks for the Meteor vacancies and lists them after a loading skeleton', async () => {
     getVacancies.mockResolvedValue([vacancy({ title: 'Kok', applyEmail: 'jobs@hubble.cafe' })])
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('vacancies-skeleton')
     expect(await screen.findByText('Kok')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Apply' })).toHaveAttribute('href', 'mailto:jobs@hubble.cafe')
     expect(getVacancies).toHaveBeenCalledWith('METEOR')

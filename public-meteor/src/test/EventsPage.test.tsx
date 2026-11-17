@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { cafeEvent } from '@cafe/shared-web/testing'
 import { EventsPage } from '../pages/EventsPage'
@@ -20,10 +21,10 @@ describe('Meteor EventsPage (agenda)', () => {
     reportApiFailure.mockReset()
   })
 
-  it('asks for the Meteor events and renders them after a loading line', async () => {
+  it('asks for the Meteor events and renders them after a loading skeleton', async () => {
     getUpcomingEvents.mockResolvedValue([cafeEvent({ bar: 'METEOR', title: 'Poetry night', date: '2030-10-05' })])
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('events-skeleton')
     // h2: the page title is the h1, so a card title skipping to h3 broke the outline.
     expect(await screen.findByRole('heading', { level: 2, name: 'Poetry night' })).toBeInTheDocument()
     expect(screen.getByText(/5 October 2030/)).toBeInTheDocument()

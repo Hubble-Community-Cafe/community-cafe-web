@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { DailyDishPage } from '../pages/DailyDishPage'
 import { getTodaysDishes, reportApiFailure, type DailyDish } from '@cafe/shared-web'
@@ -33,7 +34,7 @@ describe('Hubble DailyDishPage', () => {
   it('shows a skeleton while loading', async () => {
     mockGetDishes.mockResolvedValue(DISH)
     renderDish()
-    expect(screen.getByTestId('dish-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('dish-skeleton')
     await screen.findByText('Pasta Pesto')
   })
 

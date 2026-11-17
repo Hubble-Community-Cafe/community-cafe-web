@@ -11,6 +11,10 @@
  * shared palettes and font stacks, not any layout.
  */
 
+/* Shared components (src/components) use Tailwind classes too. The apps reach this package through
+   node_modules, which Tailwind does not scan on its own. */
+@source "../";
+
 /* ── AXIS: the Hubble & Meteor display/title face ───────────────────────────── */
 @font-face {
   font-family: 'AXIS';

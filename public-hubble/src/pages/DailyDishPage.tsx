@@ -1,4 +1,4 @@
-import { getTodaysDishes, reportApiFailure, type DailyDish, useApiResource } from '@cafe/shared-web'
+import { getTodaysDishes, reportApiFailure, type DailyDish, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -31,10 +31,10 @@ export function DailyDishPage() {
       </p>
 
       {isLoading && (
-        <div className="mt-6 space-y-3" data-testid="dish-skeleton">
+        <LoadingSkeleton className="mt-6 space-y-3" testId="dish-skeleton">
           <Shimmer className="h-5 w-20 rounded-full" />
           <Shimmer className="h-28 w-full max-w-md rounded-2xl" />
-        </div>
+        </LoadingSkeleton>
       )}
       {error && (
         <p role="alert" className="mt-6 text-sm text-red-600">Could not load today's dish. Try again later.</p>

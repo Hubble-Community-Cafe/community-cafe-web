@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { cafeEvent } from '@cafe/shared-web/testing'
 import { EventsPage } from '../pages/EventsPage'
@@ -20,10 +21,10 @@ describe('Hubble EventsPage', () => {
     reportApiFailure.mockReset()
   })
 
-  it('asks for the Hubble events and shows a loading line meanwhile', async () => {
+  it('asks for the Hubble events and shows a loading skeleton meanwhile', async () => {
     getUpcomingEvents.mockResolvedValue([])
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('events-skeleton')
     expect(getUpcomingEvents).toHaveBeenCalledWith('HUBBLE')
     await screen.findByText(/No upcoming events/)
   })

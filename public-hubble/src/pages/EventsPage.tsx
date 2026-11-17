@@ -1,6 +1,7 @@
 import { ExternalLink } from 'lucide-react'
-import { getUpcomingEvents, reportApiFailure, type CafeEvent, useApiResource } from '@cafe/shared-web'
+import { getUpcomingEvents, reportApiFailure, type CafeEvent, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function formatEventDate(dateStr: string, startTime: string | null): string {
@@ -48,6 +49,25 @@ function EventCard({ event }: { event: CafeEvent }) {
   )
 }
 
+/** Placeholder cards in the shape of the event cards while they load. */
+function EventsSkeleton() {
+  return (
+    <LoadingSkeleton className="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3" testId="events-skeleton">
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} className="overflow-hidden rounded-2xl bg-white shadow-md shadow-hubble-950/10">
+          <Shimmer className="h-52 w-full rounded-none" />
+          <div className="space-y-2 p-5">
+            <Shimmer className="h-3 w-40" />
+            <Shimmer className="h-5 w-3/4" />
+            <Shimmer className="h-3 w-full" />
+            <Shimmer className="h-3 w-2/3" />
+          </div>
+        </div>
+      ))}
+    </LoadingSkeleton>
+  )
+}
+
 export function EventsPage() {
   usePageSeo('Events', 'Upcoming events at Hubble Community Cafe: parties, lectures, drinks and more.')
   const { data: events, loaded, error } = useApiResource<CafeEvent[]>(
@@ -57,9 +77,7 @@ export function EventsPage() {
 
   return (
     <PageShell title="Events">
-      {!loaded && (
-        <p className="text-sm text-hubble-700/70">Loading…</p>
-      )}
+      {!loaded && <EventsSkeleton />}
       {error && (
         <p role="alert" className="text-sm text-red-600">Could not load the events. Please try again later.</p>
       )}

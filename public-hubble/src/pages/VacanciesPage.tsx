@@ -1,4 +1,5 @@
-import { getVacancies, reportApiFailure, type Vacancy, useApiResource } from '@cafe/shared-web'
+import { getVacancies, reportApiFailure, type Vacancy, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 const TEAM_PHOTOS = [
@@ -105,7 +106,16 @@ export function VacanciesPage() {
 
           {/* Vacancy listings */}
           {!loaded && (
-            <p className="mt-10 text-sm text-hubble-700/70">Loading…</p>
+            <LoadingSkeleton className="mt-10 space-y-4" testId="vacancies-skeleton">
+              <Shimmer className="h-6 w-44" />
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={i} className="space-y-2 rounded-xl border border-hubble-100 bg-hubble-50 px-5 py-4">
+                  <Shimmer className="h-5 w-1/2" />
+                  <Shimmer className="h-3 w-full" />
+                  <Shimmer className="h-3 w-3/4" />
+                </div>
+              ))}
+            </LoadingSkeleton>
           )}
           {error && (
             <p role="alert" className="mt-10 text-sm text-red-600">Could not load the open positions. Please try again later.</p>

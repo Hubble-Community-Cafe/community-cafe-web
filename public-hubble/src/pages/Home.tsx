@@ -3,8 +3,9 @@ import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours, reportApiFailure,
   DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
-  useApiResource,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
+import { Shimmer } from '../components/Shimmer'
 import { EXTERNAL } from '../navigation'
 import { usePageSeo } from '../lib/seo'
 
@@ -92,7 +93,14 @@ export function Home() {
           Opening Times
         </h2>
         {!hoursLoaded && (
-          <p className="mt-6 text-center text-sm text-hubble-700/70">Loading…</p>
+          <LoadingSkeleton className="mx-auto mt-6 max-w-xl" testId="hours-skeleton">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between border-b border-hubble-50 py-2.5">
+                <Shimmer className="h-4 w-28" />
+                <Shimmer className="h-4 w-24" />
+              </div>
+            ))}
+          </LoadingSkeleton>
         )}
         {hoursError && (
           <p role="alert" className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>

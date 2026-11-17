@@ -1,4 +1,5 @@
 import { expect } from 'vitest'
+import { screen } from '@testing-library/react'
 
 /** A promise the test resolves itself, to look at the form while it is still sending. */
 export function pending(): { promise: Promise<void>; resolve: () => void } {
@@ -33,4 +34,11 @@ export function unannouncedErrors(sources: Record<string, string>): string[] {
     [...source.matchAll(ERROR_ELEMENT)]
       .filter((match) => !/\brole="alert"/.test(match[3]))
       .map((match) => `${file}:${source.slice(0, match.index).split('\n').length}`))
+}
+
+/** The loading skeleton is on screen and screen readers hear it: a status saying "Loading…". */
+export function expectLoadingSkeleton(testId: string): void {
+  const skeleton = screen.getByTestId(testId)
+  expect(skeleton).toHaveAttribute('role', 'status')
+  expect(skeleton).toHaveTextContent('Loading…')
 }
