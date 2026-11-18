@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
 import { usePermissions } from '../lib/usePermissions'
@@ -6,8 +6,10 @@ import {
   fetchAssociations, createAssociation, updateAssociation, deleteAssociation,
   type Association, type AssociationRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 function AssociationForm({
   initial,
@@ -18,6 +20,7 @@ function AssociationForm({
   onSave: (req: AssociationRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [name, setName] = useState(initial?.name ?? '')
   const [bar, setBar] = useState<BarLocation | ''>(initial?.bar ?? '')
   const [logo, setLogo] = useState<MediaAsset | null>(
@@ -38,8 +41,8 @@ function AssociationForm({
     setError(null)
     try {
       await onSave({ name: name.trim(), logoId: logo?.id ?? null, bar: bar || null })
-    } catch {
-      setError('Failed to save association')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save association'))
       setSaving(false)
     }
   }
@@ -48,14 +51,14 @@ function AssociationForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div>
-          <label className="block text-xs font-medium text-slate-600">Name *</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} required
+          <label htmlFor={`${formId}-name`} className="block text-xs font-medium text-slate-600">Name *</label>
+          <input id={`${formId}-name`} value={name} onChange={(e) => setName(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Inter Actief" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
-          <select value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
+          <label htmlFor={`${formId}-bar`} className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
+          <select id={`${formId}-bar`} value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="">Both</option>
             <option value="HUBBLE">Hubble</option>
@@ -63,8 +66,8 @@ function AssociationForm({
           </select>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Logo</label>
-          <div className="mt-1">
+          <span id={`${formId}-logo`} className="block text-xs font-medium text-slate-600">Logo</span>
+          <div role="group" aria-labelledby={`${formId}-logo`} className="mt-1">
             <MediaPicker value={logo} onChange={setLogo} />
           </div>
         </div>
@@ -78,7 +81,7 @@ function AssociationForm({
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </div>
     </form>
   )
@@ -93,18 +96,17 @@ function AssociationRow({
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete association "${association.name}"?`)) return
-    setDeleting(true)
-    try {
+  const handleDelete = () => confirmAction({
+    title: 'Delete this association?',
+    message: `"${association.name}" will be removed from the associations page.`,
+    confirmLabel: 'Delete association',
+    action: async () => {
       await deleteAssociation(association.id)
       onDeleted()
-    } catch {
-      setDeleting(false)
-    }
-  }
+    },
+  })
 
   if (editing && canEdit) {
     return (
@@ -146,8 +148,8 @@ function AssociationRow({
             className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${association.name}`}
-            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
+          <button onClick={handleDelete} aria-label={`Delete ${association.name}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -171,16 +173,11 @@ export function AssociationsPage() {
   }, [])
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Associations</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage connected study associations. Sorted alphabetically on the public site. Bar left blank means shown on both sites.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Associations"
+        description="Manage connected study associations. Sorted alphabetically on the public site. Bar left blank means shown on both sites."
+      />
 
       {canEditContent && (
         <div className="flex justify-end">
@@ -205,7 +202,7 @@ export function AssociationsPage() {
       )}
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

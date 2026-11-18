@@ -1,7 +1,17 @@
 import { getApiBaseUrl } from './client'
 
-/** A user-displayable error from a form submission (validation, rate limit, etc.). */
-export class FormError extends Error {}
+/**
+ * A user-displayable error from a form submission (validation, rate limit, etc.). `field` names
+ * the one field it is about, when it is about one: the name the form posts it under.
+ */
+export class FormError extends Error {
+  readonly field?: string
+
+  constructor(message: string, field?: string) {
+    super(message)
+    this.field = field
+  }
+}
 
 const NETWORK_ERROR = 'Could not reach the server. Please check your connection and try again.'
 
@@ -11,13 +21,15 @@ function errorFor(status: number, body: string): FormError {
     return new FormError('Too many submissions from this network. Please wait a minute and try again.')
   }
   let message = 'Something went wrong. Please try again.'
+  let field: string | undefined
   try {
-    const data = JSON.parse(body) as { message?: string }
+    const data = JSON.parse(body) as { message?: string; field?: string }
     if (data?.message) message = data.message
+    if (typeof data?.field === 'string') field = data.field
   } catch {
     /* keep the default message */
   }
-  return new FormError(message)
+  return new FormError(message, field)
 }
 
 /**

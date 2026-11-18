@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { MenuPage } from '../pages/MenuPage'
 import { getMenu, type MenuTab } from '@cafe/shared-web'
@@ -65,7 +66,7 @@ describe('Meteor MenuPage loading', () => {
   it('shows the shimmer skeleton while the menu is loading', async () => {
     mockGetMenu.mockResolvedValue(MENU)
     renderMenu()
-    expect(screen.getByTestId('menu-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('menu-skeleton')
     await screen.findByText('Pils')
   })
 

@@ -16,11 +16,14 @@ public record MenuItemDto(
         List<String> sizeOptions,
         List<String> dietaryTags,
         List<String> allergens,
+        // The admin sends imageId back unchanged on save; without it every save cleared the image.
+        Long imageId,
         String imageUrl,
         int sortOrder,
         boolean active
 ) {
     public static MenuItemDto from(MenuItem item) {
+        Long imageId = item.getImage() != null ? item.getImage().getId() : null;
         String imageUrl = item.getImage() != null ? item.getImage().getUrl() : null;
         return new MenuItemDto(
                 item.getId(),
@@ -32,6 +35,7 @@ public record MenuItemDto(
                 splitCsv(item.getSizeOptions()),
                 splitCsv(item.getDietaryTags()),
                 splitCsv(item.getAllergens()),
+                imageId,
                 imageUrl,
                 item.getSortOrder(),
                 item.isActive()

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, groupWeeklyHours, groupKitchenHours, reportApiFailure,
   DAY_LABELS, DAY_ORDER, type WeeklyHours, type HoursOverride,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
+import { Shimmer } from '../components/Shimmer'
 import { EXTERNAL } from '../navigation'
 import { usePageSeo } from '../lib/seo'
 
@@ -33,22 +34,14 @@ const FEATURES = [
 
 export function Home() {
   usePageSeo('', 'Hubble Community Cafe on the TU/e campus: food, drinks, events, and a living room for over 70 student associations.')
-  const [hours, setHours] = useState<WeeklyHours[]>([])
-  const [hoursLoaded, setHoursLoaded] = useState(false)
-  const [hoursError, setHoursError] = useState(false)
-  const [overrides, setOverrides] = useState<HoursOverride[]>([])
-
-  useEffect(() => {
-    getWeeklyHours('HUBBLE')
-      .then(setHours)
-      .catch((err: unknown) => {
-        void reportApiFailure('opening-hours', err)
-        setHoursError(true)
-      })
-      .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('HUBBLE').then(setOverrides)
-      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
-  }, [])
+  const { data: hours, loaded: hoursLoaded, error: hoursError } = useApiResource<WeeklyHours[]>(
+    () => getWeeklyHours('HUBBLE'), [],
+    (err) => void reportApiFailure('opening-hours', err),
+  )
+  const { data: overrides } = useApiResource<HoursOverride[]>(
+    () => getUpcomingOverrides('HUBBLE'), [],
+    (err) => void reportApiFailure('opening-hours-overrides', err),
+  )
 
   const allDays = DAY_ORDER.map((d) => ({ day: d, slot: hours.find((h) => h.dayOfWeek === d) ?? null }))
   const grouped = groupWeeklyHours(hours)
@@ -100,10 +93,17 @@ export function Home() {
           Opening Times
         </h2>
         {!hoursLoaded && (
-          <p className="mt-6 text-center text-sm text-hubble-700/70">Loading…</p>
+          <LoadingSkeleton className="mx-auto mt-6 max-w-xl" testId="hours-skeleton">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center justify-between border-b border-hubble-50 py-2.5">
+                <Shimmer className="h-4 w-28" />
+                <Shimmer className="h-4 w-24" />
+              </div>
+            ))}
+          </LoadingSkeleton>
         )}
         {hoursError && (
-          <p className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
+          <p role="alert" className="mt-6 text-center text-sm text-red-600">Could not load the opening times. Please try again later.</p>
         )}
         {hoursLoaded && !hoursError && hours.length === 0 && (
           <p className="mt-6 text-center text-sm text-hubble-700/70">Opening times coming soon.</p>

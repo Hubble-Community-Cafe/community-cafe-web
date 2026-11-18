@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { association } from '@cafe/shared-web/testing'
 import { AssociationsPage } from '../pages/AssociationsPage'
@@ -26,7 +27,7 @@ describe('Hubble AssociationsPage', () => {
       association({ id: 2, name: 'Scintilla' }),
     ])
     renderPage()
-    expect(screen.getByTestId('associations-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('associations-skeleton')
     expect(await screen.findByRole('img', { name: 'Inter Actief logo' })).toHaveAttribute('src', '/media/ia.png')
     expect(screen.getByText('Scintilla')).toBeInTheDocument()
   })
@@ -40,7 +41,7 @@ describe('Hubble AssociationsPage', () => {
   it('shows an error instead of the empty text when loading fails, and reports it', async () => {
     getAssociations.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the associations. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the associations. Please try again later.')
     expect(screen.queryByText('No associations listed yet.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('associations', expect.any(Error))
   })

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { DeclarationsPage } from '../pages/DeclarationsPage'
-import { expectHiddenHoneypot } from './formTestUtils'
+import { expectHiddenHoneypot } from '@cafe/shared-web/testing/forms'
 
 // The widget registers web workers and auto-fetches on mount; the page only needs its callback.
 vi.mock('altcha', () => ({}))
@@ -28,6 +28,7 @@ async function fillRequiredFields(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText('Full name *'), 'Nora Vermeer')
   await user.type(screen.getByLabelText('Email address *'), 'nora@example.com')
   await user.type(screen.getByLabelText('IBAN *'), 'NL70 TRIO 0338 5890 15')
+  await user.type(screen.getByLabelText('Date of purchase *'), '2026-06-18')
   await user.type(screen.getByLabelText('Amount in euros *'), '40,00')
 }
 
@@ -95,17 +96,46 @@ describe('Meteor DeclarationsPage', () => {
   })
 
   it('shows the backend validation message, or a general one for other failures', async () => {
-    submitDeclarationForm.mockRejectedValueOnce(new FormError('iban is not a valid IBAN'))
+    submitDeclarationForm.mockRejectedValueOnce(new FormError('IBAN must be a valid IBAN'))
     const user = userEvent.setup()
     renderPage()
     await fillRequiredFields(user)
     await user.upload(screen.getByLabelText('Receipt *'), file('receipt.pdf', 'application/pdf'))
     await user.click(screen.getByRole('button', { name: 'Send' }))
-    expect(await screen.findByRole('alert')).toHaveTextContent('iban is not a valid IBAN')
+    expect(await screen.findByRole('alert')).toHaveTextContent('IBAN must be a valid IBAN')
 
     submitDeclarationForm.mockRejectedValueOnce(new Error('boom'))
     await user.click(screen.getByRole('button', { name: 'Send' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong. Please try again.')
+  })
+
+  it('marks the field the backend refused, for screen readers and the eye', async () => {
+    submitDeclarationForm.mockRejectedValueOnce(new FormError('IBAN must be a valid IBAN', 'iban'))
+    const user = userEvent.setup()
+    renderPage()
+    await fillRequiredFields(user)
+    await user.upload(screen.getByLabelText('Receipt *'), file('receipt.pdf', 'application/pdf'))
+    await user.click(screen.getByRole('button', { name: /Send|Submit/ }))
+
+    const alert = await screen.findByRole('alert')
+    const iban = screen.getByLabelText('IBAN *')
+    expect(iban).toHaveAttribute('aria-invalid', 'true')
+    expect(iban).toHaveAttribute('aria-describedby', alert.id)
+    expect(iban).toHaveFocus()
+    expect(iban.className).toContain('aria-[invalid=true]:border-red-')
+  })
+
+  it('names and marks the required fields left empty, without sending', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(screen.getByRole('button', { name: /Send|Submit/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Please fill in: Full name, Email address, IBAN, Date of purchase, Amount in euros.')
+    expect(screen.getByLabelText('Full name *')).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText('Full name *')).toHaveFocus()
+    expect(screen.getByLabelText('Phone number')).not.toHaveAttribute('aria-invalid')
+    expect(submitDeclarationForm).not.toHaveBeenCalled()
   })
 
   it('has a hidden honeypot', () => {

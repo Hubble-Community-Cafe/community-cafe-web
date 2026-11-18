@@ -1,5 +1,7 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.service.TestUploads;
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.AuroraClient;
 import cafe.community.backend.aurora.AuroraException;
@@ -68,7 +70,7 @@ class ScreenFormAuroraTest {
 
     private static MockMultipartHttpServletRequestBuilder form() {
         return multipart("/api/forms/screen")
-                .file(new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3}))
+                .file(new MockMultipartFile("file", "poster.png", "image/png", TestImages.png(1, 1)))
                 .param("name", "Anke").param("association", "Doppio").param("email", REQUESTER)
                 .param("hexColor", "#FFF200").param("message", "Please post");
     }
@@ -110,7 +112,7 @@ class ScreenFormAuroraTest {
         assertThat(r.accentColor()).isEqualTo("#FFF200");
         assertThat(r.defaultTimeout()).isEqualTo(30);
         assertThat(r.file().filename()).isEqualTo("poster.png");
-        assertThat(r.file().data()).containsExactly(1, 2, 3);
+        assertThat(r.file().data()).isEqualTo(TestImages.png(1, 1));
         assertThat(repo.count()).isEqualTo(1);
     }
 
@@ -194,6 +196,18 @@ class ScreenFormAuroraTest {
 
     // ── Aurora refuses: the requester sees why ──────────────────────────────────
 
+    /** A refusal of the request as a whole marks no single field. */
+    @Test
+    void auroraRefusesTheRequest_marksNoField() throws Exception {
+        when(aurora.createPosterRequest(any())).thenThrow(new AuroraRejectedException(
+                AuroraRejectedException.Reason.INVALID, "Aurora refused the poster request with 422"));
+
+        mockMvc.perform(dated())
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(org.hamcrest.Matchers.startsWith("The screens system")))
+                .andExpect(jsonPath("$.field").doesNotExist());
+    }
+
     @Test
     void auroraRefusesTheFile_showsTheRequesterWhyAndSendsNothing(CapturedOutput output) throws Exception {
         when(aurora.createPosterRequest(any())).thenThrow(new AuroraRejectedException(
@@ -203,7 +217,8 @@ class ScreenFormAuroraTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value(
                         "We could not read your poster. Please upload a valid JPG, PNG or MP4 file "
-                                + "(iPhone .mov videos are not supported)."));
+                                + "(iPhone .mov videos are not supported)."))
+                .andExpect(jsonPath("$.field").value("file"));
 
         verify(mail, never()).send(any());
         assertThat(repo.count()).isZero();
@@ -225,7 +240,7 @@ class ScreenFormAuroraTest {
 
     @Test
     void posterOver10MbButWithin20Mb_isAccepted() throws Exception {
-        byte[] big = new byte[15 * 1024 * 1024];
+        byte[] big = TestUploads.mp4(15 * 1024 * 1024);
         mockMvc.perform(multipart("/api/forms/screen")
                         .file(new MockMultipartFile("file", "clip.mp4", "video/mp4", big))
                         .param("name", "Anke").param("association", "Doppio").param("email", REQUESTER)

@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ExternalLink } from 'lucide-react'
 import {
   getWeeklyHours, getUpcomingOverrides, reportApiFailure, type WeeklyHours, type HoursOverride,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
+import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 import { EXTERNAL } from '../navigation'
 
@@ -41,22 +42,14 @@ function groupHours(hours: WeeklyHours[]): { label: string; open: string; close:
 
 export function Home() {
   usePageSeo('', 'Meteor Community Cafe on the TU/e campus: a lively cafe and meeting space by day, a relaxed spot for events by night.')
-  const [hours, setHours] = useState<WeeklyHours[]>([])
-  const [hoursLoaded, setHoursLoaded] = useState(false)
-  const [hoursError, setHoursError] = useState(false)
-  const [overrides, setOverrides] = useState<HoursOverride[]>([])
-
-  useEffect(() => {
-    getWeeklyHours('METEOR')
-      .then(setHours)
-      .catch((err: unknown) => {
-        void reportApiFailure('opening-hours', err)
-        setHoursError(true)
-      })
-      .finally(() => setHoursLoaded(true))
-    getUpcomingOverrides('METEOR').then(setOverrides)
-      .catch((err: unknown) => void reportApiFailure('opening-hours-overrides', err))
-  }, [])
+  const { data: hours, loaded: hoursLoaded, error: hoursError } = useApiResource<WeeklyHours[]>(
+    () => getWeeklyHours('METEOR'), [],
+    (err) => void reportApiFailure('opening-hours', err),
+  )
+  const { data: overrides } = useApiResource<HoursOverride[]>(
+    () => getUpcomingOverrides('METEOR'), [],
+    (err) => void reportApiFailure('opening-hours-overrides', err),
+  )
 
   const closedDays = DAY_ORDER.filter((d) => !hours.find((h) => h.dayOfWeek === d))
   const grouped = groupHours(hours)
@@ -115,11 +108,18 @@ export function Home() {
             Opening hours
           </h2>
           {!hoursLoaded && (
-            <p className="mt-6 text-sm text-meteor-700/70">Loading…</p>
+            <LoadingSkeleton className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100" testId="hours-skeleton">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="flex items-center justify-between py-3.5">
+                  <Shimmer className="h-4 w-28" />
+                  <Shimmer className="h-4 w-24" />
+                </div>
+              ))}
+            </LoadingSkeleton>
           )}
           {/* Without this, a failed load would list every day as closed. */}
           {hoursError && (
-            <p className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
+            <p role="alert" className="mt-6 text-sm text-red-700">Could not load the opening hours. Please try again later.</p>
           )}
           {hoursLoaded && !hoursError && (
             <dl className="mt-6 max-w-2xl divide-y divide-meteor-100 border-y border-meteor-100">

@@ -13,13 +13,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
-
-    /** All entries, newest first (paged) for the admin audit view. */
-    Page<AuditLog> findAllByOrderByCreatedAtDesc(Pageable pageable);
 
     /**
      * Audit entries newest first, optionally narrowed by entity type and/or action.
@@ -34,9 +30,6 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
     Page<AuditLog> findFiltered(@Param("entityType") AuditEntityType entityType,
                                 @Param("action") AuditAction action,
                                 Pageable pageable);
-
-    /** Entries for a single entity, newest first (per-entity history timeline). */
-    List<AuditLog> findByEntityTypeAndEntityIdOrderByCreatedAtDesc(AuditEntityType entityType, Long entityId);
 
     /** Data retention: blank who made the change on entries older than {@code cutoff}; the change stays. */
     @Transactional

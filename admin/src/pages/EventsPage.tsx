@@ -1,12 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { usePermissions } from '../lib/usePermissions'
 import {
   fetchEvents, createEvent, updateEvent, deleteEvent,
   type BarLocation, type CafeEvent, type EventRequest,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 
@@ -28,6 +30,7 @@ function EventForm({
   onSave: (req: EventRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [date, setDate] = useState(initial?.date ?? '')
@@ -57,8 +60,8 @@ function EventForm({
         imageId: initial?.imageId ?? null,
         published,
       })
-    } catch {
-      setError('Failed to save event')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save event'))
       setSaving(false)
     }
   }
@@ -67,36 +70,37 @@ function EventForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Title *</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required
+          <label htmlFor={`${formId}-title`} className="block text-xs font-medium text-slate-600">Title *</label>
+          <input id={`${formId}-title`} value={title} onChange={(e) => setTitle(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Quiz Night" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Date *</label>
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} required
+          <label htmlFor={`${formId}-date`} className="block text-xs font-medium text-slate-600">Date *</label>
+          <input id={`${formId}-date`} type="date" value={date} onChange={(e) => setDate(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Start time</label>
-          <input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
+          <label htmlFor={`${formId}-start-time`} className="block text-xs font-medium text-slate-600">Start time</label>
+          <input id={`${formId}-start-time`} type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Price</label>
-          <input value={price} onChange={(e) => setPrice(e.target.value)}
+          <label htmlFor={`${formId}-price`} className="block text-xs font-medium text-slate-600">Price</label>
+          <input id={`${formId}-price`} value={price} onChange={(e) => setPrice(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Free / €5 / TBD" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Sign-up link</label>
-          <input value={subscribeLink} onChange={(e) => setSubscribeLink(e.target.value)}
+          <label htmlFor={`${formId}-signup-link`} className="block text-xs font-medium text-slate-600">Sign-up link</label>
+          <input id={`${formId}-signup-link`} type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+            value={subscribeLink} onChange={(e) => setSubscribeLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+          <label htmlFor={`${formId}-description`} className="block text-xs font-medium text-slate-600">Description</label>
+          <textarea id={`${formId}-description`} value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="A short description of the event…" />
         </div>
@@ -117,7 +121,7 @@ function EventForm({
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </div>
     </form>
   )
@@ -132,18 +136,17 @@ function EventRow({
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete "${event.title}"?`)) return
-    setDeleting(true)
-    try {
+  const handleDelete = () => confirmAction({
+    title: 'Delete this event?',
+    message: `"${event.title}" will be removed from the website.`,
+    confirmLabel: 'Delete event',
+    action: async () => {
       await deleteEvent(event.id)
       onDeleted()
-    } catch {
-      setDeleting(false)
-    }
-  }
+    },
+  })
 
   if (editing && canEdit) {
     return (
@@ -188,8 +191,8 @@ function EventRow({
             className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${event.title}`}
-            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
+          <button onClick={handleDelete} aria-label={`Delete ${event.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -206,19 +209,18 @@ export function EventsPage() {
   const [error, setError] = useState<string | null>(null)
   const [creating, setCreating] = useState(false)
 
-  const load = async (b: BarLocation) => {
+  useEffect(() => {
+    // Switching bars quickly can leave the previous bar's request still running. Only the current
+    // bar's answer may land, or Hubble's events would show under "Meteor events".
+    let current = true
     setLoading(true)
     setError(null)
-    try {
-      setEvents(await fetchEvents(b))
-    } catch {
-      setError('Failed to load events')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load(bar) }, [bar])
+    fetchEvents(bar)
+      .then((list) => { if (current) setEvents(list) })
+      .catch(() => { if (current) setError('Failed to load events') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [bar])
 
   const handleCreated = (e: CafeEvent) => {
     setEvents((prev) => [e, ...prev].sort((a, b) => b.date.localeCompare(a.date)))
@@ -226,16 +228,11 @@ export function EventsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Events</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage upcoming events for each bar. Published events appear on the public site.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Events"
+        description="Manage upcoming events for each bar. Published events appear on the public site."
+      />
 
       <div className="flex gap-2">
         {BARS.map((b) => (
@@ -251,7 +248,7 @@ export function EventsPage() {
       </div>
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

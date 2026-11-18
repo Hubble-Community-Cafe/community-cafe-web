@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -62,27 +61,12 @@ public class SecurityConfig {
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             // CSRF disabled: stateless JWT bearer auth (not cookies), so CSRF does not apply.
             .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers("/", "/actuator/health", "/error").permitAll()
-                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
-                // Public sites read published CMS content without logging in.
-                .requestMatchers(HttpMethod.GET, "/api/public/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/menu/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/daily-dish/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/opening-hours/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/events/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/board/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/vacancies/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/associations/**").permitAll()
-                // Public form submissions (honeypot + ALTCHA + rate-limit protected) + the challenge.
-                .requestMatchers(HttpMethod.GET, "/api/forms/challenge").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/forms/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/media/**").permitAll()
+            .authorizeHttpRequests(auth -> {
+                PublicRoutes.permit(auth);
                 // Everything under /api/admin requires a valid staff token.
-                .requestMatchers("/api/admin/**").authenticated()
-                .anyRequest().authenticated()
-            );
+                auth.requestMatchers("/api/admin/**").authenticated()
+                    .anyRequest().authenticated();
+            });
 
         http.oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()));
 
@@ -115,6 +99,13 @@ public class SecurityConfig {
      * fetching Microsoft's signing keys.
      */
     static OAuth2TokenValidator<Jwt> tokenValidator(String azureTenantId, String azureClientId) {
+        // Without a client id there is no audience to check, and any token of the tenant, issued
+        // for any app, would pass. Refuse to start instead of quietly skipping that check.
+        if (azureClientId == null || azureClientId.isBlank()) {
+            throw new IllegalStateException(
+                    "azure.client-id (AZURE_CLIENT_ID) must be set when azure.tenant-id is: "
+                            + "without it the token audience cannot be checked");
+        }
         // Azure AD issues v1.0 or v2.0 issuers depending on accessTokenAcceptedVersion.
         String issuerV1 = "https://sts.windows.net/" + azureTenantId + "/";
         String issuerV2 = "https://login.microsoftonline.com/" + azureTenantId + "/v2.0";
@@ -123,9 +114,6 @@ public class SecurityConfig {
 
         OAuth2TokenValidator<Jwt> audienceValidator = new JwtClaimValidator<>(
                 JwtClaimNames.AUD, aud -> {
-            if (azureClientId == null || azureClientId.isEmpty()) {
-                return true;
-            }
             String expected = "api://" + azureClientId;
             if (aud instanceof String single) {
                 return expected.equals(single) || azureClientId.equals(single);

@@ -11,18 +11,10 @@ import {
   type BarLocation, type DailyDish, type CafeEvent,
   type HoursOverride, type AuditLogEntry,
 } from '../lib/api'
+import { barDaysFrom, barToday } from '../lib/barDate'
 
 // ── Date / format helpers ──────────────────────────────────────────────────────
 
-function localDateStr(d: Date): string {
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
-const todayStr = () => localDateStr(new Date())
-function inDaysStr(n: number): string {
-  const d = new Date()
-  d.setDate(d.getDate() + n)
-  return localDateStr(d)
-}
 function formatDate(dateStr: string): string {
   const [y, m, d] = dateStr.split('-').map(Number)
   return new Date(y, m - 1, d).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
@@ -45,7 +37,7 @@ function CardLabel({ children }: { children: React.ReactNode }) {
 function BarBadge({ bar }: { bar: BarLocation }) {
   const cls = bar === 'HUBBLE' ? 'bg-hubble-50 text-hubble-700' : 'bg-emerald-50 text-emerald-700'
   return (
-    <span className={`rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase ${cls}`}>
+    <span className={`rounded-full px-1.5 py-0.5 text-xs font-semibold uppercase ${cls}`}>
       {bar === 'HUBBLE' ? 'Hubble' : 'Meteor'}
     </span>
   )
@@ -68,7 +60,7 @@ function DailyDishWidget() {
 
   useEffect(() => {
     fetchDailyDishes()
-      .then((list) => setDish(list.find((d) => d.date === todayStr()) ?? null))
+      .then((list) => setDish(list.find((d) => d.date === barToday()) ?? null))
       .catch(() => setDish(null))
   }, [])
 
@@ -101,7 +93,7 @@ function EventsWidget() {
   useEffect(() => {
     Promise.all([fetchEvents('HUBBLE'), fetchEvents('METEOR')])
       .then(([h, m]) => {
-        const today = todayStr()
+        const today = barToday()
         const upcoming = [...h, ...m]
           .filter((e) => e.date >= today)
           .sort((a, b) => a.date.localeCompare(b.date))
@@ -126,7 +118,7 @@ function EventsWidget() {
               <span className="min-w-0 flex-1 truncate font-medium text-slate-700">{e.title}</span>
               <span className="shrink-0 text-xs text-slate-500">{formatDate(e.date)}</span>
               {!e.published && (
-                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-amber-700">
+                <span className="shrink-0 rounded bg-amber-50 px-1.5 py-0.5 text-xs font-semibold uppercase text-amber-700">
                   draft
                 </span>
               )}
@@ -145,8 +137,8 @@ function OverridesWidget() {
   useEffect(() => {
     Promise.all([fetchOverrides('HUBBLE'), fetchOverrides('METEOR')])
       .then(([h, m]) => {
-        const today = todayStr()
-        const horizon = inDaysStr(14)
+        const today = barToday()
+        const horizon = barDaysFrom(14)
         const list = [...h, ...m]
           .filter((o) => o.date >= today && o.date <= horizon)
           .sort((a, b) => a.date.localeCompare(b.date))

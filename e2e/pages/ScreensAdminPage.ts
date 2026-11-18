@@ -33,6 +33,17 @@ export class ScreensAdminPage {
     return this.page.getByLabel(scene, { exact: true })
   }
 
+  /**
+   * Choose a scene's poster and wait until it is saved. The page saves in the background, so a
+   * scene clicked straight after could otherwise still run with the previous poster.
+   */
+  async choosePoster(scene: 'Closed' | 'Last call', label: string): Promise<void> {
+    const saved = this.page.waitForResponse((r) =>
+      r.url().endsWith('/api/admin/screens/settings') && r.request().method() === 'PUT')
+    await this.posterSelect(scene).selectOption({ label })
+    await saved
+  }
+
   async apply(label: 'Open' | 'Last call' | 'Closed'): Promise<void> {
     await this.sceneButton(label).click()
     await expect(this.currentScene()).toHaveText(label)

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { ConfirmActionProvider } from '../components/ConfirmActionProvider'
+import { ActionError } from '../lib/actionError'
 import { MediaPage } from '../pages/MediaPage'
 import { fetchAllMedia, uploadMedia, deleteMedia } from '../lib/api'
 import { usePermissions } from '../lib/usePermissions'
@@ -33,7 +35,8 @@ const pickFile = (file: File) => {
 }
 
 /** The page title's Help button reads the route, so the page renders inside a router. */
-const renderPage = () => render(<MemoryRouter initialEntries={['/media']}><MediaPage /></MemoryRouter>)
+const renderPage = () => render(
+  <MemoryRouter initialEntries={['/media']}><ConfirmActionProvider><MediaPage /></ConfirmActionProvider></MemoryRouter>)
 
 describe('MediaPage uploads', () => {
   beforeEach(() => {
@@ -109,14 +112,14 @@ describe('MediaPage deleting', () => {
     vi.resetAllMocks()
     mockFetch.mockResolvedValue([ASSET] as never)
     asEditor()
-    vi.spyOn(window, 'confirm').mockReturnValue(true)
   })
 
   it('shows why an image cannot be deleted and keeps it in the library', async () => {
     vi.mocked(deleteMedia).mockRejectedValue(
-      new Error("This image is still used by the event 'Pub quiz'. Choose another image there first."))
+      new ActionError("This image is still used by the event 'Pub quiz'. Choose another image there first."))
     renderPage()
     fireEvent.click(await screen.findByTitle('Delete'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete image' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent(
       "This image is still used by the event 'Pub quiz'. Choose another image there first.")
@@ -128,6 +131,7 @@ describe('MediaPage deleting', () => {
     vi.mocked(deleteMedia).mockResolvedValue(undefined)
     renderPage()
     fireEvent.click(await screen.findByTitle('Delete'))
+    fireEvent.click(await screen.findByRole('button', { name: 'Delete image' }))
 
     await waitFor(() => expect(screen.queryByText('quiz.jpg')).not.toBeInTheDocument())
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()

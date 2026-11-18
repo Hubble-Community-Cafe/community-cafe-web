@@ -1,5 +1,6 @@
 package cafe.community.backend.altcha;
 
+import java.time.Clock;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -12,7 +13,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
-import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Map;
@@ -35,6 +35,7 @@ public class AltchaService {
     private final String hmacKey;
     private final int maxNumber;
     private final long expirySeconds;
+    private final Clock clock;
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final SecureRandom random = new SecureRandom();
     /** Solved signatures (single-use), mapped to their expiry epoch for lazy cleanup. */
@@ -43,11 +44,13 @@ public class AltchaService {
     public AltchaService(
             @Value("${app.altcha.enabled:false}") boolean enabled,
             @Value("${app.altcha.hmac-key:}") String hmacKey,
-            @Value("${app.altcha.max-number:50000}") int maxNumber,
-            @Value("${app.altcha.expiry-seconds:300}") long expirySeconds) {
+            @Value("${app.altcha.max-number:1000000}") int maxNumber,
+            @Value("${app.altcha.expiry-seconds:300}") long expirySeconds,
+            Clock clock) {
         this.enabled = enabled;
         this.maxNumber = maxNumber;
         this.expirySeconds = expirySeconds;
+        this.clock = clock;
         if (hmacKey == null || hmacKey.isBlank()) {
             this.hmacKey = randomHex(32);
             if (enabled) {
@@ -65,7 +68,7 @@ public class AltchaService {
 
     /** A fresh, single-use challenge for the widget (fields match the ALTCHA spec). */
     public Challenge createChallenge() {
-        String salt = randomHex(12) + "?expires=" + (Instant.now().getEpochSecond() + expirySeconds);
+        String salt = randomHex(12) + "?expires=" + (clock.instant().getEpochSecond() + expirySeconds);
         long number = random.nextInt(maxNumber + 1);
         String challenge = sha256Hex(salt + number);
         String signature = hmacSha256Hex(challenge);
@@ -92,7 +95,7 @@ public class AltchaService {
             long number = p.path("number").asLong();
 
             long expires = parseExpires(salt);
-            if (expires > 0 && Instant.now().getEpochSecond() > expires) {
+            if (expires > 0 && clock.instant().getEpochSecond() > expires) {
                 return false;
             }
             if (!constantTimeEquals(sha256Hex(salt + number), challenge)) {
@@ -104,7 +107,7 @@ public class AltchaService {
             // Single-use: reject a payload we've already accepted (best-effort, in-memory).
             purgeExpired();
             return usedSignatures.putIfAbsent(signature, expires > 0 ? expires
-                    : Instant.now().getEpochSecond() + expirySeconds) == null;
+                    : clock.instant().getEpochSecond() + expirySeconds) == null;
         } catch (Exception e) {
             return false;
         }
@@ -125,7 +128,7 @@ public class AltchaService {
     }
 
     private void purgeExpired() {
-        long now = Instant.now().getEpochSecond();
+        long now = clock.instant().getEpochSecond();
         usedSignatures.entrySet().removeIf(e -> e.getValue() < now);
     }
 

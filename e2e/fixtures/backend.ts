@@ -164,6 +164,28 @@ export function seedMenuItem(
   })
 }
 
+/**
+ * The menu the admin menu specs work on: a Hubble "E2E Drinks" tab with an "E2E Cocktails"
+ * section of three items (Mojito, Negroni, Daiquiri, in that order). `withBeers` adds an
+ * "E2E Beers" section with one item, as a second place to move items to.
+ */
+export async function seedCocktailMenu(
+  request: APIRequestContext,
+  { studentPrice = null, withBeers = false }: { studentPrice?: number | null; withBeers?: boolean } = {},
+) {
+  const tab = await seedMenuCategory(request, { name: 'E2E Drinks', bar: 'HUBBLE' })
+  const cocktails = await seedMenuCategory(request, { name: 'E2E Cocktails', bar: 'HUBBLE', parentId: tab.id })
+  let beers: { id: number } | null = null
+  if (withBeers) {
+    beers = await seedMenuCategory(request, { name: 'E2E Beers', bar: 'HUBBLE', parentId: tab.id })
+    await seedMenuItem(request, beers.id, { name: 'E2E Pils', regularPrice: 3 })
+  }
+  for (const name of ['E2E Mojito', 'E2E Negroni', 'E2E Daiquiri']) {
+    await seedMenuItem(request, cocktails.id, { name, regularPrice: 7, studentPrice })
+  }
+  return { tab, cocktails, beers }
+}
+
 export function seedDailyDish(
   request: APIRequestContext,
   dish: { date: string; name: string; description?: string | null; price?: number | null },

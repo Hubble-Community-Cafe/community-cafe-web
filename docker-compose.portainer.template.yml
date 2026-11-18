@@ -8,9 +8,16 @@
 #     and user there first.
 #
 # Reverse-proxy the published ports to the public hostnames:
-#   admin   -> admin.test.hubble.cafe
-#   hubble  -> test.hubble.cafe
-#   meteor  -> test.meteor.cafe
+#   9810 backend -> api.test.hubble.cafe
+#   9813 admin   -> admin.test.hubble.cafe
+#   9811 hubble  -> test.hubble.cafe
+#   9812 meteor  -> test.meteor.cafe
+# Every port is bound to 127.0.0.1, where the proxy reaches it. Without the address Docker
+# publishes on all interfaces (bypassing ufw), so anyone could talk plain HTTP to the containers
+# on the host IP, skipping TLS and the X-Real-IP header the backend rate limiter keys on.
+# The proxy must SET (overwrite) X-Real-IP to the client address, for example nginx
+# `proxy_set_header X-Real-IP $remote_addr;` or Caddy `header_up X-Real-IP {remote_host}`.
+# The backend trusts that header only from loopback/private peers such as this proxy.
 
 services:
   backend:
@@ -26,7 +33,7 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9810:8080"
+      - "127.0.0.1:9810:8080"
     networks:
       - cafe
       - mariadb_mariadb-network
@@ -89,7 +96,7 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9811:80"
+      - "127.0.0.1:9811:80"
     networks:
       - cafe
     environment:
@@ -103,7 +110,7 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9812:80"
+      - "127.0.0.1:9812:80"
     networks:
       - cafe
     environment:
@@ -117,7 +124,7 @@ services:
         condition: on-failure
         delay: 5s
     ports:
-      - "9813:80"
+      - "127.0.0.1:9813:80"
     networks:
       - cafe
     environment:

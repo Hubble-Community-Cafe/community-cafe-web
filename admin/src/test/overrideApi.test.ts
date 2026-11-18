@@ -30,6 +30,6 @@ describe('override API', () => {
 
   it('rejects with a general message when there is none', async () => {
     respondWith(500)
-    await expect(updateOverride(4, req)).rejects.toThrow('Could not save the override (500). Please try again.')
+    await expect(updateOverride(4, req)).rejects.toThrow('Could not save the override. Please try again.')
   })
 })

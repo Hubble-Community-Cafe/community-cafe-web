@@ -9,6 +9,9 @@ import cafe.community.backend.model.AuditAction;
 import cafe.community.backend.repository.AuditLogRepository;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.boot.test.system.CapturedOutput;
+import org.springframework.boot.test.system.OutputCaptureExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -46,6 +49,17 @@ class AdminUserServiceTest {
         assertThat(user.getId()).isNotNull();
         assertThat(user.getRole()).isEqualTo(AdminRole.STAFF);
         assertThat(user.getPermissions()).isEmpty();
+    }
+
+    /** Staff email is personal data: the provisioning log names the object id instead. */
+    @Test
+    @ExtendWith(OutputCaptureExtension.class)
+    void getOrCreateUser_logsTheObjectIdButNotTheEmail(CapturedOutput output) {
+        adminUserService.getOrCreateUser("u-log", "private.person@hubble.cafe", "Private Person");
+
+        assertThat(output.getAll()).contains("Provisioned admin user oid=u-log role=STAFF")
+                .doesNotContain("private.person@hubble.cafe")
+                .doesNotContain("Private Person");
     }
 
     @Test

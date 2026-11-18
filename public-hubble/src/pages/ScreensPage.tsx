@@ -1,17 +1,25 @@
 import { useState } from 'react'
-import { submitScreenForm, FormError, formsChallengeUrl, type UploadProgress } from '@cafe/shared-web'
+import {
+  submitScreenForm, formsChallengeUrl, type UploadProgress, checkUpload, type UploadRule, useFormSubmit, type FormProblem,
+} from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { UploadProgressPanel } from '../components/UploadProgressPanel'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { ColourField } from '../components/ColourField'
 import { usePageSeo } from '../lib/seo'
 
-const MAX_BYTES = 20 * 1024 * 1024
-const ACCEPTED = ['image/jpeg', 'image/png', 'video/mp4']
+const POSTER_UPLOAD: UploadRule = {
+  accept: ['image/jpeg', 'image/png', 'video/mp4'],
+  maxBytes: 20 * 1024 * 1024,
+  missing: 'Please choose a poster file (JPG, PNG or MP4).',
+  wrongType: 'Unsupported file type. Use JPG, PNG or MP4.',
+}
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-600'
 const label = 'block text-sm font-semibold text-hubble-800'
 
 const REQUIREMENTS = [
@@ -34,10 +42,8 @@ export function ScreensPage() {
   })
   const [permanent, setPermanent] = useState(false)
   const [file, setFile] = useState<File | null>(null)
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
   const [progress, setProgress] = useState<UploadProgress | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
@@ -48,34 +54,37 @@ export function ScreensPage() {
     !permanent && !!form.startDate && !!form.endDate &&
     new Date(form.endDate).getTime() - new Date(form.startDate).getTime() > TWO_WEEKS_MS
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    if (!file) { setError('Please choose a poster file (JPG, PNG or MP4).'); return }
-    if (!ACCEPTED.includes(file.type)) { setError('Unsupported file type. Use JPG, PNG or MP4.'); return }
-    if (file.size > MAX_BYTES) { setError('That file is larger than 20 MB.'); return }
-    if (!permanent) {
-      if (!form.startDate || !form.endDate) {
-        setError('Please choose a start and end date, or tick the permanent-poster box.'); return
+  /** What is wrong before sending, if anything: the poster file, then the dates. */
+  const check = (): FormProblem | null => {
+    const fileProblem = checkUpload(file, POSTER_UPLOAD)
+    if (fileProblem) return { message: fileProblem, field: 'file' }
+    if (permanent) return null
+    if (!form.startDate || !form.endDate) {
+      return {
+        message: 'Please choose a start and end date, or tick the permanent-poster box.',
+        field: form.startDate ? 'endDate' : 'startDate',
       }
-      if (form.endDate < form.startDate) { setError('The end date must be on or after the start date.'); return }
     }
+    if (form.endDate < form.startDate) {
+      return { message: 'The end date must be on or after the start date.', field: 'endDate' }
+    }
+    return null
+  }
 
-    setStatus('sending')
-    try {
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    void send(async (altcha) => {
       const data = new FormData()
       Object.entries(form).forEach(([k, v]) => data.append(k, v))
       data.append('permanent', String(permanent))
-      data.append('altcha', altcha ?? '')
-      data.append('file', file)
-      await submitScreenForm(data, setProgress)
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    } finally {
-      setProgress(null)
-    }
+      data.append('altcha', altcha)
+      data.append('file', file!) // never null here: the check ran first
+      try {
+        await submitScreenForm(data, setProgress)
+      } finally {
+        setProgress(null)
+      }
+    }, check)
   }
 
   return (
@@ -112,24 +121,24 @@ export function ScreensPage() {
           </p>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-8 space-y-5" noValidate>
+        <form {...formProps} onSubmit={submit} className="mt-8 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="s-name" className={label}>Name *</label>
-              <input id="s-name" required value={form.name} onChange={set('name')} className={field} />
+              <input id="s-name" required value={form.name} {...fieldProps('name')} onChange={set('name')} className={field} />
             </div>
             <div>
               <label htmlFor="s-assoc" className={label}>Association *</label>
-              <input id="s-assoc" required value={form.association} onChange={set('association')} className={field} />
+              <input id="s-assoc" required value={form.association} {...fieldProps('association')} onChange={set('association')} className={field} />
             </div>
             <div>
               <label htmlFor="s-email" className={label}>Email *</label>
-              <input id="s-email" type="email" required value={form.email} onChange={set('email')} className={field} />
+              <input id="s-email" type="email" required value={form.email} {...fieldProps('email')} onChange={set('email')} className={field} />
             </div>
 
             <div className="sm:col-span-2">
               <label className="flex items-start gap-2.5 text-sm text-hubble-900">
-                <input type="checkbox" checked={permanent}
+                <input type="checkbox" {...fieldProps('permanent')} checked={permanent}
                   onChange={(e) => setPermanent(e.target.checked)}
                   className="mt-0.5 h-4 w-4 rounded border-hubble-300 text-hubble-700 focus-visible:ring-hubble-500/40" />
                 <span>I want to use this poster as our association&rsquo;s permanent poster (no dates).</span>
@@ -146,13 +155,13 @@ export function ScreensPage() {
             <div>
               <label htmlFor="s-start" className={label}>Start date {!permanent && '*'}</label>
               <input id="s-start" type="date" required={!permanent} disabled={permanent}
-                value={form.startDate} onChange={set('startDate')}
+                value={form.startDate} {...fieldProps('startDate')} onChange={set('startDate')}
                 className={`${field} disabled:cursor-not-allowed disabled:bg-hubble-50 disabled:text-hubble-400`} />
             </div>
             <div>
               <label htmlFor="s-end" className={label}>End date {!permanent && '*'}</label>
               <input id="s-end" type="date" required={!permanent} disabled={permanent}
-                value={form.endDate} onChange={set('endDate')}
+                value={form.endDate} {...fieldProps('endDate')} onChange={set('endDate')}
                 className={`${field} disabled:cursor-not-allowed disabled:bg-hubble-50 disabled:text-hubble-400`} />
             </div>
 
@@ -164,18 +173,18 @@ export function ScreensPage() {
             )}
             <div>
               <label htmlFor="s-hex" className={label}>Clock / progress colour <span className="font-normal text-hubble-800/70">(optional hex)</span></label>
-              <ColourField id="s-hex" value={form.hexColor} className={field}
+              <ColourField id="s-hex" {...fieldProps('hexColor')} value={form.hexColor} className={field}
                 onChange={(hexColor) => setForm((f) => ({ ...f, hexColor }))} />
             </div>
             <div>
               <label htmlFor="s-file" className={label}>Poster file *</label>
-              <input id="s-file" type="file" accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
+              <input id="s-file" type="file" {...fieldProps('file')} accept=".jpg,.jpeg,.png,.mp4,image/jpeg,image/png,video/mp4"
                 onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-                className="mt-1 w-full text-sm text-hubble-800 file:mr-3 file:rounded file:border-0 file:bg-hubble-700 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-hubble-600" />
+                className="mt-1 w-full rounded aria-[invalid=true]:outline-2 aria-[invalid=true]:outline-offset-4 aria-[invalid=true]:outline-red-600 text-sm text-hubble-800 file:mr-3 file:rounded file:border-0 file:bg-hubble-700 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-hubble-600" />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="s-msg" className={label}>Message</label>
-              <textarea id="s-msg" rows={4} value={form.message} onChange={set('message')} className={field} />
+              <textarea id="s-msg" rows={4} value={form.message} {...fieldProps('message')} onChange={set('message')} className={field} />
             </div>
           </div>
 
@@ -187,7 +196,7 @@ export function ScreensPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           {status === 'sending' && progress && <UploadProgressPanel progress={progress} />}

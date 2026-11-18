@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.dao.CannotAcquireLockException;
 
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -37,7 +38,7 @@ class AdminUserIdentityRefreshTest {
     @BeforeEach
     void setUp() {
         repository = mock(AdminUserRepository.class);
-        service = new AdminUserService(repository, mock(AuditService.class), "");
+        service = new AdminUserService(repository, mock(AuditService.class), "", Clock.systemUTC());
 
         stored = new AdminUser();
         stored.setId(1L);

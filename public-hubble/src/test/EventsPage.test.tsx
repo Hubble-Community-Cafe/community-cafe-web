@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { cafeEvent } from '@cafe/shared-web/testing'
 import { EventsPage } from '../pages/EventsPage'
@@ -20,10 +21,10 @@ describe('Hubble EventsPage', () => {
     reportApiFailure.mockReset()
   })
 
-  it('asks for the Hubble events and shows a loading line meanwhile', async () => {
+  it('asks for the Hubble events and shows a loading skeleton meanwhile', async () => {
     getUpcomingEvents.mockResolvedValue([])
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('events-skeleton')
     expect(getUpcomingEvents).toHaveBeenCalledWith('HUBBLE')
     await screen.findByText(/No upcoming events/)
   })
@@ -33,7 +34,8 @@ describe('Hubble EventsPage', () => {
       cafeEvent({ title: 'Pub quiz', date: '2030-10-05', startTime: '20:00', price: '€2', subscribeLink: 'https://example.com/signup' }),
     ])
     renderPage()
-    expect(await screen.findByRole('heading', { name: 'Pub quiz' })).toBeInTheDocument()
+    // h2: the page title is the h1, so a card title skipping to h3 broke the outline.
+    expect(await screen.findByRole('heading', { level: 2, name: 'Pub quiz' })).toBeInTheDocument()
     expect(screen.getByText('Saturday, 5 October 2030, 20:00')).toBeInTheDocument()
     expect(screen.getByText('€2')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Sign up/ })).toHaveAttribute('href', 'https://example.com/signup')
@@ -49,7 +51,7 @@ describe('Hubble EventsPage', () => {
     const failure = new Error('network')
     getUpcomingEvents.mockRejectedValue(failure)
     renderPage()
-    expect(await screen.findByText('Could not load the events. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the events. Please try again later.')
     expect(screen.queryByText(/No upcoming events/)).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('events', failure)
   })

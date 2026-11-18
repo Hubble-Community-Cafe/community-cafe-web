@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react'
-import { getTodaysDishes, reportApiFailure, type DailyDish } from '@cafe/shared-web'
+import { getTodaysDishes, reportApiFailure, type DailyDish, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
@@ -19,19 +18,11 @@ function TodayTag() {
 
 export function DailyDishPage() {
   usePageSeo('Daily Dinner Dish', 'Today’s affordable dinner dish at Hubble Community Cafe.')
-  const [dishes, setDishes] = useState<DailyDish[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getTodaysDishes()
-      .then(setDishes)
-      .catch((err: unknown) => {
-        void reportApiFailure('daily-dish', err)
-        setError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+  const { data: dishes, loaded, error } = useApiResource<DailyDish[]>(
+    () => getTodaysDishes(), [],
+    (err) => void reportApiFailure('daily-dish', err),
+  )
+  const isLoading = !loaded
 
   return (
     <PageShell title="Daily Dinner Dish">
@@ -40,13 +31,13 @@ export function DailyDishPage() {
       </p>
 
       {isLoading && (
-        <div className="mt-6 space-y-3" data-testid="dish-skeleton">
+        <LoadingSkeleton className="mt-6 space-y-3" testId="dish-skeleton">
           <Shimmer className="h-5 w-20 rounded-full" />
           <Shimmer className="h-28 w-full max-w-md rounded-2xl" />
-        </div>
+        </LoadingSkeleton>
       )}
       {error && (
-        <p className="mt-6 text-sm text-red-600">Could not load today's dish. Try again later.</p>
+        <p role="alert" className="mt-6 text-sm text-red-600">Could not load today's dish. Try again later.</p>
       )}
 
       {!isLoading && !error && dishes.length === 0 && (
@@ -58,8 +49,7 @@ export function DailyDishPage() {
           {dishes.map((dish) => (
             <div
               key={dish.id}
-              className="rounded-2xl px-6 py-5 text-white shadow-lg"
-              style={{ background: 'linear-gradient(150deg, #0c3d50, #0f4d64)' }}
+              className="rounded-2xl bg-linear-150 from-hubble-700 to-hubble-600 px-6 py-5 text-white shadow-lg"
             >
               <TodayTag />
               <div className="mt-3 flex items-baseline justify-between gap-4">

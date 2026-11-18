@@ -7,6 +7,7 @@ import {
 } from '../../lib/access'
 import type { AccessLevel, AdminModule, AdminUser } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
+import { messageFor } from '../../lib/actionError'
 
 const LEVEL_LABELS: Record<AccessLevel, string> = { HIDDEN: 'Hidden', VIEW: 'View', EDIT: 'Edit' }
 const PRESETS: PresetName[] = ['VIEWER', 'DDD_POSTER', 'EDITOR']
@@ -69,8 +70,8 @@ export function AccessForm({ user, onSave, onCancel }: {
     setError(null)
     try {
       await onSave({ admin, permissions: access })
-    } catch {
-      setError('Could not save this access. Please try again.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not save this access. Please try again.'))
       setSaving(false)
     }
   }

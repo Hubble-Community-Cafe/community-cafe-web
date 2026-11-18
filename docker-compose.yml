@@ -18,8 +18,10 @@ services:
   db:
     image: mariadb:11
     restart: unless-stopped
+    # Localhost only: the dev database has well-known passwords, so it must not be reachable
+    # from the rest of the network (a cafe or office Wi-Fi). Docker publishes bypass the firewall.
     ports:
-      - "3306:3306"
+      - "127.0.0.1:3306:3306"
     environment:
       MARIADB_ROOT_PASSWORD: rootpassword
       MARIADB_DATABASE: cafeweb
@@ -46,8 +48,9 @@ services:
     labels:
       analytics.scrape: "true"
       analytics.app: "community-cafe"
+    # Localhost only, like the database: the dev backend runs with test-friendly settings.
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     depends_on:
       db:
         condition: service_healthy

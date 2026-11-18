@@ -1,8 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { HexColorPicker } from 'react-colorful'
+import type { FieldProps } from '@cafe/shared-web'
 import { DEFAULT_COLOUR, normaliseHex } from '../lib/colour'
 
-interface Props {
+interface Props extends Partial<FieldProps> {
   id: string
   value: string
   onChange: (value: string) => void
@@ -13,7 +14,7 @@ interface Props {
  * Hex colour text field with a swatch that previews the colour and opens a small picker.
  * The text stays the source of truth, so typing and picking always agree.
  */
-export function ColourField({ id, value, onChange, className }: Props) {
+export function ColourField({ id, value, onChange, className, ...field }: Props) {
   const [open, setOpen] = useState(false)
   const wrapper = useRef<HTMLDivElement>(null)
   const swatch = useRef<HTMLButtonElement>(null)
@@ -38,7 +39,7 @@ export function ColourField({ id, value, onChange, className }: Props) {
 
   return (
     <div ref={wrapper} className="relative">
-      <input id={id} value={value} onChange={(e) => onChange(e.target.value)}
+      <input id={id} {...field} value={value} onChange={(e) => onChange(e.target.value)}
         className={`${className} pr-12`} placeholder={DEFAULT_COLOUR} pattern="^#?[0-9A-Fa-f]{6}$" />
       <button ref={swatch} type="button" aria-label="Pick a colour" aria-expanded={open} aria-controls={popoverId}
         data-colour={colour} onClick={() => setOpen((o) => !o)}

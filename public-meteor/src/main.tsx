@@ -2,7 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import * as Sentry from '@sentry/react'
-import { initSentry, installChunkReload } from '@cafe/shared-web'
+import { initSentry, installChunkReload, runtimeConfig } from '@cafe/shared-web'
 import './index.css'
 import App from './App.tsx'
 
@@ -15,7 +15,7 @@ installChunkReload()
 initSentry(Sentry, {
   project: 'community-cafe-public-meteor',
   version: __APP_VERSION__,
-  dsn: window.__RUNTIME_CONFIG__?.SENTRY_DSN ?? import.meta.env.VITE_PUBLIC_METEOR_SENTRY_DSN,
+  dsn: runtimeConfig('SENTRY_DSN') ?? import.meta.env.VITE_PUBLIC_METEOR_SENTRY_DSN,
   environment: import.meta.env.MODE,
 })
 

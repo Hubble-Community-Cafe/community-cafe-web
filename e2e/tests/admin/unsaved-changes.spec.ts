@@ -47,6 +47,13 @@ test.describe('Admin unsaved changes', () => {
     await admin.goto('/events')
     await page.getByRole('button', { name: 'Edit Pub quiz' }).click()
     await page.locator('form').getByPlaceholder('Quiz Night').fill('Pub quiz XL')
+    // The warning is attached a render after the input, so on a busy machine an immediate close
+    // could beat it. Wait until a (synthetic) beforeunload is refused, which opens no dialog.
+    await expect.poll(() => page.evaluate(() => {
+      const probe = new Event('beforeunload', { cancelable: true })
+      window.dispatchEvent(probe)
+      return probe.defaultPrevented
+    })).toBe(true)
 
     const dialog = page.waitForEvent('dialog')
     await page.close({ runBeforeUnload: true })

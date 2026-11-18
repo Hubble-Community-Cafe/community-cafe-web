@@ -35,6 +35,7 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 COPY public-hubble/nginx.conf /etc/nginx/conf.d/default.conf
+COPY public-hubble/nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY --from=build /app/public-hubble/dist /usr/share/nginx/html
 
 # Runtime config injection: rewrite config.js from env at container startup.

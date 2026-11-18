@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { boardMember, boardTerm } from '@cafe/shared-web/testing'
 import { CurrentBoardPage, PreviousBoardsPage, SupervisoryBoardPage } from '../pages/BoardPage'
@@ -30,7 +31,7 @@ describe('Hubble board pages', () => {
   it('current board: shows a skeleton, then the current executive members', async () => {
     getBoard.mockResolvedValue(TERMS)
     renderWith(<CurrentBoardPage />)
-    expect(screen.getByTestId('board-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('board-skeleton')
     expect(await screen.findByText('Robin Bestuur')).toBeInTheDocument()
     expect(screen.getByText('President')).toBeInTheDocument()
     expect(screen.queryByText('Sam Oud')).not.toBeInTheDocument()
@@ -45,7 +46,7 @@ describe('Hubble board pages', () => {
   it('current board: shows an error and reports it when loading fails', async () => {
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<CurrentBoardPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
     expect(screen.queryByText('Board information coming soon.')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('board', expect.any(Error))
   })
@@ -66,7 +67,7 @@ describe('Hubble board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<PreviousBoardsPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
     expect(screen.queryByText('No previous board information available.')).not.toBeInTheDocument()
   })
 
@@ -83,6 +84,20 @@ describe('Hubble board pages', () => {
 
     getBoard.mockRejectedValue(new Error('down'))
     renderWith(<SupervisoryBoardPage />)
-    expect(await screen.findByText('Could not load the board. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the board. Please try again later.')
+  })
+
+  it("does not read a member's name twice: photos without their own alt text are decorative", async () => {
+    getBoard.mockResolvedValue([boardTerm({ id: 1, current: true, members: [
+      boardMember({ id: 1, name: 'Robin Bestuur', photoUrl: '/media/1' }),
+      boardMember({ id: 2, name: 'Sam Oud', photoUrl: '/media/2', photoAlt: 'Sam on the terrace' }),
+      boardMember({ id: 3, name: 'Kim Zonder' }),
+    ] })])
+    const { container } = renderWith(<CurrentBoardPage />)
+    await screen.findByText('Robin Bestuur')
+
+    expect(container.querySelector('img[src="/media/1"]')).toHaveAttribute('alt', '')
+    expect(screen.getByRole('img', { name: 'Sam on the terrace' })).toBeInTheDocument()
+    expect(screen.getByText('K')).toHaveAttribute('aria-hidden', 'true')
   })
 })

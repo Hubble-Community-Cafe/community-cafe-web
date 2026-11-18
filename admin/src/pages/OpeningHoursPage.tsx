@@ -6,15 +6,14 @@ import {
   fetchOverrides, createOverride, updateOverride, deleteOverride,
   type BarLocation, type DayOfWeek, type WeeklyHours, type HoursOverride,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { DAY_LABELS } from '@cafe/shared-web'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BARS: BarLocation[] = ['HUBBLE', 'METEOR']
 const DAYS: DayOfWeek[] = ['MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY','SUNDAY']
-const DAY_LABELS: Record<DayOfWeek, string> = {
-  MONDAY: 'Monday', TUESDAY: 'Tuesday', WEDNESDAY: 'Wednesday',
-  THURSDAY: 'Thursday', FRIDAY: 'Friday', SATURDAY: 'Saturday', SUNDAY: 'Sunday',
-}
 
 function TimeInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   return (
@@ -68,8 +67,8 @@ function DayRow({
       })
       onSaved(updated)
       setEditing(false)
-    } catch {
-      setError('Failed to save')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
@@ -82,8 +81,8 @@ function DayRow({
       await closeDay(bar, day)
       onSaved(null)
       setEditing(false)
-    } catch {
-      setError('Failed to save')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save'))
     } finally {
       setSaving(false)
     }
@@ -123,7 +122,7 @@ function DayRow({
                 Mark closed
               </button>
             )}
-            {error && <span className="text-xs text-red-600">{error}</span>}
+            {error && <span role="alert" className="text-xs text-red-600">{error}</span>}
           </div>
         </td>
       </tr>
@@ -274,26 +273,28 @@ export function OpeningHoursPage() {
   const [bar, setBar] = useState<BarLocation>('HUBBLE')
   const [slots, setSlots] = useState<WeeklyHours[]>([])
   const [overrides, setOverrides] = useState<HoursOverride[]>([])
+  const confirmAction = useConfirmAction()
   const [editingOverride, setEditingOverride] = useState<number | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const load = async (b: BarLocation) => {
+  useEffect(() => {
+    // Only the current bar's answer may land: a slower request for the bar just left would
+    // otherwise show its hours under the other bar's name.
+    let current = true
     setLoading(true)
     setEditingOverride(null)
     setError(null)
-    try {
-      const [h, o] = await Promise.all([fetchWeeklyHours(b), fetchOverrides(b)])
-      setSlots(h)
-      setOverrides(o)
-    } catch {
-      setError('Failed to load opening hours')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load(bar) }, [bar])
+    Promise.all([fetchWeeklyHours(bar), fetchOverrides(bar)])
+      .then(([h, o]) => {
+        if (!current) return
+        setSlots(h)
+        setOverrides(o)
+      })
+      .catch(() => { if (current) setError('Failed to load opening hours') })
+      .finally(() => { if (current) setLoading(false) })
+    return () => { current = false }
+  }, [bar])
 
   const handleDaySaved = (day: DayOfWeek, updated: WeeklyHours | null) => {
     setSlots((prev) => {
@@ -313,26 +314,22 @@ export function OpeningHoursPage() {
     setEditingOverride(null)
   }
 
-  const handleDeleteOverride = async (id: number) => {
-    try {
-      await deleteOverride(id)
-      setOverrides((prev) => prev.filter((o) => o.id !== id))
-    } catch {
-      // silently ignore, the user can retry
-    }
-  }
+  const handleDeleteOverride = (o: HoursOverride) => confirmAction({
+    title: 'Delete this override?',
+    message: `${o.date} goes back to the regular weekly opening hours on the website.`,
+    confirmLabel: 'Delete override',
+    action: async () => {
+      await deleteOverride(o.id)
+      setOverrides((prev) => prev.filter((existing) => existing.id !== o.id))
+    },
+  })
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Opening Hours</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Set the regular weekly schedule and add one-off date overrides for closures or special hours.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Opening Hours"
+        description="Set the regular weekly schedule and add one-off date overrides for closures or special hours."
+      />
 
       {/* Bar selector */}
       <div className="flex gap-2">
@@ -349,7 +346,7 @@ export function OpeningHoursPage() {
       </div>
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <>
@@ -413,7 +410,7 @@ export function OpeningHoursPage() {
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
                           <Pencil className="h-4 w-4" />
                         </button>
-                        <button onClick={() => handleDeleteOverride(o.id)} aria-label={`Delete the override for ${o.date}`}
+                        <button onClick={() => handleDeleteOverride(o)} aria-label={`Delete the override for ${o.date}`}
                           className="rounded p-1 text-slate-500 hover:bg-red-50 hover:text-red-600">
                           <Trash2 className="h-4 w-4" />
                         </button>

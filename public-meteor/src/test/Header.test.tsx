@@ -46,4 +46,29 @@ describe('Header', () => {
     await user.click(screen.getByRole('button', { name: /open menu/i }))
     expect(screen.getByRole('navigation', { name: 'Mobile' })).toBeInTheDocument()
   })
+
+  /**
+   * The desktop menu is also shown on an iPad in landscape, where nothing hovers: a tap has to open
+   * a dropdown. Keyboard users open it with Enter or Space and close it with Escape.
+   */
+  it('opens a desktop dropdown on a click or tap, and Escape closes it', async () => {
+    const user = userEvent.setup()
+    renderHeader()
+    const primary = screen.getByRole('navigation', { name: 'Primary' })
+    const button = within(primary).getByRole('button', { name: 'Community' })
+    const panel = document.getElementById(button.getAttribute('aria-controls')!)!
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+    expect(panel).toHaveClass('invisible')
+
+    await user.click(button)
+    expect(button).toHaveAttribute('aria-expanded', 'true')
+    expect(panel).toHaveClass('visible')
+    expect(panel).not.toHaveClass('invisible')
+    expect(within(panel).getByRole('link', { name: 'Current board' })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+    expect(button).toHaveAttribute('aria-expanded', 'false')
+    expect(button).toHaveFocus()
+    expect(panel).toHaveClass('invisible')
+  })
 })

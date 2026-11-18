@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { HubbleTipsForm } from '../../pages/PublicForms'
 import { clearMailpit, waitForMessageTo, expectNoMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -8,14 +9,16 @@ test.describe('Hubble tips/complaints/ideas form', () => {
   })
 
   test('submitting a complaint emails nuisance and confirms the submitter', async ({ page, request }, testInfo) => {
+
+    const tips = new HubbleTipsForm(page)
     await page.goto('/contact/tips')
     await expect(page.getByRole('heading', { name: 'Tips, Complaints & Ideas' })).toBeVisible()
 
-    await page.locator('#t-name').fill('Pim Tester')
-    await page.locator('#t-email').fill('pim@example.com')
-    await page.locator('#t-type').selectOption('COMPLAINT')
-    await page.locator('#t-updates').selectOption('no')
-    await page.locator('#t-message').fill('The music upstairs is too loud on Fridays.')
+    await tips.name.fill('Pim Tester')
+    await tips.email.fill('pim@example.com')
+    await tips.type.selectOption('COMPLAINT')
+    await tips.wantsUpdates.selectOption('no')
+    await tips.message.fill('The music upstairs is too loud on Fridays.')
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Thank you!' })).toBeVisible()
@@ -33,10 +36,12 @@ test.describe('Hubble tips/complaints/ideas form', () => {
   })
 
   test('a honeypot-filled submission is silently dropped (no email)', async ({ page, request }) => {
+
+    const tips = new HubbleTipsForm(page)
     await page.goto('/contact/tips')
-    await page.locator('#t-name').fill('Bot')
-    await page.locator('#t-email').fill('bot@example.com')
-    await page.locator('#t-message').fill('spam')
+    await tips.name.fill('Bot')
+    await tips.email.fill('bot@example.com')
+    await tips.message.fill('spam')
     await page.locator('input[name="website"]').evaluate((el) => {
       const input = el as HTMLInputElement
       const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!

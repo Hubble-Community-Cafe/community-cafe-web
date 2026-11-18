@@ -16,14 +16,19 @@ import type { AdminModule } from './lib/api'
 import type { Permissions } from './lib/permissions'
 
 /**
- * What a nav item (and its route) requires: 'admin', or view access on any of the listed
+ * What a nav item and its route require (the one place this is declared): 'admin', or view access on any of the listed
  * modules. Undefined means any signed-in user. Editing is gated inside each page.
  */
 export type NavRequirement = 'admin' | AdminModule[]
 
+/** Every page of the admin. App.tsx has a page for each and builds its routes from NAV. */
+export type NavPath =
+  | '/' | '/menu' | '/daily-dish' | '/hours' | '/events' | '/board' | '/vacancies'
+  | '/associations' | '/media' | '/screens' | '/users' | '/audit'
+
 export interface NavItem {
   label: string
-  to: string
+  to: NavPath
   icon: LucideIcon
   requires?: NavRequirement
 }
@@ -80,3 +85,6 @@ export const NAV: NavSection[] = [
     ],
   },
 ]
+
+/** Every nav item, in menu order. */
+export const NAV_ITEMS: NavItem[] = NAV.flatMap((section) => section.items)

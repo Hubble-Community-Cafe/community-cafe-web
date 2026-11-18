@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { ComplaintsPage } from '../pages/ComplaintsPage'
-import { expectHiddenHoneypot, pending } from './formTestUtils'
+import { expectHiddenHoneypot, pending } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitComplaint = vi.hoisted(() => vi.fn())
@@ -44,11 +44,12 @@ describe('Meteor ComplaintsPage', () => {
   })
 
   it('shows the backend validation message and keeps the form', async () => {
-    submitComplaint.mockRejectedValue(new FormError('message must not be blank'))
+    submitComplaint.mockRejectedValue(new FormError('Message must not be blank'))
     const user = userEvent.setup()
     renderPage()
+    await fill(user)
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('message must not be blank')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Message must not be blank')
     expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()
   })
 

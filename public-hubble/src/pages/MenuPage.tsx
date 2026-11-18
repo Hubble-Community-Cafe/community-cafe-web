@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import {
   getMenu,
   reportApiFailure,
   type MenuTab,
   type MenuCategoryWithItems,
   type MenuItem,
+  useApiResource, LoadingSkeleton,
 } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
@@ -20,14 +21,14 @@ const SKELETON_WIDTHS = ['58%', '42%', '66%', '38%', '52%']
 
 function MenuSkeleton() {
   return (
-    <div className="mt-8 max-w-md" data-testid="menu-skeleton">
+    <LoadingSkeleton className="mt-8 max-w-md" testId="menu-skeleton">
       {SKELETON_WIDTHS.map((width, i) => (
         <div key={i} className="flex items-center justify-between py-[11px]">
           <Shimmer className="h-[13px]" style={{ width }} />
           <Shimmer className="h-[13px] w-[46px]" />
         </div>
       ))}
-    </div>
+    </LoadingSkeleton>
   )
 }
 
@@ -70,23 +71,14 @@ function CategoryBlock({ category }: { category: MenuCategoryWithItems }) {
 
 export function MenuPage() {
   usePageSeo('Menu', 'The Hubble drinks and food menu, with TU/e student pricing.')
-  const [tabs, setTabs] = useState<MenuTab[]>([])
-  const [activeTabId, setActiveTabId] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(false)
-
-  useEffect(() => {
-    getMenu('HUBBLE')
-      .then((data) => {
-        setTabs(data)
-        if (data.length > 0) setActiveTabId(data[0].id)
-      })
-      .catch((err: unknown) => {
-        void reportApiFailure('menu', err)
-        setError(true)
-      })
-      .finally(() => setIsLoading(false))
-  }, [])
+  const { data: tabs, loaded, error } = useApiResource<MenuTab[]>(
+    () => getMenu('HUBBLE'), [],
+    (err) => void reportApiFailure('menu', err),
+  )
+  const isLoading = !loaded
+  // The tab the visitor picked, or else the first one.
+  const [chosenTabId, setActiveTabId] = useState<number | null>(null)
+  const activeTabId = chosenTabId ?? tabs[0]?.id ?? null
 
   const activeTab = tabs.find((t) => t.id === activeTabId) ?? null
 
@@ -101,7 +93,7 @@ export function MenuPage() {
 
       {isLoading && <MenuSkeleton />}
       {error && (
-        <p className="text-sm text-red-600">Could not load the menu. Please try again later.</p>
+        <p role="alert" className="text-sm text-red-600">Could not load the menu. Please try again later.</p>
       )}
 
       {!isLoading && !error && tabs.length > 0 && (

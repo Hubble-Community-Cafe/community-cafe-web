@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState, useId } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import {
   fetchDailyDishes,
@@ -10,6 +10,8 @@ import {
 } from '../../lib/api'
 import { useChangedSince, useUnsavedChangesGuard } from '../../lib/unsavedChanges'
 import { barToday } from '../../lib/barDate'
+import { useConfirmAction } from '../../lib/confirmAction'
+import { messageFor } from '../../lib/actionError'
 
 function DishForm({
   initial,
@@ -20,6 +22,7 @@ function DishForm({
   onSave: (req: DailyDishRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [date, setDate] = useState(initial?.date ?? barToday())
   const [name, setName] = useState(initial?.name ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
@@ -39,10 +42,11 @@ function DishForm({
         name: name.trim(),
         description: description.trim() || null,
         price: price.trim() ? parseFloat(price) : null,
-        imageId: null,
+        // No image picker yet: keep whatever image the dish already has.
+        imageId: initial?.imageId ?? null,
       })
-    } catch {
-      setError('Could not save daily dish.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not save daily dish.'))
       setSaving(false)
     }
   }
@@ -53,12 +57,12 @@ function DishForm({
       className="rounded-xl border border-hubble-100 bg-hubble-50 p-4 space-y-3"
     >
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
       <div className="grid gap-3 sm:grid-cols-3">
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Date</label>
-          <input
+          <label htmlFor={`${formId}-date`} className="mb-1 block text-xs font-medium text-slate-600">Date</label>
+          <input id={`${formId}-date`}
             required
             type="date"
             value={date}
@@ -67,8 +71,8 @@ function DishForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">Dish name</label>
-          <input
+          <label htmlFor={`${formId}-dish-name`} className="mb-1 block text-xs font-medium text-slate-600">Dish name</label>
+          <input id={`${formId}-dish-name`}
             required
             maxLength={200}
             value={name}
@@ -77,10 +81,10 @@ function DishForm({
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-price`} className="mb-1 block text-xs font-medium text-slate-600">
             Price (€) <span className="text-slate-500">(optional)</span>
           </label>
-          <input
+          <input id={`${formId}-price`}
             type="number"
             step="0.01"
             min="0"
@@ -90,10 +94,10 @@ function DishForm({
           />
         </div>
         <div className="sm:col-span-3">
-          <label className="mb-1 block text-xs font-medium text-slate-600">
+          <label htmlFor={`${formId}-description`} className="mb-1 block text-xs font-medium text-slate-600">
             Description <span className="text-slate-500">(optional)</span>
           </label>
-          <textarea
+          <textarea id={`${formId}-description`}
             rows={2}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -156,11 +160,16 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
     setEditing(null)
   }
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Delete this daily dish?')) return
-    await deleteDailyDish(id)
-    setDishes((prev) => prev.filter((d) => d.id !== id))
-  }
+  const confirmAction = useConfirmAction()
+  const handleDelete = (dish: DailyDish) => confirmAction({
+    title: 'Delete this daily dish?',
+    message: `"${dish.name}" on ${dish.date} will be removed from the website.`,
+    confirmLabel: 'Delete dish',
+    action: async () => {
+      await deleteDailyDish(dish.id)
+      setDishes((prev) => prev.filter((d) => d.id !== dish.id))
+    },
+  })
 
   return (
     <div>
@@ -182,7 +191,7 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
       )}
 
       {error && (
-        <p className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
       {isLoading ? (
         <p className="text-sm text-slate-500">Loading…</p>
@@ -221,7 +230,7 @@ export function DailyDishSection({ canEdit = true }: { canEdit?: boolean }) {
                         <Pencil className="h-4 w-4" />
                       </button>
                       <button
-                        onClick={() => handleDelete(dish.id)}
+                        onClick={() => handleDelete(dish)}
                         className="rounded-lg p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600"
                         aria-label="Delete"
                       >

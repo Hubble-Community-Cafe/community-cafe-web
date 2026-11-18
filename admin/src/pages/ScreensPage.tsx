@@ -5,7 +5,8 @@ import {
   fetchScreenScene, applyScreenScene, updateScreenSceneSettings,
   type CurrentScene, type ScreenScene, type ScreenScenePoster, type ScreenSceneStatus,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
+import { messageFor } from '../lib/actionError'
 
 const SCENES: { scene: ScreenScene; label: string; hint: string; icon: typeof Monitor }[] = [
   { scene: 'OPEN', label: 'Open', hint: 'Back to the poster carousel', icon: PlayCircle },
@@ -115,29 +116,24 @@ export function ScreensPage() {
     setError(null)
     try {
       setStatus(await updateScreenSceneSettings({ closedPosterId, lastCallPosterId }))
-    } catch {
-      setError('Failed to save the poster choices')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save the poster choices'))
     } finally {
       setSavingSettings(false)
     }
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Screens</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Switch every Aurora screen between the poster carousel and the closed or last call slide.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Screens"
+        description="Switch every Aurora screen between the poster carousel and the closed or last call slide."
+      />
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
 
       {error && (
-        <p className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+        <p role="alert" className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> {error}
         </p>
       )}

@@ -1,29 +1,20 @@
-import { useEffect, useState } from 'react'
-import { getBoard, reportApiFailure, type BoardTerm, type BoardMember } from '@cafe/shared-web'
+import { getBoard, reportApiFailure, type BoardTerm, type BoardMember, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
-  const [terms, setTerms] = useState<BoardTerm[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-  useEffect(() => {
-    getBoard()
-      .then(setTerms)
-      .catch((err: unknown) => {
-        void reportApiFailure('board', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: terms, loaded, error } = useApiResource<BoardTerm[]>(
+    () => getBoard(), [],
+    (err) => void reportApiFailure('board', err),
+  )
   return { terms, loaded, error }
 }
 
 /** Placeholder grid mirroring the member cards while the board loads. */
 function BoardGridSkeleton() {
   return (
-    <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3" testId="board-skeleton">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i}>
           <Shimmer className="aspect-[3/4] w-full rounded-lg" />
@@ -31,18 +22,18 @@ function BoardGridSkeleton() {
           <Shimmer className="mt-1.5 h-3 w-16" />
         </div>
       ))}
-    </div>
+    </LoadingSkeleton>
   )
 }
 
 /** A few shimmer lines for the text-only board sub-pages. */
 function BoardLinesSkeleton() {
   return (
-    <div className="mt-6 space-y-2" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-6 space-y-2" testId="board-skeleton">
       <Shimmer className="h-5 w-40" />
       <Shimmer className="h-3 w-32" />
       <Shimmer className="h-3 w-28" />
-    </div>
+    </LoadingSkeleton>
   )
 }
 
@@ -54,12 +45,13 @@ function MemberCard({ member, index }: { member: BoardMember; index: number }) {
       {member.photoUrl ? (
         <img
           src={member.photoUrl}
-          alt={member.photoAlt ?? member.name}
+          // The name is printed right below: repeating it in the alt text makes screen readers say it twice.
+          alt={member.photoAlt ?? ''}
           loading="lazy"
           className="aspect-[3/4] w-full object-cover"
         />
       ) : (
-        <div className="flex aspect-[3/4] w-full items-center justify-center bg-hubble-100 text-4xl font-bold text-hubble-300">
+        <div aria-hidden="true" className="flex aspect-[3/4] w-full items-center justify-center bg-hubble-100 text-4xl font-bold text-hubble-300">
           {member.name.charAt(0).toUpperCase()}
         </div>
       )}
@@ -98,7 +90,7 @@ export function CurrentBoardPage() {
             </>
           )}
 
-          {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+          {error && <p role="alert" className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
           {!error && (!term || term.members.length === 0) && (
             <p className="mt-4 text-sm text-hubble-700/70">Board information coming soon.</p>
           )}
@@ -120,7 +112,7 @@ export function PreviousBoardsPage() {
   return (
     <PageShell title="Previous boards">
       {!loaded && <BoardLinesSkeleton />}
-      {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+      {error && <p role="alert" className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
       {loaded && !error && previous.length === 0 && (
         <p className="text-sm text-hubble-700/70">No previous board information available.</p>
       )}
@@ -176,7 +168,7 @@ export function SupervisoryBoardPage() {
           </ul>
         </section>
       ))}
-      {error && <p className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
+      {error && <p role="alert" className="mt-4 text-sm text-red-600">Could not load the board. Please try again later.</p>}
       {loaded && !error && supervisory.length === 0 && (
         <p className="mt-4 text-sm text-hubble-700/70">Supervisory board information coming soon.</p>
       )}

@@ -9,10 +9,7 @@
  * Inert in dev and production: that value is only ever set by the e2e stack.
  */
 
-function clean(value: string | undefined): string | undefined {
-  if (!value || value.startsWith('__') || value.trim() === '') return undefined
-  return value
-}
+import { runtimeConfig } from '@cafe/shared-web'
 
 export interface E2eAuth {
   oid: string
@@ -22,10 +19,9 @@ export interface E2eAuth {
 
 /** The injected e2e identity, or null when not running under the e2e stack. */
 export function getE2eAuth(): E2eAuth | null {
-  const cfg = window.__RUNTIME_CONFIG__
-  const oid = clean(cfg?.E2E_AUTH_OID)
+  const oid = runtimeConfig('E2E_AUTH_OID')
   if (!oid) return null
-  return { oid, email: clean(cfg?.E2E_AUTH_EMAIL), name: clean(cfg?.E2E_AUTH_NAME) }
+  return { oid, email: runtimeConfig('E2E_AUTH_EMAIL'), name: runtimeConfig('E2E_AUTH_NAME') }
 }
 
 /** True only when the app is running under the e2e test stack. */

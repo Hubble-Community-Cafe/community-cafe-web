@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { submitTip, FormError, formsChallengeUrl, type ComplaintType } from '@cafe/shared-web'
+import { submitTip, formsChallengeUrl, type ComplaintType, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { usePageSeo } from '../lib/seo'
 
 const TYPES: { value: ComplaintType; label: string }[] = [
@@ -12,7 +12,9 @@ const TYPES: { value: ComplaintType; label: string }[] = [
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-600'
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function TipsPage() {
@@ -22,28 +24,20 @@ export function TipsPage() {
   })
   const [type, setType] = useState<ComplaintType>('TIP')
   const [wantsUpdates, setWantsUpdates] = useState(true)
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
+    void send(async (altcha) => {
       await submitTip({
         name: form.name, email: form.email, phone: form.phone, date: form.date,
         type, message: form.message, wantsUpdates,
-        honeypot: form.honeypot, altcha: altcha ?? '',
+        honeypot: form.honeypot, altcha,
       })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    })
   }
 
   return (
@@ -78,33 +72,33 @@ export function TipsPage() {
           </p>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-8 space-y-5" noValidate>
+        <form {...formProps} onSubmit={submit} className="mt-8 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="t-name" className={label}>Name *</label>
-              <input id="t-name" required value={form.name} onChange={set('name')} className={field} autoComplete="name" />
+              <input id="t-name" required value={form.name} {...fieldProps('name')} onChange={set('name')} className={field} autoComplete="name" />
             </div>
             <div>
               <label htmlFor="t-email" className={label}>Email *</label>
-              <input id="t-email" type="email" required value={form.email} onChange={set('email')} className={field} autoComplete="email" />
+              <input id="t-email" type="email" required value={form.email} {...fieldProps('email')} onChange={set('email')} className={field} autoComplete="email" />
             </div>
             <div>
               <label htmlFor="t-phone" className={label}>Phone</label>
-              <input id="t-phone" value={form.phone} onChange={set('phone')} className={field} placeholder="+316 1234 5678" autoComplete="tel" />
+              <input id="t-phone" value={form.phone} {...fieldProps('phone')} onChange={set('phone')} className={field} placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div>
               <label htmlFor="t-date" className={label}>Date <span className="font-normal text-hubble-800/70">(if relevant)</span></label>
-              <input id="t-date" type="date" value={form.date} onChange={set('date')} className={field} />
+              <input id="t-date" type="date" value={form.date} {...fieldProps('date')} onChange={set('date')} className={field} />
             </div>
             <div>
               <label htmlFor="t-type" className={label}>Type of submission</label>
-              <select id="t-type" value={type} onChange={(e) => setType(e.target.value as ComplaintType)} className={field}>
+              <select id="t-type" {...fieldProps('type')} value={type} onChange={(e) => setType(e.target.value as ComplaintType)} className={field}>
                 {TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
               </select>
             </div>
             <div>
               <label htmlFor="t-updates" className={label}>I&rsquo;d like to receive updates on this subject</label>
-              <select id="t-updates" value={wantsUpdates ? 'yes' : 'no'}
+              <select id="t-updates" {...fieldProps('wantsUpdates')} value={wantsUpdates ? 'yes' : 'no'}
                 onChange={(e) => setWantsUpdates(e.target.value === 'yes')} className={field}>
                 <option value="yes">Yes</option>
                 <option value="no">No</option>
@@ -112,7 +106,7 @@ export function TipsPage() {
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="t-message" className={label}>Message *</label>
-              <textarea id="t-message" required rows={5} value={form.message} onChange={set('message')} className={field} />
+              <textarea id="t-message" required rows={5} value={form.message} {...fieldProps('message')} onChange={set('message')} className={field} />
             </div>
           </div>
 
@@ -124,7 +118,7 @@ export function TipsPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={status === 'sending'}

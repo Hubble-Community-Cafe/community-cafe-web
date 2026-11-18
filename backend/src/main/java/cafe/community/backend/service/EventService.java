@@ -1,11 +1,12 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.EventDto;
 import cafe.community.backend.dto.EventRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.EventRepository;
-import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.service.audit.AuditSnapshots;
+import cafe.community.backend.service.audit.Audited;
 import cafe.community.backend.service.audit.Snapshot;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -21,23 +21,29 @@ import java.util.List;
 @Transactional
 public class EventService {
 
-    private static final ZoneId TZ = ZoneId.of("Europe/Amsterdam");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
     private final EventRepository eventRepo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
+    private final Clock clock;
 
-    public EventService(EventRepository eventRepo, MediaAssetRepository mediaRepo, AuditService auditService) {
+    /** Summaries name the bar and date too: two bars can run an event with the same title. */
+    private static final Audited<Event> EVENT = new Audited<>(AuditEntityType.EVENT, "event", Event::getId, Event::getTitle,
+            e -> e.getTitle() + " (" + e.getBar().name() + ", " + e.getDate() + ")", AuditSnapshots::of);
+
+
+    public EventService(EventRepository eventRepo, MediaService media, AuditService auditService, Clock clock) {
         this.eventRepo = eventRepo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
+        this.clock = clock;
     }
 
     /** Upcoming published events for a bar, from today onwards. */
     @Transactional(readOnly = true)
     public List<EventDto> getUpcoming(BarLocation bar) {
-        LocalDate today = LocalDate.now(TZ);
+        LocalDate today = LocalDate.now(clock);
         return eventRepo.findUpcoming(bar, today).stream().map(EventDto::from).toList();
     }
 
@@ -52,36 +58,30 @@ public class EventService {
         Event event = new Event();
         apply(event, req);
         Event saved = eventRepo.save(event);
-        auditService.recordCreate(AuditEntityType.EVENT, saved.getId(), saved.getTitle(),
-                AuditSnapshots.of(saved).asCreated(),
-                "Created event: " + saved.getTitle() + " (" + saved.getBar().name() + ", " + saved.getDate() + ")");
+        auditService.created(EVENT, saved);
         return EventDto.from(saved);
     }
 
     public EventDto update(Long id, EventRequest req) {
         Event event = eventRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found: " + id));
-        Snapshot before = AuditSnapshots.of(event);
+        Snapshot before = EVENT.snapshot(event);
         apply(event, req);
         Event saved = eventRepo.save(event);
-        auditService.recordUpdate(AuditEntityType.EVENT, saved.getId(), saved.getTitle(),
-                before.changesTo(AuditSnapshots.of(saved)),
-                "Updated event: " + saved.getTitle() + " (" + saved.getBar().name() + ", " + saved.getDate() + ")");
+        auditService.updated(EVENT, before, saved);
         return EventDto.from(saved);
     }
 
     public void delete(Long id) {
         Event event = eventRepo.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found: " + id));
-        String label = event.getTitle();
-        Snapshot lastValues = AuditSnapshots.of(event);
+        auditService.deleted(EVENT, event);
         eventRepo.deleteById(id);
-        auditService.recordDelete(AuditEntityType.EVENT, id, label, lastValues.asDeleted(),
-                "Deleted event: " + label + " (" + event.getBar().name() + ", " + event.getDate() + ")");
     }
 
     private void apply(Event event, EventRequest req) {
-        event.setBar(BarLocation.valueOf(req.bar()));
+        // Never null here: EventRequest.bar is @NotBlank, events always belong to one bar.
+        event.setBar(BarLocation.parseOrShared(req.bar()));
         event.setTitle(req.title());
         event.setDescription(req.description());
         event.setDate(req.date());
@@ -90,8 +90,6 @@ public class EventService {
         event.setPrice(req.price());
         event.setSubscribeLink(req.subscribeLink());
         event.setPublished(req.published());
-        MediaAsset image = req.imageId() != null
-                ? mediaRepo.findById(req.imageId()).orElse(null) : null;
-        event.setImage(image);
+        event.setImage(media.resolve(req.imageId()));
     }
 }

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { LoanPage } from '../pages/LoanPage'
-import { expectHiddenHoneypot } from './formTestUtils'
+import { expectHiddenHoneypot } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitLoan = vi.hoisted(() => vi.fn())
@@ -15,6 +15,17 @@ vi.mock('@cafe/shared-web', async (importOriginal) => ({
 
 const renderPage = () => render(<MemoryRouter><LoanPage /></MemoryRouter>)
 
+async function fill(user: ReturnType<typeof userEvent.setup>) {
+  await user.type(screen.getByLabelText('Name *'), 'Sven')
+  await user.type(screen.getByLabelText('Association *'), 'Inter Actief')
+  await user.type(screen.getByLabelText('Email *'), 'sven@example.com')
+  await user.type(screen.getByLabelText('Pick-up date *'), '2030-10-01')
+  await user.type(screen.getByLabelText('Pick-up time *'), '10:00')
+  await user.type(screen.getByLabelText('Return date *'), '2030-10-02')
+  await user.type(screen.getByLabelText('Return time *'), '12:00')
+  await user.type(screen.getByLabelText('Message *'), 'Two speakers please')
+}
+
 describe('Hubble LoanPage', () => {
   beforeEach(() => {
     submitLoan.mockReset()
@@ -24,14 +35,7 @@ describe('Hubble LoanPage', () => {
   it('sends the loan request with pick-up and return moments', async () => {
     const user = userEvent.setup()
     renderPage()
-    await user.type(screen.getByLabelText('Name *'), 'Sven')
-    await user.type(screen.getByLabelText('Association *'), 'Inter Actief')
-    await user.type(screen.getByLabelText('Email *'), 'sven@example.com')
-    await user.type(screen.getByLabelText('Pick-up date *'), '2030-10-01')
-    await user.type(screen.getByLabelText('Pick-up time *'), '10:00')
-    await user.type(screen.getByLabelText('Return date *'), '2030-10-02')
-    await user.type(screen.getByLabelText('Return time *'), '12:00')
-    await user.type(screen.getByLabelText('Message *'), 'Two speakers please')
+    await fill(user)
     await user.click(screen.getByRole('button', { name: 'Send' }))
 
     expect(submitLoan).toHaveBeenCalledWith({
@@ -46,6 +50,7 @@ describe('Hubble LoanPage', () => {
     submitLoan.mockRejectedValue(new FormError('The return must be after the pick-up.'))
     const user = userEvent.setup()
     renderPage()
+    await fill(user)
     await user.click(screen.getByRole('button', { name: 'Send' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('The return must be after the pick-up.')
   })

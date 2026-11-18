@@ -6,7 +6,6 @@ import cafe.community.backend.repository.AuditLogRepository;
 import cafe.community.backend.repository.FormSubmissionRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -49,24 +48,15 @@ public class DataRetentionService {
     private final int inactiveAdminUserDays;
     private final Clock clock;
 
-    @Autowired
+    /** Tests pin the clock so the cut-off dates are deterministic. */
     public DataRetentionService(AuditLogRepository auditLogRepository,
                                 FormSubmissionRepository formSubmissionRepository,
                                 AdminUserRepository adminUserRepository,
                                 @Value("${app.data.retention.audit-anonymise-days:365}") int auditAnonymiseDays,
                                 @Value("${app.data.retention.audit-delete-days:730}") int auditDeleteDays,
                                 @Value("${app.data.retention.form-submission-days:730}") int formSubmissionDays,
-                                @Value("${app.data.retention.inactive-admin-user-days:365}") int inactiveAdminUserDays) {
-        this(auditLogRepository, formSubmissionRepository, adminUserRepository, auditAnonymiseDays,
-                auditDeleteDays, formSubmissionDays, inactiveAdminUserDays, Clock.systemDefaultZone());
-    }
-
-    /** Package-private: lets tests pin the clock so the cut-off dates are deterministic. */
-    DataRetentionService(AuditLogRepository auditLogRepository,
-                         FormSubmissionRepository formSubmissionRepository,
-                         AdminUserRepository adminUserRepository,
-                         int auditAnonymiseDays, int auditDeleteDays, int formSubmissionDays,
-                         int inactiveAdminUserDays, Clock clock) {
+                                @Value("${app.data.retention.inactive-admin-user-days:365}") int inactiveAdminUserDays,
+                                Clock clock) {
         this.auditLogRepository = auditLogRepository;
         this.formSubmissionRepository = formSubmissionRepository;
         this.adminUserRepository = adminUserRepository;

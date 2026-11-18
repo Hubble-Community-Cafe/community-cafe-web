@@ -1,4 +1,4 @@
-import { type ReactNode, useEffect, useState } from 'react'
+import { type ReactNode, useEffect, useState, useId } from 'react'
 import { Plus, Trash2, Pencil, Check, X } from 'lucide-react'
 import { MediaPicker } from '../components/MediaPicker'
 import { SortableList } from '../components/SortableList'
@@ -7,8 +7,10 @@ import {
   fetchVacancies, createVacancy, updateVacancy, deleteVacancy, reorderVacancies,
   type Vacancy, type VacancyRequest, type BarLocation, type MediaAsset,
 } from '../lib/api'
-import { PageHelp } from '../components/HelpGuide'
+import { PageHeader } from '../components/PageHeader'
 import { useChangedSince, useUnsavedChangesGuard } from '../lib/unsavedChanges'
+import { useConfirmAction } from '../lib/confirmAction'
+import { messageFor } from '../lib/actionError'
 
 const BAR_LABELS: Record<string, string> = { HUBBLE: 'Hubble', METEOR: 'Meteor' }
 
@@ -21,6 +23,7 @@ function VacancyForm({
   onSave: (req: VacancyRequest) => Promise<void>
   onCancel: () => void
 }) {
+  const formId = useId()
   const [title, setTitle] = useState(initial?.title ?? '')
   const [description, setDescription] = useState(initial?.description ?? '')
   const [hours, setHours] = useState(initial?.hours ?? '')
@@ -59,8 +62,8 @@ function VacancyForm({
         // Position is set by dragging: omitting it appends a new vacancy and leaves an
         // existing one where it is.
       })
-    } catch {
-      setError('Failed to save vacancy')
+    } catch (err) {
+      setError(messageFor(err, 'Failed to save vacancy'))
       setSaving(false)
     }
   }
@@ -69,14 +72,14 @@ function VacancyForm({
     <form onSubmit={submit} className="space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Title *</label>
-          <input value={title} onChange={(e) => setTitle(e.target.value)} required
+          <label htmlFor={`${formId}-title`} className="block text-xs font-medium text-slate-600">Title *</label>
+          <input id={`${formId}-title`} value={title} onChange={(e) => setTitle(e.target.value)} required
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Manager" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
-          <select value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
+          <label htmlFor={`${formId}-bar`} className="block text-xs font-medium text-slate-600">Bar (blank = both)</label>
+          <select id={`${formId}-bar`} value={bar} onChange={(e) => setBar(e.target.value as BarLocation | '')}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm">
             <option value="">Both</option>
             <option value="HUBBLE">Hubble</option>
@@ -84,38 +87,39 @@ function VacancyForm({
           </select>
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Hours</label>
-          <input value={hours} onChange={(e) => setHours(e.target.value)}
+          <label htmlFor={`${formId}-hours`} className="block text-xs font-medium text-slate-600">Hours</label>
+          <input id={`${formId}-hours`} value={hours} onChange={(e) => setHours(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="10-15 hrs/week" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Type</label>
-          <input value={type} onChange={(e) => setType(e.target.value)}
+          <label htmlFor={`${formId}-type`} className="block text-xs font-medium text-slate-600">Type</label>
+          <input id={`${formId}-type`} value={type} onChange={(e) => setType(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Paid" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Apply e-mail</label>
-          <input type="email" value={applyEmail} onChange={(e) => setApplyEmail(e.target.value)}
+          <label htmlFor={`${formId}-apply-email`} className="block text-xs font-medium text-slate-600">Apply e-mail</label>
+          <input id={`${formId}-apply-email`} type="email" value={applyEmail} onChange={(e) => setApplyEmail(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="jobs@hubble.cafe" />
         </div>
         <div>
-          <label className="block text-xs font-medium text-slate-600">Apply link</label>
-          <input value={applyLink} onChange={(e) => setApplyLink(e.target.value)}
+          <label htmlFor={`${formId}-apply-link`} className="block text-xs font-medium text-slate-600">Apply link</label>
+          <input id={`${formId}-apply-link`} type="url" pattern="https?://.+" title="Start the link with https:// (for example https://forms.office.com/…)"
+            value={applyLink} onChange={(e) => setApplyLink(e.target.value)}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="https://…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Description</label>
-          <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
+          <label htmlFor={`${formId}-description`} className="block text-xs font-medium text-slate-600">Description</label>
+          <textarea id={`${formId}-description`} value={description} onChange={(e) => setDescription(e.target.value)} rows={3}
             className="mt-1 w-full rounded border border-slate-200 bg-white px-2.5 py-1.5 text-sm"
             placeholder="Short description of the role…" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-slate-600">Photo</label>
-          <div className="mt-1">
+          <span id={`${formId}-photo`} className="block text-xs font-medium text-slate-600">Photo</span>
+          <div role="group" aria-labelledby={`${formId}-photo`} className="mt-1">
             <MediaPicker value={image} onChange={setImage} />
           </div>
         </div>
@@ -136,7 +140,7 @@ function VacancyForm({
           className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-600 hover:bg-slate-200">
           <X className="h-4 w-4" />
         </button>
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p role="alert" className="text-xs text-red-600">{error}</p>}
       </div>
     </form>
   )
@@ -154,23 +158,22 @@ function VacancyRow({
   onDeleted: () => void
 }) {
   const [editing, setEditing] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const confirmAction = useConfirmAction()
 
   const setEditingState = (value: boolean) => {
     setEditing(value)
     onEditingChange(value)
   }
 
-  const handleDelete = async () => {
-    if (!confirm(`Delete vacancy "${vacancy.title}"?`)) return
-    setDeleting(true)
-    try {
+  const handleDelete = () => confirmAction({
+    title: 'Delete this vacancy?',
+    message: `"${vacancy.title}" will be removed from the website.`,
+    confirmLabel: 'Delete vacancy',
+    action: async () => {
       await deleteVacancy(vacancy.id)
       onDeleted()
-    } catch {
-      setDeleting(false)
-    }
-  }
+    },
+  })
 
   if (editing && canEdit) {
     return (
@@ -223,8 +226,8 @@ function VacancyRow({
             className="rounded p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-700">
             <Pencil className="h-4 w-4" />
           </button>
-          <button onClick={handleDelete} disabled={deleting} aria-label={`Delete ${vacancy.title}`}
-            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-50">
+          <button onClick={handleDelete} aria-label={`Delete ${vacancy.title}`}
+            className="rounded p-1.5 text-slate-500 hover:bg-red-50 hover:text-red-600">
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
@@ -255,23 +258,18 @@ export function VacanciesPage() {
     setError(null)
     try {
       await reorderVacancies(next.map((v) => v.id))
-    } catch {
+    } catch (err) {
       setVacancies(previous)
-      setError('Could not save the new order. Please try again.')
+      setError(messageFor(err, 'Could not save the new order. Please try again.'))
     }
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      <div>
-        <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Vacancies</h1>
-          <PageHelp />
-        </div>
-        <p className="mt-1 text-sm text-slate-600">
-          Manage open positions. Active vacancies appear on the public site. Bar left blank means shown on both sites.
-        </p>
-      </div>
+    <div className="space-y-8">
+      <PageHeader
+        title="Vacancies"
+        description="Manage open positions. Active vacancies appear on the public site. Bar left blank means shown on both sites."
+      />
 
       {canEditContent && (
         <div className="flex justify-end">
@@ -296,7 +294,7 @@ export function VacanciesPage() {
       )}
 
       {loading && <p className="text-sm text-slate-500">Loading…</p>}
-      {error && <p className="text-sm text-red-600">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
 
       {!loading && !error && (
         <section className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">

@@ -19,15 +19,14 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
+import static cafe.community.backend.TestUsers.token;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -156,7 +155,7 @@ class HoursOverrideEditTest {
                 new HoursOverrideRequest(day, true, null, null, null));
 
         mockMvc.perform(put("/api/admin/opening-hours/overrides/" + created.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "viewer-oid").claim("preferred_username", "viewer@test.invalid")))
+                        .with(token("viewer-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(body(day, false, null, null, null)))
                 .andExpect(status().isForbidden());
@@ -164,7 +163,7 @@ class HoursOverrideEditTest {
 
     private ResultActions send(MockHttpServletRequestBuilder request,
                                LocalDate date, boolean closed, String open, String close, String note) throws Exception {
-        return mockMvc.perform(request.with(editor()).contentType(MediaType.APPLICATION_JSON)
+        return mockMvc.perform(request.with(token("editor-oid")).contentType(MediaType.APPLICATION_JSON)
                 .content(body(date, closed, open, close, note)));
     }
 
@@ -178,7 +177,4 @@ class HoursOverrideEditTest {
         return value == null ? "null" : "\"" + value + "\"";
     }
 
-    private static RequestPostProcessor editor() {
-        return jwt().jwt(j -> j.claim("oid", "editor-oid").claim("preferred_username", "editor@test.invalid"));
-    }
 }

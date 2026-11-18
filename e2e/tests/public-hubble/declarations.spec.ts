@@ -1,9 +1,8 @@
 import { test, expect } from '@playwright/test'
+import { DeclarationForm } from '../../pages/PublicForms'
+import { MINIMAL_PDF } from '../../fixtures/files'
 import { clearMailpit, waitForMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
-
-// Minimal valid-enough PDF bytes; the backend checks the content type, not the contents.
-const PDF = Buffer.from('%PDF-1.4\n1 0 obj<<>>endobj\ntrailer<<>>\n%%EOF', 'utf8')
 
 test.describe('Hubble e-declaration form', () => {
   test.beforeEach(async ({ request }) => {
@@ -11,17 +10,19 @@ test.describe('Hubble e-declaration form', () => {
   })
 
   test('submitting a declaration emails finance with the receipt attached', async ({ page, request }, testInfo) => {
+
+    const declaration = new DeclarationForm(page)
     await page.goto('/contact/declarations')
     await expect(page.getByRole('heading', { name: 'Online Declarations' })).toBeVisible()
 
-    await page.locator('#d-name').fill('Sven Rooijakkers')
-    await page.locator('#d-email').fill('sven@example.com')
-    await page.locator('#d-iban').fill('NL70 TRIO 0338 5890 15')
-    await page.locator('#d-date').fill('2026-06-18')
-    await page.locator('#d-amount').fill('150,04')
-    await page.locator('#d-cat').selectOption('Other')
-    await page.locator('#d-desc').fill('SVH Exam')
-    await page.locator('#d-file').setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: PDF })
+    await declaration.fullName.fill('Sven Rooijakkers')
+    await declaration.email.fill('sven@example.com')
+    await declaration.iban.fill('NL70 TRIO 0338 5890 15')
+    await declaration.dateOfPurchase.fill('2026-06-18')
+    await declaration.amount.fill('150,04')
+    await declaration.category.selectOption('Other')
+    await declaration.description.fill('SVH Exam')
+    await declaration.receipt.setInputFiles({ name: 'receipt.pdf', mimeType: 'application/pdf', buffer: MINIMAL_PDF })
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Declaration submitted' })).toBeVisible()

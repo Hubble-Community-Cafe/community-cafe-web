@@ -2,12 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { ConfirmActionProvider } from '../components/ConfirmActionProvider'
 import { OpeningHoursPage } from '../pages/OpeningHoursPage'
 import {
-  createOverride, fetchOverrides, fetchWeeklyHours, updateOverride, type HoursOverride,
+  createOverride, deleteOverride, fetchOverrides, fetchWeeklyHours, updateOverride, type HoursOverride,
 } from '../lib/api'
 import { usePermissions } from '../lib/usePermissions'
 import { permissionsFor, staffUser } from './access'
+import { ActionError } from '../lib/actionError'
 
 vi.mock('../lib/api', () => ({
   fetchWeeklyHours: vi.fn(),
@@ -28,7 +30,8 @@ const override = (o: Partial<HoursOverride>): HoursOverride => ({
   id: 1, bar: 'HUBBLE', date: '2030-12-24', closed: true, open: null, close: null, note: null, ...o,
 })
 
-const renderPage = () => render(<MemoryRouter initialEntries={['/hours']}><OpeningHoursPage /></MemoryRouter>)
+const renderPage = () => render(
+  <MemoryRouter initialEntries={['/hours']}><ConfirmActionProvider><OpeningHoursPage /></ConfirmActionProvider></MemoryRouter>)
 
 describe('OpeningHoursPage date overrides', () => {
   beforeEach(() => {
@@ -132,5 +135,41 @@ describe('OpeningHoursPage date overrides', () => {
     expect(await screen.findByText('Open 20:00 to 02:00')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Edit the override/ })).not.toBeInTheDocument()
     expect(screen.queryByRole('form', { name: 'Add an override' })).not.toBeInTheDocument()
+  })
+
+  /** It used to delete straight away on one click, and to fail without a word. */
+  it('asks before deleting an override, and keeps it when cancelled', async () => {
+    const user = userEvent.setup()
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Delete the override for 2030-12-24' }))
+
+    expect(screen.getByRole('alertdialog', { name: 'Delete this override?' }))
+      .toHaveTextContent('2030-12-24 goes back to the regular weekly opening hours on the website.')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(deleteOverride).not.toHaveBeenCalled()
+    expect(screen.getByText('LED Party')).toBeInTheDocument()
+  })
+
+  it('removes the override once confirmed', async () => {
+    const user = userEvent.setup()
+    vi.mocked(deleteOverride).mockResolvedValue(undefined)
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Delete the override for 2030-12-24' }))
+    await user.click(screen.getByRole('button', { name: 'Delete override' }))
+
+    expect(deleteOverride).toHaveBeenCalledWith(1)
+    expect(screen.queryByText('LED Party')).not.toBeInTheDocument()
+  })
+
+  it('says so when the delete fails, and keeps the override', async () => {
+    const user = userEvent.setup()
+    vi.mocked(deleteOverride).mockRejectedValue(new ActionError('Could not delete the special day. Please try again.'))
+    renderPage()
+    await user.click(await screen.findByRole('button', { name: 'Delete the override for 2030-12-24' }))
+    await user.click(screen.getByRole('button', { name: 'Delete override' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not delete the special day. Please try again.')
+    expect(screen.getByText('LED Party')).toBeInTheDocument()
   })
 })

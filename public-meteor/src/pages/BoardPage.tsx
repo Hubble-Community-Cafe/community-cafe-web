@@ -1,29 +1,20 @@
-import { useEffect, useState } from 'react'
-import { getBoard, reportApiFailure, type BoardTerm, type BoardMember } from '@cafe/shared-web'
+import { getBoard, reportApiFailure, type BoardTerm, type BoardMember, useApiResource, LoadingSkeleton } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
 import { Shimmer } from '../components/Shimmer'
 import { usePageSeo } from '../lib/seo'
 
 function useBoard() {
-  const [terms, setTerms] = useState<BoardTerm[]>([])
-  const [loaded, setLoaded] = useState(false)
-  const [error, setError] = useState(false)
-  useEffect(() => {
-    getBoard()
-      .then(setTerms)
-      .catch((err: unknown) => {
-        void reportApiFailure('board', err)
-        setError(true)
-      })
-      .finally(() => setLoaded(true))
-  }, [])
+  const { data: terms, loaded, error } = useApiResource<BoardTerm[]>(
+    () => getBoard(), [],
+    (err) => void reportApiFailure('board', err),
+  )
   return { terms, loaded, error }
 }
 
 /** Placeholder grid mirroring the member cards while the board loads. */
 function BoardGridSkeleton() {
   return (
-    <div className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-6 grid grid-cols-2 gap-6 sm:grid-cols-3" testId="board-skeleton">
       {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="flex flex-col items-center border border-meteor-200 bg-white p-5">
           <Shimmer className="h-24 w-24 rounded-full" />
@@ -31,18 +22,18 @@ function BoardGridSkeleton() {
           <Shimmer className="mt-1.5 h-3 w-16" />
         </div>
       ))}
-    </div>
+    </LoadingSkeleton>
   )
 }
 
 /** A few shimmer lines for the text-only previous-boards page. */
 function BoardLinesSkeleton() {
   return (
-    <div className="mt-6 space-y-2 text-center" data-testid="board-skeleton">
+    <LoadingSkeleton className="mt-6 space-y-2 text-center" testId="board-skeleton">
       <Shimmer className="mx-auto h-5 w-40" />
       <Shimmer className="mx-auto h-3 w-32" />
       <Shimmer className="mx-auto h-3 w-28" />
-    </div>
+    </LoadingSkeleton>
   )
 }
 
@@ -57,12 +48,13 @@ function MemberCard({ member, index }: { member: BoardMember; index: number }) {
       {member.photoUrl ? (
         <img
           src={member.photoUrl}
-          alt={member.photoAlt ?? member.name}
+          // The name is printed right below: repeating it in the alt text makes screen readers say it twice.
+          alt={member.photoAlt ?? ''}
           loading="lazy"
           className="h-24 w-24 rounded-full object-cover"
         />
       ) : (
-        <div className="flex h-24 w-24 items-center justify-center rounded-full bg-meteor-100 text-2xl font-bold text-meteor-400">
+        <div aria-hidden="true" className="flex h-24 w-24 items-center justify-center rounded-full bg-meteor-100 text-2xl font-bold text-meteor-400">
           {member.name.charAt(0).toUpperCase()}
         </div>
       )}
@@ -94,7 +86,7 @@ export function CurrentBoardPage() {
               )}
             </>
           )}
-          {error && <p className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
+          {error && <p role="alert" className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
           {!error && (!term || term.members.length === 0) && (
             <p className="mt-4 text-sm text-meteor-700/70">Board information coming soon.</p>
           )}
@@ -116,7 +108,7 @@ export function PreviousBoardsPage() {
   return (
     <PageShell title="Previous boards">
       {!loaded && <BoardLinesSkeleton />}
-      {error && <p className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
+      {error && <p role="alert" className="mt-4 text-sm text-red-700">Could not load the board. Please try again later.</p>}
       {loaded && !error && previous.length === 0 && (
         <p className="text-sm text-meteor-700/70">No previous board information available.</p>
       )}

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { resetBackend, seedMenuCategory, seedMenuItem, setUiRole } from '../../fixtures/backend'
+import { resetBackend, seedCocktailMenu, seedMenuCategory, seedMenuItem, setUiRole } from '../../fixtures/backend'
 import { AdminApp } from '../../pages/AdminApp'
 
 /**
@@ -15,17 +15,10 @@ test.describe('Menu reordering on a phone', () => {
   })
 
   test('an item can be dragged into a new position', async ({ page, request }) => {
-    const tab = await seedMenuCategory(request, { name: 'E2E Drinks', bar: 'HUBBLE' })
-    const sub = await seedMenuCategory(request, { name: 'E2E Cocktails', bar: 'HUBBLE', parentId: tab.id })
-    for (const name of ['E2E Mojito', 'E2E Negroni', 'E2E Daiquiri']) {
-      await seedMenuItem(request, sub.id, { name, regularPrice: 7 })
-    }
+    await seedCocktailMenu(request)
 
     const admin = new AdminApp(page)
-    await admin.goto('/menu')
-    await page.getByRole('button', { name: /^E2E Drinks/ }).click()
-    await page.getByRole('button', { name: /^E2E Cocktails/ }).click()
-    await expect(admin.dragHandle('E2E Mojito')).toBeVisible()
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     // The handle is a full 44px target below the sm breakpoint, where the drag has to be pressed
     // and held precisely. At the desktop size of 28px it is an awkward thing to hit with a thumb.

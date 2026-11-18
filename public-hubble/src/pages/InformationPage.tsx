@@ -1,38 +1,32 @@
 import { useState } from 'react'
-import { submitInformation, FormError, formsChallengeUrl } from '@cafe/shared-web'
+import { submitInformation, formsChallengeUrl, useFormSubmit } from '@cafe/shared-web'
 import { PageShell } from '../components/PageShell'
-import { AltchaWidget } from '../components/AltchaWidget'
+import { AltchaWidget } from '@cafe/shared-web/altcha'
 import { usePageSeo } from '../lib/seo'
 
 const field =
   'mt-1 w-full rounded-lg border border-hubble-200 bg-white px-3 py-2.5 text-sm text-hubble-900 ' +
-  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30'
+  'outline-none transition focus-visible:border-hubble-500 focus-visible:ring-2 focus-visible:ring-hubble-500/30 ' +
+  // Marked wrong by useFormSubmit until it is changed.
+  'aria-[invalid=true]:border-red-600'
 const label = 'block text-sm font-semibold text-hubble-800'
 
 export function InformationPage() {
   usePageSeo('Information form', 'Ask Hubble Community Cafe a general question.')
   const [form, setForm] = useState({ name: '', email: '', phone: '', message: '', honeypot: '' })
-  const [altcha, setAltcha] = useState<string | null>(null)
-  const [status, setStatus] = useState<'idle' | 'sending' | 'sent'>('idle')
-  const [error, setError] = useState<string | null>(null)
+  const { setAltcha, status, error, errorId, send, fieldProps, formProps } = useFormSubmit()
 
   const set = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((f) => ({ ...f, [key]: e.target.value }))
 
-  const submit = async (e: React.FormEvent) => {
+  const submit = (e: React.FormEvent) => {
     e.preventDefault()
-    setStatus('sending')
-    setError(null)
-    try {
+    void send(async (altcha) => {
       await submitInformation({
         name: form.name, email: form.email, phone: form.phone, message: form.message,
-        honeypot: form.honeypot, altcha: altcha ?? '',
+        honeypot: form.honeypot, altcha,
       })
-      setStatus('sent')
-    } catch (err) {
-      setError(err instanceof FormError ? err.message : 'Something went wrong. Please try again.')
-      setStatus('idle')
-    }
+    })
   }
 
   return (
@@ -54,23 +48,23 @@ export function InformationPage() {
           </p>
         </div>
       ) : (
-        <form onSubmit={submit} className="mt-8 space-y-5" noValidate>
+        <form {...formProps} onSubmit={submit} className="mt-8 space-y-5">
           <div className="grid gap-5 sm:grid-cols-2">
             <div>
               <label htmlFor="i-name" className={label}>Name *</label>
-              <input id="i-name" required value={form.name} onChange={set('name')} className={field} autoComplete="name" />
+              <input id="i-name" required value={form.name} {...fieldProps('name')} onChange={set('name')} className={field} autoComplete="name" />
             </div>
             <div>
               <label htmlFor="i-email" className={label}>Email *</label>
-              <input id="i-email" type="email" required value={form.email} onChange={set('email')} className={field} autoComplete="email" />
+              <input id="i-email" type="email" required value={form.email} {...fieldProps('email')} onChange={set('email')} className={field} autoComplete="email" />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="i-phone" className={label}>Phone</label>
-              <input id="i-phone" value={form.phone} onChange={set('phone')} className={field} placeholder="+316 1234 5678" autoComplete="tel" />
+              <input id="i-phone" value={form.phone} {...fieldProps('phone')} onChange={set('phone')} className={field} placeholder="+316 1234 5678" autoComplete="tel" />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="i-message" className={label}>Message *</label>
-              <textarea id="i-message" required rows={5} value={form.message} onChange={set('message')} className={field} />
+              <textarea id="i-message" required rows={5} value={form.message} {...fieldProps('message')} onChange={set('message')} className={field} />
             </div>
           </div>
 
@@ -82,7 +76,7 @@ export function InformationPage() {
           </div>
 
           {error && (
-            <p className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
+            <p id={errorId} className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-700" role="alert">{error}</p>
           )}
 
           <button type="submit" disabled={status === 'sending'}

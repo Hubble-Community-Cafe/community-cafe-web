@@ -29,6 +29,7 @@ FROM nginx:alpine
 RUN apk upgrade --no-cache
 
 COPY admin/nginx.conf /etc/nginx/conf.d/default.conf
+COPY admin/nginx-security-headers.conf /etc/nginx/snippets/security-headers.conf
 COPY admin/nginx-csp.conf /etc/nginx/csp.conf.template
 COPY --from=build /app/admin/dist /usr/share/nginx/html
 

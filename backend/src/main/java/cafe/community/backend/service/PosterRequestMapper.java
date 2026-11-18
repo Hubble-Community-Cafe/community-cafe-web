@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import cafe.community.backend.config.TimeConfig;
 import cafe.community.backend.aurora.Aurora;
 import cafe.community.backend.aurora.AuroraRejectedException;
 import cafe.community.backend.dto.ScreenRequest;
@@ -19,7 +20,7 @@ import java.time.ZoneId;
 final class PosterRequestMapper {
 
     /** The screens hang in Eindhoven, so a chosen day runs from midnight to midnight there. */
-    static final ZoneId SCREENS_ZONE = ZoneId.of("Europe/Amsterdam");
+    static final ZoneId SCREENS_ZONE = TimeConfig.BAR_ZONE;
 
     /** Seconds a poster stays on screen per turn in the carousel. */
     static final int DEFAULT_TIMEOUT_SECONDS = 30;

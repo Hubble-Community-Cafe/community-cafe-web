@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { HubbleLoanForm } from '../../pages/PublicForms'
 import { clearMailpit, waitForMessageTo } from '../../fixtures/mailpit'
 import { captureScreenshot } from '../../fixtures/evidence'
 
@@ -8,6 +9,8 @@ test.describe('Hubble loan equipment form', () => {
   })
 
   test('submitting a loan request emails the loan list with pick-up/return details', async ({ page, request }, testInfo) => {
+
+    const loan = new HubbleLoanForm(page)
     await page.goto('/contact/loan-equipment')
     await expect(page.getByRole('heading', { name: 'Hubble Loan Equipment' })).toBeVisible()
     // The reference images open in an in-page modal (not a new tab).
@@ -17,14 +20,14 @@ test.describe('Hubble loan equipment form', () => {
     await dialog.getByRole('button', { name: 'Close' }).click()
     await expect(page.getByRole('dialog')).toHaveCount(0)
 
-    await page.locator('#l-name').fill('Lotte Tester')
-    await page.locator('#l-assoc').fill('Doppio')
-    await page.locator('#l-email').fill('lotte@example.com')
-    await page.locator('#l-pdate').fill('2026-07-01')
-    await page.locator('#l-ptime').fill('14:00')
-    await page.locator('#l-rdate').fill('2026-07-03')
-    await page.locator('#l-rtime').fill('12:00')
-    await page.locator('#l-message').fill('Two cantus tables and the beer draft please.')
+    await loan.name.fill('Lotte Tester')
+    await loan.association.fill('Doppio')
+    await loan.email.fill('lotte@example.com')
+    await loan.pickupDate.fill('2026-07-01')
+    await loan.pickupTime.fill('14:00')
+    await loan.returnDate.fill('2026-07-03')
+    await loan.returnTime.fill('12:00')
+    await loan.message.fill('Two cantus tables and the beer draft please.')
     await page.getByRole('button', { name: 'Send' }).click()
 
     await expect(page.getByRole('heading', { name: 'Request received' })).toBeVisible()
@@ -36,9 +39,12 @@ test.describe('Hubble loan equipment form', () => {
     expect(mail.text).toContain('Pick-up: 2026-07-01 at 14:00')
     expect(mail.text).toContain('Return: 2026-07-03 at 12:00')
 
+    // The submitter's confirmation does not echo their own text back.
     const ack = await waitForMessageTo(request, 'lotte@example.com')
     expect(ack.from).toBe('noreply@hubble.cafe')
     expect(ack.subject).toBe('We received your loan request')
-    expect(ack.text).toContain('Doppio')
+    expect(ack.text).toContain('not a confirmed booking')
+    expect(ack.text).not.toContain('Doppio')
+    expect(ack.text).not.toContain('cantus tables')
   })
 })

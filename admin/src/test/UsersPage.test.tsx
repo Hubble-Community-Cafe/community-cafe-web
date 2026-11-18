@@ -24,7 +24,7 @@ const level = (tab: string, name: 'Hidden' | 'View' | 'Edit') =>
 describe('UsersPage', () => {
   beforeEach(() => {
     vi.resetAllMocks()
-    vi.mocked(useRole).mockReturnValue({ user: me, role: 'ADMIN', isLoading: false, error: null, refetch: () => {} })
+    vi.mocked(useRole).mockReturnValue({ user: me, role: 'ADMIN', isLoading: false, error: null, refetch: async () => {} })
     vi.mocked(fetchAllUsers).mockResolvedValue([me, newcomer, viewer])
   })
 
@@ -41,7 +41,7 @@ describe('UsersPage', () => {
   it('reports a failed load', async () => {
     vi.mocked(fetchAllUsers).mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Failed to load users.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Failed to load users.')
   })
 
   it('saves the levels picked per tab and shows the new summary', async () => {

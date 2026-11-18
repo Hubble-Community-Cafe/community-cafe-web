@@ -1,109 +1,33 @@
 package cafe.community.backend.aurora;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.HttpStatusCode;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestClientException;
-
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 /**
- * Thin transport layer over the Aurora narrowcasting API. Knows how to make the calls and how to
- * fail cleanly; it holds no opinion about what a "scene" is.
- *
- * <p>Authentication is an integration user's key in the {@code x-api-key} header. That key is
- * scoped in Aurora to exactly the operations used here: {@code getScreenHandlers},
- * {@code setScreenHandler}, {@code showStaticPoster} and {@code createPosterRequest}. The poster
- * read endpoints come along with the {@code integration-user} group.
+ * The calls the website makes to Aurora, the narrowcasting system behind the bar's screens.
+ * {@link HttpAuroraClient} makes them for real; under the {@code e2e} profile
+ * {@link FakeAuroraClient} answers them in memory, so the screen panel works without Aurora.
  */
-@Component
-public class AuroraClient {
-
-    private static final Logger log = LoggerFactory.getLogger(AuroraClient.class);
-
-    private static final ParameterizedTypeReference<List<Aurora.ScreenHandler>> SCREEN_HANDLER_LIST =
-            new ParameterizedTypeReference<>() {
-            };
-    private static final ParameterizedTypeReference<List<Aurora.Poster>> POSTER_LIST =
-            new ParameterizedTypeReference<>() {
-            };
-
-    private final RestClient restClient;
-    private final RestClient uploadRestClient;
-    private final boolean enabled;
-    private final String baseUrl;
-
-    /** One client for every call, uploads included. */
-    public AuroraClient(RestClient auroraRestClient, boolean enabled, String baseUrl, String apiKey) {
-        this(auroraRestClient, auroraRestClient, enabled, baseUrl, apiKey);
-    }
-
-    @Autowired
-    public AuroraClient(
-            @Qualifier("auroraRestClient") RestClient auroraRestClient,
-            @Qualifier("auroraUploadRestClient") RestClient auroraUploadRestClient,
-            @Value("${app.aurora.enabled:false}") boolean enabled,
-            @Value("${app.aurora.base-url:}") String baseUrl,
-            @Value("${app.aurora.api-key:}") String apiKey) {
-        this.restClient = auroraRestClient;
-        this.uploadRestClient = auroraUploadRestClient;
-        this.baseUrl = baseUrl;
-        this.enabled = enabled && !baseUrl.isBlank() && !apiKey.isBlank();
-
-        if (enabled && !this.enabled) {
-            log.warn("Aurora is enabled but app.aurora.base-url or app.aurora.api-key is blank; "
-                    + "the screen scene panel and poster requests will stay unavailable.");
-        } else if (this.enabled) {
-            log.info("Aurora client configured for {}", baseUrl);
-        }
-    }
+public interface AuroraClient {
 
     /**
-     * Whether Aurora is configured at all. False in local dev and in the e2e stack unless wired up,
-     * which lets the admin show a clear "not configured" state instead of failing calls.
+     * Whether Aurora is configured at all. False in local dev unless wired up, which lets the admin
+     * show a clear "not configured" state instead of failing calls.
      */
-    public boolean isEnabled() {
-        return enabled;
-    }
+    boolean isEnabled();
 
-    public String baseUrl() {
-        return baseUrl;
-    }
-
-    /** All screen handlers and the screens currently attached to each. */
-    public List<Aurora.ScreenHandler> getScreenHandlers() {
-        List<Aurora.ScreenHandler> handlers = call("GET /handler/screen", () -> restClient.get()
-                .uri("/handler/screen")
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::fail)
-                .body(SCREEN_HANDLER_LIST));
-        return handlers == null ? List.of() : handlers;
-    }
+    List<Aurora.ScreenHandler> getScreenHandlers();
 
     /**
      * Every screen Aurora knows about, flattened across all handlers and de-duplicated by id.
      * Aurora exposes no plain screen list to an integration user, so this is the way to enumerate
      * them.
      */
-    public List<Aurora.Screen> getScreens() {
-        List<Aurora.ScreenHandler> handlers = getScreenHandlers();
+    default List<Aurora.Screen> getScreens() {
         Map<Long, Aurora.Screen> byId = new LinkedHashMap<>();
-        for (Aurora.ScreenHandler handler : handlers) {
+        for (Aurora.ScreenHandler handler : getScreenHandlers()) {
             if (handler.entities() == null) {
                 continue;
             }
@@ -118,117 +42,13 @@ public class AuroraClient {
      * Move one screen onto the named handler. Aurora matches {@code handlerName} against the
      * handler's class name and answers 400 if it does not resolve.
      */
-    public void setScreenHandler(long screenId, String handlerName) {
-        call("POST /handler/screen/" + screenId, () -> restClient.post()
-                .uri("/handler/screen/{id}", screenId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .body(Map.of("name", handlerName))
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::fail)
-                .toBodilessEntity());
-    }
+    void setScreenHandler(long screenId, String handlerName);
 
-    /**
-     * All posters, any of which the static poster handler can show. Aurora dropped the separate
-     * {@code /handler/screen/poster/static/items} list when it merged static and carousel posters.
-     */
-    public List<Aurora.Poster> getPosters() {
-        List<Aurora.Poster> posters = call("GET /handler/screen/poster/items", () -> restClient.get()
-                .uri("/handler/screen/poster/items")
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::fail)
-                .body(POSTER_LIST));
-        return posters == null ? List.of() : posters;
-    }
+    List<Aurora.Poster> getPosters();
 
-    /** Which poster the static handler is currently showing, if any. */
-    public Aurora.StaticPosterState getStaticPosterState() {
-        Aurora.StaticPosterState state = call("GET /handler/screen/poster/static", () -> restClient.get()
-                .uri("/handler/screen/poster/static")
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::fail)
-                .body(Aurora.StaticPosterState.class));
-        if (state == null) {
-            throw new AuroraException("Aurora returned an empty static poster state.");
-        }
-        return state;
-    }
+    Aurora.StaticPosterState getStaticPosterState();
 
-    /**
-     * Set the active poster on the static poster handler. This only reaches screens already
-     * attached to that handler, so callers move the screens first.
-     */
-    public void showStaticPoster(long posterId) {
-        call("POST /handler/screen/poster/static/items/" + posterId + "/show", () -> restClient.post()
-                .uri("/handler/screen/poster/static/items/{id}/show", posterId)
-                .retrieve()
-                .onStatus(HttpStatusCode::isError, this::fail)
-                .toBodilessEntity());
-    }
+    void showStaticPoster(long posterId);
 
-    /**
-     * Submit a poster request for review in the Aurora backoffice.
-     *
-     * @throws AuroraRejectedException when Aurora refuses the content (400, 413, 415); sending it
-     *         again will not help
-     * @throws AuroraException when Aurora is not configured, unreachable, or answers with any
-     *         other error, such as a bad key (401, 403), poster requests switched off (409) or 5xx
-     */
-    public Aurora.CreatedPosterRequest createPosterRequest(Aurora.PosterRequest request) {
-        Aurora.CreatedPosterRequest created = call("POST /handler/screen/poster/requests",
-                () -> uploadRestClient.post()
-                        .uri("/handler/screen/poster/requests")
-                        .contentType(MediaType.MULTIPART_FORM_DATA)
-                        .body(request.toMultipart().build())
-                        .retrieve()
-                        .onStatus(HttpStatusCode::isError, this::failPosterRequest)
-                        .body(Aurora.CreatedPosterRequest.class));
-        if (created == null) {
-            throw new AuroraException("Aurora returned an empty poster request response.");
-        }
-        return created;
-    }
-
-    private <T> T call(String description, Supplier<T> request) {
-        if (!enabled) {
-            throw new AuroraException("Aurora is not configured.");
-        }
-        try {
-            return request.get();
-        } catch (AuroraException e) {
-            throw e;
-        } catch (RestClientException e) {
-            log.warn("Aurora call failed: {}", description, e);
-            throw new AuroraException("Could not reach Aurora (" + description + "): " + e.getMessage(), e);
-        }
-    }
-
-    /** Turns a non-2xx Aurora response into an {@link AuroraException} carrying its body. */
-    private void fail(HttpRequest request, ClientHttpResponse response) throws IOException {
-        HttpStatusCode status = response.getStatusCode();
-        String body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
-        String detail = body.isBlank() ? "" : ": " + body;
-        throw new AuroraException("Aurora returned " + status.value() + detail);
-    }
-
-    /**
-     * Like {@link #fail}, but separates content Aurora refused from Aurora being unusable. Aurora's
-     * validation messages name the field, never its value, so they are safe to log.
-     */
-    private void failPosterRequest(HttpRequest request, ClientHttpResponse response) throws IOException {
-        AuroraRejectedException.Reason reason = switch (response.getStatusCode().value()) {
-            case 400 -> AuroraRejectedException.Reason.INVALID;
-            case 413 -> AuroraRejectedException.Reason.TOO_LARGE;
-            case 415 -> AuroraRejectedException.Reason.UNSUPPORTED_FILE;
-            default -> null;
-        };
-        if (reason == null) {
-            fail(request, response);
-            return;
-        }
-        String body = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
-        String detail = body.isBlank() ? "" : ": " + body;
-        throw new AuroraRejectedException(reason,
-                "Aurora refused the poster request with " + response.getStatusCode().value() + detail);
-    }
+    Aurora.CreatedPosterRequest createPosterRequest(Aurora.PosterRequest request);
 }

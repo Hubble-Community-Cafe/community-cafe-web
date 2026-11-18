@@ -40,6 +40,16 @@ export class AdminApp {
   }
 
   /** The "Discard unsaved changes?" question shown when leaving a page with unsaved input. */
+  /** The confirmation shown before a delete, by its question ("Delete this image?"). */
+  confirmDialog(title: string): Locator {
+    return this.page.getByRole('alertdialog', { name: title })
+  }
+
+  /** Answer the open confirmation with its confirm button ("Delete image"). */
+  async confirm(title: string, confirmLabel: string): Promise<void> {
+    await this.confirmDialog(title).getByRole('button', { name: confirmLabel }).click()
+  }
+
   unsavedChangesDialog(): Locator {
     return this.page.getByRole('alertdialog', { name: 'Discard unsaved changes?' })
   }
@@ -50,6 +60,17 @@ export class AdminApp {
   }
 
   // ── Reordering ──────────────────────────────────────────────────────────────
+
+  /**
+   * Open the Menu page and expand one tab and one section in it, waiting until `firstItem` in
+   * that section can be dragged (so its rows have loaded).
+   */
+  async openMenuSection(tab: string, section: string, firstItem: string): Promise<void> {
+    await this.goto('/menu')
+    await this.page.getByRole('button', { name: new RegExp(`^${tab}`) }).click()
+    await this.page.getByRole('button', { name: new RegExp(`^${section}`) }).click()
+    await expect(this.dragHandle(firstItem)).toBeVisible()
+  }
 
   /** The drag handle of a row, by the name it was given ("Reorder Mojito"). */
   dragHandle(name: string): Locator {

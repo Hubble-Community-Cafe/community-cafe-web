@@ -1,0 +1,128 @@
+import { PublicClientApplication } from '@azure/msal-browser'
+import { runtimeConfig } from '@cafe/shared-web'
+import { getE2eAuth } from '../e2eAuth'
+import { ActionError, ForbiddenError } from '../actionError'
+import { AZURE_CLIENT_ID } from '../authConfig'
+
+// In containers the API_URL is injected at startup; locally default to the documented dev backend
+// so the app loads without a .env.
+const API_BASE_URL = runtimeConfig('API_URL') ?? (import.meta.env.VITE_API_URL || 'http://localhost:8080')
+
+export { ForbiddenError }
+
+let msalInstance: PublicClientApplication | null = null
+
+export const setMsalInstance = (instance: PublicClientApplication) => {
+  msalInstance = instance
+}
+
+export const clearAuth = () => {
+  sessionStorage.clear()
+}
+
+// Azure AD returns a token for ONE resource at a time, so we request only the
+// API scope here (never mixed with Graph scopes). The same client id sign-in uses.
+const getApiScope = () => `api://${AZURE_CLIENT_ID}/access_as_user`
+
+const getAccessToken = async (): Promise<string | null> => {
+  if (!msalInstance) {
+    console.error('MSAL instance not set')
+    return null
+  }
+  const accounts = msalInstance.getAllAccounts()
+  if (accounts.length === 0) {
+    return null
+  }
+  try {
+    const response = await msalInstance.acquireTokenSilent({
+      scopes: [getApiScope()],
+      account: accounts[0],
+    })
+    return response.accessToken
+  } catch (error) {
+    console.error('Failed to acquire token silently:', error)
+    return null
+  }
+}
+
+/** Fetch against the backend with admin authentication (MSAL bearer, or e2e headers). */
+export async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
+  const fullUrl = url.startsWith('http') ? url : `${API_BASE_URL}${url}`
+  const headers: Record<string, string> = { ...(options.headers as Record<string, string>) }
+
+  const e2e = getE2eAuth()
+  if (e2e) {
+    headers['X-Test-Oid'] = e2e.oid
+    if (e2e.email) headers['X-Test-Email'] = e2e.email
+    if (e2e.name) headers['X-Test-Name'] = e2e.name
+  } else {
+    const token = await getAccessToken()
+    if (!token) {
+      throw new Error('Not authenticated')
+    }
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  if (!(options.body instanceof FormData)) {
+    headers['Content-Type'] = 'application/json'
+  }
+
+  const response = await fetch(fullUrl, { ...options, headers })
+
+  if (response.status === 401) {
+    clearAuth()
+    throw new Error('Authentication failed')
+  }
+  if (response.status === 403) {
+    throw new ForbiddenError('You do not have permission to perform this action')
+  }
+  return response
+}
+
+/**
+ * The error for a failed request. A 4xx answer carries a message written for people (a field that
+ * is not valid, a date that already has an override, missing access): that becomes an ActionError,
+ * which the admin shows as is. A 5xx or an answer without a message is not for staff to read, so it
+ * stays a technical error and the form shows its own plain text instead.
+ */
+async function failureFrom(response: Response, url: string): Promise<Error> {
+  let message: string | undefined
+  try {
+    message = ((await response.json()) as { message?: string }).message
+  } catch {
+    // No JSON body (a proxy error page, say): nothing to show.
+  }
+  if (response.status < 500 && message) return new ActionError(message)
+  return new Error(`Request failed (${response.status}) for ${url}`)
+}
+
+export async function getJson<T>(url: string, options: RequestInit = {}): Promise<T> {
+  const response = await fetchWithAuth(url, options)
+  if (!response.ok) {
+    throw await failureFrom(response, url)
+  }
+  return response.json() as Promise<T>
+}
+
+/**
+ * Delete something. It being gone already (404, a colleague deleted it first) counts as done, so
+ * the row can go. Any other failure throws an ActionError with the backend's own reason when it
+ * gives one (an image still in use, say), or a plain "Could not delete …" otherwise.
+ */
+export async function deleteResource(url: string, what: string): Promise<void> {
+  const response = await fetchWithAuth(url, { method: 'DELETE' })
+  if (response.ok || response.status === 404) return
+  const body = await response.json().catch(() => ({})) as { message?: string }
+  throw new ActionError(body.message || `Could not delete ${what}. Please try again.`)
+}
+
+/**
+ * A write that answers 204 with no body, so there is nothing to parse. Still throws on failure,
+ * which is what lets an optimistic caller put the old state back.
+ */
+export async function sendNoContent(url: string, options: RequestInit): Promise<void> {
+  const response = await fetchWithAuth(url, options)
+  if (!response.ok) {
+    throw await failureFrom(response, url)
+  }
+}

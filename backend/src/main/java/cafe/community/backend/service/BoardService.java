@@ -7,7 +7,6 @@ import cafe.community.backend.dto.BoardTermRequest;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.BoardMemberRepository;
 import cafe.community.backend.repository.BoardTermRepository;
-import cafe.community.backend.repository.MediaAssetRepository;
 import cafe.community.backend.util.SortOrders;
 import cafe.community.backend.service.audit.AuditSnapshots;
 import cafe.community.backend.service.audit.Snapshot;
@@ -25,19 +24,19 @@ public class BoardService {
 
     private final BoardTermRepository termRepo;
     private final BoardMemberRepository memberRepo;
-    private final MediaAssetRepository mediaRepo;
+    private final MediaService media;
     private final AuditService auditService;
 
     public BoardService(BoardTermRepository termRepo, BoardMemberRepository memberRepo,
-                        MediaAssetRepository mediaRepo, AuditService auditService) {
+                        MediaService media, AuditService auditService) {
         this.termRepo = termRepo;
         this.memberRepo = memberRepo;
-        this.mediaRepo = mediaRepo;
+        this.media = media;
         this.auditService = auditService;
     }
 
     public List<BoardTermDto> getAll() {
-        return termRepo.findAll(org.springframework.data.domain.Sort.by("sortOrder", "label"))
+        return termRepo.findAll(Sort.by("sortOrder", "label"))
                 .stream().map(BoardTermDto::from).toList();
     }
 
@@ -155,16 +154,14 @@ public class BoardService {
     private void applyTerm(BoardTerm term, BoardTermRequest req) {
         term.setLabel(req.label());
         term.setType(BoardType.valueOf(req.type()));
-        term.setBar(req.bar() != null && !req.bar().isBlank() ? BarLocation.valueOf(req.bar()) : null);
+        term.setBar(BarLocation.parseOrShared(req.bar()));
         term.setCurrent(req.current());
         // Omitting the position leaves it where it is; createTerm appends instead.
         if (req.sortOrder() != null) {
             term.setSortOrder(req.sortOrder());
         }
         term.setPhotoCredit(req.photoCredit());
-        MediaAsset groupPhoto = req.groupPhotoId() != null
-                ? mediaRepo.findById(req.groupPhotoId()).orElse(null) : null;
-        term.setGroupPhoto(groupPhoto);
+        term.setGroupPhoto(media.resolve(req.groupPhotoId()));
     }
 
     private void applyMember(BoardMember member, BoardMemberRequest req) {
@@ -174,8 +171,6 @@ public class BoardService {
         if (req.sortOrder() != null) {
             member.setSortOrder(req.sortOrder());
         }
-        MediaAsset photo = req.photoId() != null
-                ? mediaRepo.findById(req.photoId()).orElse(null) : null;
-        member.setPhoto(photo);
+        member.setPhoto(media.resolve(req.photoId()));
     }
 }

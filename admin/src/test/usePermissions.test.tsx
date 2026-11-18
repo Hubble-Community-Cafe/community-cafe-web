@@ -9,7 +9,7 @@ vi.mock('../lib/RoleContext', () => ({ useRole: vi.fn() }))
 const mockUseRole = vi.mocked(useRole)
 
 function signedInAs(user: AdminUser | null) {
-  mockUseRole.mockReturnValue({ user, role: user?.role ?? null, isLoading: false, error: null, refetch: () => {} })
+  mockUseRole.mockReturnValue({ user, role: user?.role ?? null, isLoading: false, error: null, refetch: async () => {} })
   return renderHook(() => usePermissions()).result.current
 }
 

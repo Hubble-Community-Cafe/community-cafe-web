@@ -9,7 +9,8 @@ interface RoleContextValue {
   role: AdminRole | null
   isLoading: boolean
   error: string | null
-  refetch: () => void
+  /** Loads the signed-in staff member's access again; resolves once it is done. */
+  refetch: () => Promise<void>
 }
 
 const RoleContext = createContext<RoleContextValue>({
@@ -17,7 +18,7 @@ const RoleContext = createContext<RoleContextValue>({
   role: null,
   isLoading: true,
   error: null,
-  refetch: () => {},
+  refetch: async () => {},
 })
 
 export function useRole() {

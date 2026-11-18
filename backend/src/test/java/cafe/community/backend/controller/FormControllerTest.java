@@ -1,5 +1,7 @@
 package cafe.community.backend.controller;
 
+import cafe.community.backend.service.TestUploads;
+import cafe.community.backend.media.TestImages;
 import cafe.community.backend.mail.FormEmail;
 import cafe.community.backend.mail.FormMailService;
 import cafe.community.backend.repository.FormSubmissionRepository;
@@ -19,6 +21,8 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -27,6 +31,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -46,11 +51,11 @@ class FormControllerTest {
     }
 
     private MockMultipartFile png() {
-        return new MockMultipartFile("file", "poster.png", "image/png", new byte[]{1, 2, 3});
+        return new MockMultipartFile("file", "poster.png", "image/png", TestImages.png(1, 1));
     }
 
     private MockMultipartFile pdf() {
-        return new MockMultipartFile("file", "receipt.pdf", "application/pdf", new byte[]{1, 2, 3});
+        return new MockMultipartFile("file", "receipt.pdf", "application/pdf", TestUploads.pdf());
     }
 
     // ── Complaint ────────────────────────────────────────────────────────────────
@@ -77,7 +82,9 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@meteor.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@meteor.cafe");
         assertThat(ack.subject()).isEqualTo("We received your tip");
-        assertThat(ack.body()).contains("Hi Alice").contains("Lovely food");
+        // Only server-chosen values come back: no name, no message (see the abuse test below).
+        assertThat(ack.body()).contains("Hello,").contains("Type: Tip")
+                .doesNotContain("Alice").doesNotContain("Lovely food");
         assertThat(ack.attachments()).isEmpty();
 
         assertThat(repo.count()).isEqualTo(1);
@@ -104,13 +111,54 @@ class FormControllerTest {
                 .doesNotContain("carol.visitor@example.com");
     }
 
+    /**
+     * The confirmation goes to whatever address was typed in, so it must not carry anything else
+     * the visitor typed: otherwise anyone could send their own text and links to any inbox, from
+     * our real mailboxes.
+     */
+    @Test
+    void confirmation_neverEchoesFreeTextToTheClaimedAddress() throws Exception {
+        String lure = "Your account is locked, verify at https://evil.example/login";
+        mockMvc.perform(post("/api/forms/information").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","email":"victim@example.com","message":"%s"}
+                                """.formatted(lure, lure)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/forms/loan").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","association":"%s","email":"victim@example.com",
+                                 "pickupDate":"evil.example/a","pickupTime":"evil.example/b",
+                                 "returnDate":"evil.example/c","returnTime":"evil.example/d",
+                                 "message":"%s"}
+                                """.formatted(lure, lure, lure)))
+                .andExpect(status().isNoContent());
+        mockMvc.perform(post("/api/forms/tips").contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name":"%s","email":"victim@example.com","type":"TIP",
+                                 "date":"evil.example/e","message":"%s"}
+                                """.formatted(lure, lure)))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(6)).send(sent.capture());
+        List<FormEmail> acks = sent.getAllValues().stream()
+                .filter(e -> e.to().equals("victim@example.com"))
+                .toList();
+
+        assertThat(acks).hasSize(3).allSatisfy(ack -> {
+            assertThat(ack.subject()).doesNotContain("evil.example");
+            assertThat(ack.body()).doesNotContain("evil.example").doesNotContain("locked");
+        });
+    }
+
     @Test
     void complaint_missingMessage_isRejected() throws Exception {
         mockMvc.perform(post("/api/forms/complaint").contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"Alice","email":"alice@x.com","type":"TIP"}
                                 """))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("message"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -149,7 +197,8 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.subject()).isEqualTo("We received your poster screen request");
-        assertThat(ack.body()).contains("Hi Anke").contains("Doppio");
+        assertThat(ack.body()).contains("Start date: 2026-07-01").contains("End date: 2026-07-15")
+                .doesNotContain("Anke").doesNotContain("Doppio").doesNotContain("Please post");
         assertThat(ack.attachments()).isEmpty();
     }
 
@@ -171,7 +220,8 @@ class FormControllerTest {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
                         .param("startDate", "2026-07-15").param("endDate", "2026-07-01"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("endDate"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -181,7 +231,8 @@ class FormControllerTest {
         mockMvc.perform(multipart("/api/forms/screen").file(txt)
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com")
                         .param("startDate", "2026-07-01").param("endDate", "2026-07-15"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("file"));
     }
 
     @Test
@@ -201,7 +252,8 @@ class FormControllerTest {
     void screen_missingDatesWithoutPermanent_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/screen").file(png())
                         .param("name", "Anke").param("association", "Doppio").param("email", "anke@x.com"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("startDate"));
         verify(mail, never()).send(org.mockito.ArgumentMatchers.any());
     }
 
@@ -228,8 +280,8 @@ class FormControllerTest {
         assertThat(ack.from()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.replyTo()).isEqualTo("noreply@hubble.cafe");
         assertThat(ack.subject()).isEqualTo("We received your declaration");
-        assertThat(ack.body()).contains("Hi Sven Rooijakkers").contains("Amount in euros: 150.04")
-                .contains("Hubble Community Cafe");
+        assertThat(ack.body()).contains("Amount in euros: 150.04").contains("Hubble Community Cafe")
+                .doesNotContain("Sven").doesNotContain("SVH Exam").doesNotContain("Other");
         assertThat(ack.attachments()).isEmpty();
     }
 
@@ -277,13 +329,63 @@ class FormControllerTest {
         verify(mail, never()).send(any());
     }
 
+    /**
+     * The treasurer must never receive a visitor's HTML page dressed up as a receipt: the type is
+     * read from the bytes, so the declared type and the double extension change nothing.
+     */
+    /** The site shows this message as it is, so it names the field the way the form does. */
+    @Test
+    void declaration_invalidIban_isNamedLikeTheFormLabel() throws Exception {
+        mockMvc.perform(multipart("/api/forms/declaration").file(pdf())
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "not an iban").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("iban"))
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("IBAN must be a valid IBAN"));
+        verify(mail, never()).send(any());
+    }
+
+    @Test
+    void declaration_htmlDisguisedAsAPdf_isRejected() throws Exception {
+        MockMultipartFile disguised = new MockMultipartFile("file", "receipt.pdf.html", "application/pdf",
+                "<html><body>Pay here</body></html>".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        mockMvc.perform(multipart("/api/forms/declaration").file(disguised)
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isBadRequest())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers
+                        .jsonPath("$.message").value("Unsupported file type. Please upload a PDF or image receipt."));
+        verify(mail, never()).send(any());
+    }
+
+    @Test
+    void declaration_receiptIsRenamedFromItsDetectedType() throws Exception {
+        MockMultipartFile oddlyNamed = new MockMultipartFile("file", "scan.pdf.exe", "application/octet-stream",
+                TestUploads.pdf());
+        mockMvc.perform(multipart("/api/forms/declaration").file(oddlyNamed)
+                        .param("fullName", "Sven").param("email", "sven@x.com")
+                        .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
+                        .param("amount", "10,00").param("category", "Other"))
+                .andExpect(status().isNoContent());
+
+        ArgumentCaptor<FormEmail> sent = ArgumentCaptor.forClass(FormEmail.class);
+        verify(mail, times(2)).send(sent.capture());
+        FormEmail.Attachment receipt = to(sent, "finance@hubble.cafe").attachments().get(0);
+        assertThat(receipt.filename()).isEqualTo("receipt.pdf");
+        assertThat(receipt.contentType()).isEqualTo("application/pdf");
+    }
+
     @Test
     void declaration_badAmount_isRejected() throws Exception {
         mockMvc.perform(multipart("/api/forms/declaration").file(pdf())
                         .param("fullName", "Sven").param("email", "sven@x.com")
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "free").param("category", "Other"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("amount"));
     }
 
     /** The multipart limit is 20 MB for posters, but a receipt keeps its own 10 MB limit. */
@@ -307,7 +409,8 @@ class FormControllerTest {
                         .param("fullName", "Sven").param("email", "sven@x.com")
                         .param("iban", "NL70TRIO0338589015").param("dateOfPurchase", "2026-06-18")
                         .param("amount", "10,00").param("category", "Other"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.field").value("file"));
     }
 
     // ── Tips, Complaints & Ideas (Hubble) ─────────────────────────────────────────
@@ -406,7 +509,8 @@ class FormControllerTest {
 
         FormEmail ack = to(sent, "lotte@x.com");
         assertThat(ack.subject()).isEqualTo("We received your loan request");
-        assertThat(ack.body()).contains("Doppio");
+        assertThat(ack.body()).contains("not a confirmed booking")
+                .doesNotContain("Lotte").doesNotContain("Doppio").doesNotContain("cantus");
     }
 
     @Test

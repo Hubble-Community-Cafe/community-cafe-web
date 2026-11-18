@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { DailyDishPage } from '../pages/DailyDishPage'
 import { getTodaysDishes, reportApiFailure, type DailyDish } from '@cafe/shared-web'
@@ -33,7 +34,7 @@ describe('Hubble DailyDishPage', () => {
   it('shows a skeleton while loading', async () => {
     mockGetDishes.mockResolvedValue(DISH)
     renderDish()
-    expect(screen.getByTestId('dish-skeleton')).toBeInTheDocument()
+    expectLoadingSkeleton('dish-skeleton')
     await screen.findByText('Pasta Pesto')
   })
 
@@ -45,10 +46,18 @@ describe('Hubble DailyDishPage', () => {
     expect(screen.queryByTestId('dish-skeleton')).not.toBeInTheDocument()
   })
 
+  it('colours the card with the theme tokens, not copied hex values', async () => {
+    mockGetDishes.mockResolvedValue(DISH)
+    renderDish()
+    const card = (await screen.findByText('Pasta Pesto')).closest('.rounded-2xl') as HTMLElement
+    expect(card).toHaveClass('from-hubble-700', 'to-hubble-600')
+    expect(card.getAttribute('style')).toBeNull()
+  })
+
   it('shows an error and reports it when loading fails', async () => {
     mockGetDishes.mockRejectedValue(new Error('down'))
     renderDish()
-    expect(await screen.findByText("Could not load today's dish. Try again later.")).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent("Could not load today's dish. Try again later.")
     expect(mockReport).toHaveBeenCalledWith('daily-dish', expect.any(Error))
   })
 })

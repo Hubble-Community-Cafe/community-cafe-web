@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError } from '@cafe/shared-web'
 import { TipsPage } from '../pages/TipsPage'
-import { expectHiddenHoneypot, pending } from './formTestUtils'
+import { expectHiddenHoneypot, pending } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitTip = vi.hoisted(() => vi.fn())
@@ -43,12 +43,13 @@ describe('Hubble TipsPage', () => {
   })
 
   it('shows the backend validation message and keeps the form', async () => {
-    submitTip.mockRejectedValue(new FormError('email must be a well-formed email address'))
+    submitTip.mockRejectedValue(new FormError('Email must be a well-formed email address'))
     const user = userEvent.setup()
     renderPage()
+    await fill(user)
     await user.click(screen.getByRole('button', { name: 'Send' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('email must be a well-formed email address')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Email must be a well-formed email address')
     expect(screen.getByRole('button', { name: 'Send' })).toBeEnabled()
     expect(screen.queryByRole('heading', { name: 'Thank you!' })).not.toBeInTheDocument()
   })

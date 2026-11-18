@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -84,8 +84,7 @@ class OpeningHoursControllerTest {
     @Test
     void adminUpsertDay_createsRow() throws Exception {
         mockMvc.perform(put("/api/admin/opening-hours/HUBBLE/MONDAY")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"open":"11:00","close":"02:00","kitchenOpen":null,"kitchenClose":null}
@@ -101,8 +100,7 @@ class OpeningHoursControllerTest {
                 new WeeklyHoursRequest("12:00", "20:00", null, null));
 
         mockMvc.perform(delete("/api/admin/opening-hours/HUBBLE/SUNDAY")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
 
         mockMvc.perform(get("/api/opening-hours/HUBBLE"))
@@ -128,8 +126,7 @@ class OpeningHoursControllerTest {
         LocalDate future = LocalDate.now().plusDays(5);
 
         mockMvc.perform(post("/api/admin/opening-hours/HUBBLE/overrides")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"date":"%s","closed":true,"open":null,"close":null,"note":"Bank holiday"}
@@ -139,8 +136,7 @@ class OpeningHoursControllerTest {
                 .andExpect(jsonPath("$.note").value("Bank holiday"));
 
         mockMvc.perform(get("/api/admin/opening-hours/HUBBLE/overrides")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].date").value(future.toString()));
     }

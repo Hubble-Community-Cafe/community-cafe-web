@@ -1,8 +1,6 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.model.AccessPreset;
-import cafe.community.backend.model.AdminRole;
-import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
 import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.model.AuditLog;
@@ -15,10 +13,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.admin;
+import static cafe.community.backend.TestUsers.withPreset;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -40,19 +38,6 @@ class AuditLogControllerTest {
         userRepo.deleteAllInBatch();
     }
 
-    private RequestPostProcessor as(String oid, AdminRole role) {
-        AdminUser u = new AdminUser();
-        u.setAzureOid(oid);
-        u.setEmail(oid + "@test.invalid");
-        u.setDisplayName(oid);
-        u.setRole(role);
-        if (role == AdminRole.STAFF) {
-            AccessPreset.EDITOR.applyTo(u);
-        }
-        userRepo.save(u);
-        return jwt().jwt(j -> j.claim("oid", oid).claim("preferred_username", u.getEmail()));
-    }
-
     private void entry(AuditEntityType type, AuditAction action) {
         AuditLog log = new AuditLog();
         log.setEntityType(type);
@@ -63,7 +48,7 @@ class AuditLogControllerTest {
 
     @Test
     void list_requiresAdmin() throws Exception {
-        mockMvc.perform(get("/api/admin/audit").with(as("ed", AdminRole.STAFF)))
+        mockMvc.perform(get("/api/admin/audit").with(withPreset(userRepo, "ed", AccessPreset.EDITOR)))
                 .andExpect(status().isForbidden());
     }
 
@@ -72,7 +57,7 @@ class AuditLogControllerTest {
         entry(AuditEntityType.EVENT, AuditAction.CREATE);
         entry(AuditEntityType.MENU_ITEM, AuditAction.UPDATE);
 
-        mockMvc.perform(get("/api/admin/audit").with(as("ad", AdminRole.ADMIN)))
+        mockMvc.perform(get("/api/admin/audit").with(admin(userRepo, "ad")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(2));
     }
@@ -82,7 +67,7 @@ class AuditLogControllerTest {
         entry(AuditEntityType.EVENT, AuditAction.CREATE);
         entry(AuditEntityType.MENU_ITEM, AuditAction.UPDATE);
 
-        mockMvc.perform(get("/api/admin/audit").param("entityType", "EVENT").with(as("ad", AdminRole.ADMIN)))
+        mockMvc.perform(get("/api/admin/audit").param("entityType", "EVENT").with(admin(userRepo, "ad")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].entityType").value("EVENT"));
@@ -97,7 +82,7 @@ class AuditLogControllerTest {
         mockMvc.perform(get("/api/admin/audit")
                         .param("entityType", "EVENT")
                         .param("action", "UPDATE")
-                        .with(as("ad", AdminRole.ADMIN)))
+                        .with(admin(userRepo, "ad")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.length()").value(1))
                 .andExpect(jsonPath("$.content[0].action").value("UPDATE"));

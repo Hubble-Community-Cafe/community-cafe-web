@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import { expectLoadingSkeleton } from '@cafe/shared-web/testing/forms'
 import { MemoryRouter } from 'react-router-dom'
 import { weeklyHours } from '@cafe/shared-web/testing'
 import { Home } from '../pages/Home'
@@ -28,7 +29,7 @@ describe('Meteor Home opening hours', () => {
   it('shows loading, then the grouped hours and the closed weekend', async () => {
     getWeeklyHours.mockResolvedValue(WEEKDAYS.map((day, i) => weeklyHours({ id: i + 1, bar: 'METEOR', dayOfWeek: day })))
     renderPage()
-    expect(screen.getByText('Loading…')).toBeInTheDocument()
+    expectLoadingSkeleton('hours-skeleton')
     expect(await screen.findByText('12:00 to 23:00')).toBeInTheDocument()
     expect(screen.getByText('Saturday, Sunday')).toBeInTheDocument()
     expect(getWeeklyHours).toHaveBeenCalledWith('METEOR')
@@ -37,7 +38,7 @@ describe('Meteor Home opening hours', () => {
   it('a failed load shows an error, never "All days: Closed", and is reported', async () => {
     getWeeklyHours.mockRejectedValue(new Error('down'))
     renderPage()
-    expect(await screen.findByText('Could not load the opening hours. Please try again later.')).toBeInTheDocument()
+    expect(await screen.findByRole('alert')).toHaveTextContent('Could not load the opening hours. Please try again later.')
     expect(screen.queryByText('All days')).not.toBeInTheDocument()
     expect(screen.queryByText('Closed')).not.toBeInTheDocument()
     expect(reportApiFailure).toHaveBeenCalledWith('opening-hours', expect.any(Error))

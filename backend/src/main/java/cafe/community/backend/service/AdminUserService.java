@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.FieldChange;
 import cafe.community.backend.model.AccessLevel;
 import cafe.community.backend.model.AdminModule;
@@ -8,11 +9,13 @@ import cafe.community.backend.model.AdminUser;
 import cafe.community.backend.model.AuditAction;
 import cafe.community.backend.model.AuditEntityType;
 import cafe.community.backend.repository.AdminUserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -34,14 +37,17 @@ public class AdminUserService {
     private final AdminUserRepository adminUserRepository;
     private final AuditService auditService;
     private final String initialAdminOid;
+    private final Clock clock;
 
     public AdminUserService(
             AdminUserRepository adminUserRepository,
             AuditService auditService,
-            @Value("${app.initial-admin-oid:}") String initialAdminOid) {
+            @Value("${app.initial-admin-oid:}") String initialAdminOid,
+            Clock clock) {
         this.adminUserRepository = adminUserRepository;
         this.auditService = auditService;
         this.initialAdminOid = initialAdminOid;
+        this.clock = clock;
     }
 
     /** Find by Azure OID or create a new user (STAFF without access, or ADMIN for the initial admin). */
@@ -68,11 +74,16 @@ public class AdminUserService {
      * every module); anyone else becomes STAFF with exactly the given levels, hidden ones left out.
      * Refuses changing your own access, so there is always another admin involved, and a view-only
      * level on Screen posters, which is a yes/no setting.
+     *
+     * <p>One transaction with its audit entry: an access change never sticks without a record of
+     * who changed it. (getOrCreateUser stays outside one on purpose: it swallows a lost concurrent
+     * write, which inside a transaction would still roll the request back.)
      */
+    @Transactional
     public AdminUser updateAccess(Long userId, boolean admin, Map<AdminModule, AccessLevel> permissions,
                                   String requestingUserOid) {
         AdminUser target = adminUserRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + userId));
 
         if (target.getAzureOid().equals(requestingUserOid)) {
             throw new IllegalArgumentException("Cannot change your own access");
@@ -120,7 +131,7 @@ public class AdminUserService {
         user.setAzureOid(azureOid);
         user.setEmail(email);
         user.setDisplayName(displayName);
-        user.setLastSeenAt(LocalDateTime.now());
+        user.setLastSeenAt(LocalDateTime.now(clock));
 
         boolean isInitialAdmin = initialAdminOid != null && !initialAdminOid.isBlank()
                 && initialAdminOid.equals(azureOid);
@@ -128,7 +139,8 @@ public class AdminUserService {
         user.setRole(isInitialAdmin ? AdminRole.ADMIN : AdminRole.STAFF);
 
         AdminUser saved = adminUserRepository.save(user);
-        log.info("Provisioned admin user email='{}' role={}", email, saved.getRole());
+        // The object id, not the email: personal data stays out of the logs.
+        log.info("Provisioned admin user oid={} role={}", saved.getAzureOid(), saved.getRole());
         return saved;
     }
 
@@ -156,7 +168,7 @@ public class AdminUserService {
         }
 
         try {
-            adminUserRepository.updateIdentity(user.getId(), newEmail, newDisplayName, LocalDateTime.now());
+            adminUserRepository.updateIdentity(user.getId(), newEmail, newDisplayName, LocalDateTime.now(clock));
             user.setEmail(newEmail);
             user.setDisplayName(newDisplayName);
         } catch (DataAccessException e) {
@@ -172,7 +184,7 @@ public class AdminUserService {
      * a moment later.
      */
     private void touchLastSeen(AdminUser user) {
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now(clock);
         if (user.getLastSeenAt() != null && user.getLastSeenAt().isAfter(now.minusDays(1))) {
             return;
         }

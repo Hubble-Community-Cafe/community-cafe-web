@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { FormError, type UploadProgress } from '@cafe/shared-web'
 import { ScreensPage } from '../pages/ScreensPage'
-import { expectHiddenHoneypot, file, pending } from './formTestUtils'
+import { expectHiddenHoneypot, file, pending } from '@cafe/shared-web/testing/forms'
 
 vi.mock('altcha', () => ({}))
 const submitScreenForm = vi.hoisted(() => vi.fn())
@@ -86,6 +86,7 @@ describe('Hubble ScreensPage', () => {
 
     await send(user)
     expect(await screen.findByRole('alert')).toHaveTextContent('Please choose a poster file (JPG, PNG or MP4).')
+    expect(screen.getByLabelText('Poster file *')).toHaveAttribute('aria-invalid', 'true')
 
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.gif', 'image/gif'))
     await send(user)
@@ -116,22 +117,25 @@ describe('Hubble ScreensPage', () => {
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
 
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('Please choose a start and end date')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Please fill in: Start date, End date.')
 
     await fillDates(user, '2030-10-14', '2030-10-01')
     await send(user)
     expect(await screen.findByRole('alert')).toHaveTextContent('The end date must be on or after the start date.')
+    expect(screen.getByLabelText(/^End date/)).toHaveAttribute('aria-invalid', 'true')
+    expect(screen.getByLabelText(/^Start date/)).not.toHaveAttribute('aria-invalid')
     expect(submitScreenForm).not.toHaveBeenCalled()
   })
 
   it('shows the backend validation message', async () => {
-    submitScreenForm.mockRejectedValue(new FormError('association must not be blank'))
+    submitScreenForm.mockRejectedValue(new FormError('Association must not be blank'))
     const user = userEvent.setup()
     renderPage()
+    await fillContact(user)
     await fillDates(user, '2030-10-01', '2030-10-14')
     await user.upload(screen.getByLabelText('Poster file *'), file('poster.png', 'image/png'))
     await send(user)
-    expect(await screen.findByRole('alert')).toHaveTextContent('association must not be blank')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Association must not be blank')
   })
 
   it('shows a generic message for an unexpected error', async () => {

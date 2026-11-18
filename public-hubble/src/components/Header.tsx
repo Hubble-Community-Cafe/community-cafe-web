@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link, NavLink } from 'react-router-dom'
 import { ChevronDown, ExternalLink, Menu, X } from 'lucide-react'
-import { cn } from '@cafe/shared-web'
+import { cn, useDropdown } from '@cafe/shared-web'
 import { EXTERNAL, NAV, type NavGroup, type NavLeaf } from '../navigation'
 
 /** A single dropdown menu item (internal route or external link). */
@@ -39,18 +39,33 @@ function DesktopGroup({ group }: { group: NavGroup }) {
       </NavLink>
     )
   }
+  return <DesktopDropdown group={group} />
+}
+
+/**
+ * A top-level item with a menu. A mouse opens it on hover; a click, a tap (iPad in landscape gets
+ * this desktop menu too) or Enter/Space on the button toggles it, and Escape closes it.
+ */
+function DesktopDropdown({ group }: { group: NavGroup }) {
+  const { open, containerProps, buttonProps, panelProps } = useDropdown()
   return (
-    <div className="group relative">
+    <div className="group relative" {...containerProps}>
       <button
         type="button"
         className="flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold text-hubble-900 hover:text-hubble-500 transition-colors"
-        aria-haspopup="true"
+        {...buttonProps}
       >
         {group.label}
-        <ChevronDown className="h-4 w-4 transition-transform group-hover:rotate-180" />
+        <ChevronDown className={cn('h-4 w-4 transition-transform group-hover:rotate-180', open && 'rotate-180')} />
       </button>
-      <div className="invisible absolute left-0 top-full z-30 w-60 origin-top rounded-xl border border-hubble-100 bg-white py-2 opacity-0 shadow-lg shadow-hubble-900/10 transition-[opacity,visibility] duration-150 ease-out group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        {group.children.map((leaf) => (
+      <div
+        {...panelProps}
+        className={cn(
+          'invisible absolute left-0 top-full z-30 w-60 origin-top rounded-xl border border-hubble-100 bg-white py-2 opacity-0 shadow-lg shadow-hubble-900/10 transition-[opacity,visibility] duration-150 ease-out group-hover:visible group-hover:opacity-100',
+          open && 'visible opacity-100',
+        )}
+      >
+        {group.children!.map((leaf) => (
           <DesktopLeaf key={leaf.label + (leaf.to ?? leaf.href)} leaf={leaf} />
         ))}
       </div>

@@ -6,30 +6,15 @@
  * back to a build-time Vite env var, so the same image runs in every
  * environment without a rebuild.
  */
-
-// Runtime configuration injected at container startup (see each app's config.js
-// and the Docker entrypoint). Values are placeholders like `__API_URL__` until
-// substituted, so callers must ignore anything still wrapped in underscores.
-declare global {
-  interface Window {
-    __RUNTIME_CONFIG__?: {
-      API_URL?: string
-      SENTRY_DSN?: string
-      [key: string]: string | undefined
-    }
-  }
-}
-
-const isPlaceholder = (value: string | undefined): value is undefined =>
-  !value || value.startsWith('__')
+import { runtimeConfig } from '../lib/runtimeConfig'
 
 /**
  * Resolve the backend base URL. Prefers runtime config, then the build-time
  * `VITE_PUBLIC_API_URL` (public sites) or `VITE_API_URL` (admin).
  */
 export function getApiBaseUrl(): string {
-  const runtimeUrl = window.__RUNTIME_CONFIG__?.API_URL
-  if (!isPlaceholder(runtimeUrl)) {
+  const runtimeUrl = runtimeConfig('API_URL')
+  if (runtimeUrl) {
     return runtimeUrl
   }
   const envUrl =

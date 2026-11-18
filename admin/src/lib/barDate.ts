@@ -12,3 +12,12 @@ export function barToday(now: Date = new Date()): string {
   const part = (type: Intl.DateTimeFormatPartTypes) => parts.find((p) => p.type === type)?.value
   return `${part('year')}-${part('month')}-${part('day')}`
 }
+
+/**
+ * The bars' date `days` from today, as YYYY-MM-DD. Counted on the calendar date itself, so a
+ * daylight-saving change in between cannot shift it by a day.
+ */
+export function barDaysFrom(days: number, now: Date = new Date()): string {
+  const [y, m, d] = barToday(now).split('-').map(Number)
+  return new Date(Date.UTC(y, m - 1, d + days)).toISOString().slice(0, 10)
+}

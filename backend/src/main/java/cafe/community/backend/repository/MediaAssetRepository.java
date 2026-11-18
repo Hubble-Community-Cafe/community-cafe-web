@@ -1,6 +1,5 @@
 package cafe.community.backend.repository;
 
-import cafe.community.backend.model.BarLocation;
 import cafe.community.backend.model.MediaAsset;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -13,8 +12,6 @@ import java.util.List;
 public interface MediaAssetRepository extends JpaRepository<MediaAsset, Long> {
 
     List<MediaAsset> findAllByOrderByCreatedAtDesc();
-
-    List<MediaAsset> findByBarOrderByCreatedAtDesc(BarLocation bar);
 
     // What still uses an image, one query per table with a foreign key to media_asset, returning
     // the name staff know it by. Used to refuse deleting an image that is in use (MediaService).

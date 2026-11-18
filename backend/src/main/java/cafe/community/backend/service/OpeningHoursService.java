@@ -1,5 +1,6 @@
 package cafe.community.backend.service;
 
+import java.time.Clock;
 import cafe.community.backend.dto.*;
 import cafe.community.backend.model.*;
 import cafe.community.backend.repository.HoursOverrideRepository;
@@ -13,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
@@ -23,19 +23,20 @@ import java.util.Optional;
 @Transactional
 public class OpeningHoursService {
 
-    private static final ZoneId TZ = ZoneId.of("Europe/Amsterdam");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
     private static final DateTimeFormatter DAY_FMT = DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.ENGLISH);
 
     private final OpeningHoursRepository hoursRepo;
     private final HoursOverrideRepository overrideRepo;
     private final AuditService auditService;
+    private final Clock clock;
 
     public OpeningHoursService(OpeningHoursRepository hoursRepo, HoursOverrideRepository overrideRepo,
-                               AuditService auditService) {
+                               AuditService auditService, Clock clock) {
         this.hoursRepo = hoursRepo;
         this.overrideRepo = overrideRepo;
         this.auditService = auditService;
+        this.clock = clock;
     }
 
     /** Weekly schedule for a bar, ordered Monday to Sunday. */
@@ -48,7 +49,7 @@ public class OpeningHoursService {
     /** Today's open/closed status, factoring in any override for today's date. */
     @Transactional(readOnly = true)
     public BarStatusDto getStatus(BarLocation bar) {
-        LocalDate today = LocalDate.now(TZ);
+        LocalDate today = LocalDate.now(clock);
         DayOfWeek dow = today.getDayOfWeek();
 
         Optional<HoursOverride> override = overrideRepo.findByBarAndDate(bar, today);
@@ -104,7 +105,7 @@ public class OpeningHoursService {
     /** Upcoming (today and future) overrides for a bar. */
     @Transactional(readOnly = true)
     public List<HoursOverrideDto> getUpcomingOverrides(BarLocation bar) {
-        LocalDate today = LocalDate.now(TZ);
+        LocalDate today = LocalDate.now(clock);
         return overrideRepo.findAllByBarAndDateGreaterThanEqualOrderByDate(bar, today)
                 .stream().map(HoursOverrideDto::from).toList();
     }

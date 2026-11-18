@@ -59,4 +59,27 @@ test.describe('Hubble canonical host', () => {
     expect(response.status()).toBe(301)
     expect(response.headers()['location']).toBe('/cafe/menu')
   })
+
+  test('a trailing slash is stripped from any other path', async ({ request }) => {
+    const response = await request.get('/cafe/menu/', {
+      headers: { host: 'hubble.cafe' },
+      maxRedirects: 0,
+    })
+    expect(response.status()).toBe(301)
+    expect(response.headers()['location']).toBe('/cafe/menu')
+  })
+
+  // nginx decodes %5C to a backslash before the trailing-slash rule runs, and browsers read a
+  // Location of /\evil.example as //evil.example, a different site. Tabs and newlines are
+  // stripped by browsers the same way. None of these may become a redirect.
+  for (const path of ['/%5Cevil.example/', '/%09/evil.example/', '/%5C%5Cevil.example/']) {
+    test(`${path} is not turned into a redirect to another site`, async ({ request }) => {
+      const response = await request.get(path, {
+        headers: { host: 'hubble.cafe' },
+        maxRedirects: 0,
+      })
+      expect(response.status()).not.toBe(301)
+      expect(response.headers()['location']).toBeUndefined()
+    })
+  }
 })

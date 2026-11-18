@@ -98,12 +98,18 @@ export async function scanRoutes(page: Page, testInfo: TestInfo, routes: string[
   }
 }
 
-/** Submits each form empty, so the validation messages are scanned too. */
+/**
+ * Submits each form empty, so the validation messages are scanned too. Every public form shows its
+ * message as a role="alert" inside the form, straight away for a missing file or once the backend
+ * has refused the empty fields, so the scan waits for it rather than for a fixed time. A form that
+ * stops showing one fails here.
+ */
 export async function scanFormErrors(page: Page, testInfo: TestInfo, forms: string[]): Promise<void> {
   for (const route of forms) {
     await page.goto(route)
-    await page.locator('form').first().locator('button[type="submit"]').first().click()
-    await page.waitForTimeout(300)
+    const form = page.locator('form').first()
+    await form.locator('button[type="submit"]').first().click()
+    await expect(form.getByRole('alert').first(), `${route} shows a validation message`).toBeVisible()
     await expectNoNewA11yViolations(page, testInfo, `${route} errors`)
   }
 }

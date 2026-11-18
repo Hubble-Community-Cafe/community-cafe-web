@@ -38,7 +38,8 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Module | Public (Hubble) | Public (Meteor) | Admin CRUD | Mobile |
 |--------|-----------------|-----------------|------------|--------|
 | Shell / nav / static pages | ✅ | ✅ | n/a | ✅ |
-| Canonical host (alias domains 301, legacy permalinks stay https) | ✅ | ✅ | n/a | n/a |
+| Desktop nav dropdowns (tap on a touch screen, keyboard, Escape, tap outside) | ✅ | ✅ | n/a | n/a |
+| Canonical host (alias domains 301, legacy permalinks stay https, no open redirect via trailing slash) | ✅ | ✅ | n/a | n/a |
 | SEO meta (title/OG/preview image/canonical/404 noindex) | ✅ | ✅ | n/a | n/a |
 | Plaza kiosk screen (`/plaza-page`) | 🟡 | n/a | n/a | n/a |
 | Menu | ✅ | ✅ | ✅ | ✅ |
@@ -50,7 +51,7 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Status banner (Meteor) | n/a | ✅ | n/a | ✅ |
 | Events | ✅ | ✅ | ✅ | ✅ |
 | Board (current / previous / supervisory) | ✅ | ✅ | ✅ | ✅ |
-| Vacancies | ✅ | n/a | ✅ | ✅ |
+| Vacancies | ✅ | ✅ | ✅ | ✅ |
 | Associations | ✅ | n/a | ✅ | ✅ |
 | Media library (upload, size limit, real file type) | n/a | n/a | ✅ | ⬜ |
 | Access per tab (hidden / view / edit, new account without access, old-role presets, Screens split) | n/a | n/a | ✅ | ✅ |
@@ -58,7 +59,10 @@ The screen scene panel talks to Aurora, which does not exist in the e2e stack. U
 | Audit log: what each change did (old to new on edits, values on create) | n/a | n/a | ✅ | ✅ |
 | Staff group enforced by the backend (outsider 403, not provisioned) | n/a | n/a | ✅ | n/a |
 | Admin Content-Security-Policy (every page, no violations, security headers) | n/a | n/a | ✅ | n/a |
+| Admin delete confirmation (in-app dialog, refusal reason shown, try again or cancel) | n/a | n/a | ✅ | n/a |
+| Security headers on every response (document, assets, config.js, health; no nginx version) | ✅ | ✅ | ✅ | n/a |
 | Accessibility (axe, WCAG 2.2 AA: every page, forms with validation errors) | ✅ | ✅ | ✅ | ✅ |
+| Admin form labels (every form opened: each field has a real label, axe labelling rules) | n/a | n/a | ✅ | n/a |
 | Admin in-app help (a guide on every page, dialog accessible) | n/a | n/a | ✅ | n/a |
 | Admin unsaved-changes warning (leaving a page, closing the tab) | n/a | n/a | ✅ | n/a |
 | Identity refresh under concurrency (regression) | n/a | n/a | ✅ | n/a |
@@ -80,7 +84,7 @@ and presses sent in the same tick are dropped. Touch is dispatched over CDP, sin
 API does not become touch under device emulation and its touchscreen can only tap; that path is worth
 the detour, because touch is exactly what native HTML5 drag and drop cannot do at all.
 
-The `accessibility` spec in each project runs axe (WCAG 2.2 A/AA) on every main page with seeded content, and on each public form after submitting it empty (validation errors), on desktop and mobile. Helpers live in `fixtures/a11y.ts`. Violations that are accepted for now go in `fixtures/a11y-known-issues.ts` per project and page; the list is empty, so any violation fails. When adding a page or form, add its route to the lists in `fixtures/a11y.ts`.
+The `accessibility` spec in each project runs axe (WCAG 2.2 A/AA) on every main page with seeded content, and on each public form after submitting it empty (validation errors), on desktop and mobile. Helpers live in `fixtures/a11y.ts`. Violations that are accepted for now go in `fixtures/a11y-known-issues.ts` per project and page; the list is empty, so any violation fails. When adding a page or form, add its route to the lists in `fixtures/a11y.ts`. A new admin form also goes in the `every admin form names its fields` test in `tests/admin/accessibility.spec.ts`.
 
 Form specs assert both the staff notification (to the per-form team list, with any upload attached, except the screens form, which sends the poster to the fake Aurora and only a notice to staff) and the submitter confirmation (to the submitter, from the site noreply address, no attachment) via Mailpit. The five Hubble forms live under `/contact/*` (screens, declarations, tips, information, loan-equipment); Meteor has the complaints form at `/complaints` and the declaration form at `/declarations`. The two cafes are separate companies, so the declaration specs also assert that a declaration never reaches the other cafe's treasurer. ALTCHA runs disabled in e2e, so the widget never has to solve a real challenge; the attribute is guarded by a component test in each public app instead.
 

@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { FolderInput, Tag, X } from 'lucide-react'
 import type { MenuCategory, MenuItem } from '../../lib/api'
+import { messageFor } from '../../lib/actionError'
 
 /** Sub-headings the selection can move into, grouped under the tab they belong to. */
 export interface MoveTargetGroup {
@@ -72,8 +73,8 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
     try {
       await onSetPrice({ regularPrice: reg, studentPrice: stu, clearStudentPrice: clearStudent })
       close()
-    } catch {
-      setError('Could not update those prices. Please try again.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not update those prices. Please try again.'))
       setBusy(false)
     }
   }
@@ -88,8 +89,8 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
     try {
       await onMove(Number(targetId))
       close()
-    } catch {
-      setError('Could not move those items. Please try again.')
+    } catch (err) {
+      setError(messageFor(err, 'Could not move those items. Please try again.'))
       setBusy(false)
     }
   }
@@ -135,7 +136,7 @@ export function BulkActionBar({ selected, moveTargets, onSetPrice, onMove, onCle
       </div>
 
       {error && (
-        <p className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
+        <p role="alert" className="mt-2 rounded-lg bg-red-50 px-3 py-2 text-sm text-red-600">{error}</p>
       )}
 
       {panel === 'price' && (

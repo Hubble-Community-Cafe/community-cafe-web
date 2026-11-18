@@ -1,16 +1,9 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Card, PageHeader } from '../components/PageHeader'
 import { fetchAuditLog, type AuditLogEntry } from '../lib/api'
 import { parseChanges } from '../lib/auditChanges'
 import { AuditChanges } from './audit/AuditChanges'
-
-/** Filter options mirror the backend AuditEntityType / AuditAction enums. */
-const ENTITY_TYPES = [
-  'ADMIN_USER', 'MEDIA_ASSET', 'MENU_CATEGORY', 'MENU_ITEM', 'DAILY_DISH',
-  'OPENING_HOURS', 'HOURS_OVERRIDE', 'EVENT', 'BOARD_TERM', 'BOARD_MEMBER',
-  'VACANCY', 'ASSOCIATION',
-]
-const ACTIONS = ['CREATE', 'UPDATE', 'DELETE', 'ROLE_CHANGED', 'PERMISSIONS_CHANGED', 'TOGGLE']
+import { AUDIT_ACTIONS, AUDIT_ENTITY_TYPES } from '../lib/auditFilters'
 
 /** ADMIN_USER -> "Admin user" for the dropdown labels. */
 const humanize = (value: string) =>
@@ -25,26 +18,22 @@ export function AuditLogPage() {
   const [entityType, setEntityType] = useState('')
   const [action, setAction] = useState('')
 
-  const load = useCallback(async (p: number, et: string, ac: string) => {
-    setIsLoading(true)
-    try {
-      const result = await fetchAuditLog(p, 50, {
-        entityType: et || undefined,
-        action: ac || undefined,
-      })
-      setEntries(result.content)
-      setTotalPages(result.totalPages)
-      setError(null)
-    } catch {
-      setError('Failed to load the audit log.')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
   useEffect(() => {
-    load(page, entityType, action)
-  }, [load, page, entityType, action])
+    // Changing a filter or page while the previous one still loads: only the latest answer may
+    // land, or the list would show entries that do not match the filters on screen.
+    let current = true
+    setIsLoading(true)
+    fetchAuditLog(page, 50, { entityType: entityType || undefined, action: action || undefined })
+      .then((result) => {
+        if (!current) return
+        setEntries(result.content)
+        setTotalPages(result.totalPages)
+        setError(null)
+      })
+      .catch(() => { if (current) setError('Failed to load the audit log.') })
+      .finally(() => { if (current) setIsLoading(false) })
+    return () => { current = false }
+  }, [page, entityType, action])
 
   return (
     <>
@@ -63,7 +52,7 @@ export function AuditLogPage() {
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-normal normal-case text-slate-700"
             >
               <option value="">All entities</option>
-              {ENTITY_TYPES.map((t) => (
+              {AUDIT_ENTITY_TYPES.map((t) => (
                 <option key={t} value={t}>
                   {humanize(t)}
                 </option>
@@ -82,7 +71,7 @@ export function AuditLogPage() {
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-normal normal-case text-slate-700"
             >
               <option value="">All actions</option>
-              {ACTIONS.map((a) => (
+              {AUDIT_ACTIONS.map((a) => (
                 <option key={a} value={a}>
                   {humanize(a)}
                 </option>
@@ -104,7 +93,7 @@ export function AuditLogPage() {
           )}
         </div>
         {error && (
-          <div className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
+          <div role="alert" className="mb-4 rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">
             {error}
           </div>
         )}

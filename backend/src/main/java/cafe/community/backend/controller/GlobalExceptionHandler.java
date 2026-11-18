@@ -1,7 +1,9 @@
 package cafe.community.backend.controller;
 
 import cafe.community.backend.aurora.AuroraException;
+import cafe.community.backend.service.InvalidFieldException;
 import cafe.community.backend.service.MediaInUseException;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +15,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /** Maps common exceptions to clean JSON error responses. */
@@ -25,6 +28,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
         return body(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
+    /** A refused value of one form field: the answer names the field, so the form can mark it. */
+    @ExceptionHandler(InvalidFieldException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidField(InvalidFieldException ex) {
+        return withField(body(HttpStatus.BAD_REQUEST, ex.getMessage()), ex.field());
+    }
+
+    /**
+     * Editing or deleting something that no longer exists, for example a stale admin tab after a
+     * colleague deleted the event. That is a 404, not a server error for Sentry.
+     */
+    @ExceptionHandler(EntityNotFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleNotFound(EntityNotFoundException ex) {
+        return body(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
     /**
@@ -58,13 +76,25 @@ public class GlobalExceptionHandler {
                 "That file is too large. The maximum upload size is " + maxFileSize.toMegabytes() + " MB.");
     }
 
+    /**
+     * The first broken field, named the way the form labels it, since staff and visitors read this.
+     * {@code field} carries its request name too, so the form can mark it.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .findFirst()
-                .map(e -> e.getField() + " " + e.getDefaultMessage())
+        var first = ex.getBindingResult().getFieldErrors().stream().findFirst();
+        String message = first
+                .map(e -> FieldLabels.of(e.getField()) + " " + e.getDefaultMessage())
                 .orElse("Validation failed");
-        return body(HttpStatus.BAD_REQUEST, message);
+        ResponseEntity<Map<String, Object>> response = body(HttpStatus.BAD_REQUEST, message);
+        return first.map(e -> withField(response, e.getField())).orElse(response);
+    }
+
+    private static ResponseEntity<Map<String, Object>> withField(ResponseEntity<Map<String, Object>> response,
+                                                                 String field) {
+        Map<String, Object> body = new LinkedHashMap<>(response.getBody());
+        body.put("field", field);
+        return ResponseEntity.status(response.getStatusCode()).body(body);
     }
 
     private ResponseEntity<Map<String, Object>> body(HttpStatus status, String message) {

@@ -53,6 +53,31 @@ class MediaServiceTest {
         });
     }
 
+    // ── resolve: the image picked on another module ───────────────────────────────
+
+    @Test
+    void resolve_noIdMeansNoImage_withoutALookup() {
+        assertThat(service.resolve(null)).isNull();
+        verify(repo, never()).findById(any());
+    }
+
+    @Test
+    void resolve_findsThePickedImage() {
+        MediaAsset logo = new MediaAsset();
+        logo.setId(7L);
+        when(repo.findById(7L)).thenReturn(java.util.Optional.of(logo));
+
+        assertThat(service.resolve(7L)).isSameAs(logo);
+    }
+
+    /** Deleted since the editor opened the form: saved without the image rather than refused. */
+    @Test
+    void resolve_anIdThatIsGoneMeansNoImage() {
+        when(repo.findById(99L)).thenReturn(java.util.Optional.empty());
+
+        assertThat(service.resolve(99L)).isNull();
+    }
+
     @Test
     void gpsTaggedPhotoIsStoredWithoutItsLocation() throws IOException {
         byte[] photo = TestImages.jpegWithGps("SECRET-GPS-HOME");

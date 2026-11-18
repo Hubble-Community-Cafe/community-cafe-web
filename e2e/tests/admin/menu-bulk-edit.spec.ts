@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { resetBackend, seedMenuCategory, seedMenuItem, setUiRole } from '../../fixtures/backend'
+import { resetBackend, seedCocktailMenu, setUiRole } from '../../fixtures/backend'
 import { HUBBLE_BASE_URL } from '../../playwright.config'
 import { AdminApp } from '../../pages/AdminApp'
 
@@ -14,28 +14,10 @@ test.describe('Admin menu bulk editing', () => {
     await setUiRole(request, 'EDITOR')
   })
 
-  async function seedBar(request: Parameters<typeof seedMenuCategory>[0]) {
-    const tab = await seedMenuCategory(request, { name: 'E2E Drinks', bar: 'HUBBLE' })
-    const cocktails = await seedMenuCategory(request, { name: 'E2E Cocktails', bar: 'HUBBLE', parentId: tab.id })
-    const beers = await seedMenuCategory(request, { name: 'E2E Beers', bar: 'HUBBLE', parentId: tab.id })
-    await seedMenuItem(request, beers.id, { name: 'E2E Pils', regularPrice: 3 })
-    for (const name of ['E2E Mojito', 'E2E Negroni', 'E2E Daiquiri']) {
-      await seedMenuItem(request, cocktails.id, { name, regularPrice: 7, studentPrice: 6 })
-    }
-    return { tab, cocktails, beers }
-  }
-
-  async function openCocktails(admin: AdminApp, page: import('@playwright/test').Page) {
-    await admin.goto('/menu')
-    await page.getByRole('button', { name: /^E2E Drinks/ }).click()
-    await page.getByRole('button', { name: /^E2E Cocktails/ }).click()
-    await expect(admin.itemCheckbox('E2E Mojito')).toBeVisible()
-  }
-
   test('one price is applied to a whole section and reaches the public menu', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.selectAllItems('E2E Cocktails').click()
     await expect(admin.selectionCount()).toHaveText('3 items selected')
@@ -55,9 +37,9 @@ test.describe('Admin menu bulk editing', () => {
   })
 
   test('only the picked items change price', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.itemCheckbox('E2E Mojito').click()
     await expect(admin.selectionCount()).toHaveText('1 item selected')
@@ -72,9 +54,9 @@ test.describe('Admin menu bulk editing', () => {
   })
 
   test('the student price can be removed from a selection', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.selectAllItems('E2E Cocktails').click()
     await page.getByRole('button', { name: 'Set price' }).click()
@@ -87,9 +69,9 @@ test.describe('Admin menu bulk editing', () => {
   })
 
   test('a selection can be moved to another sub-heading', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.itemCheckbox('E2E Negroni').click()
     await admin.itemCheckbox('E2E Daiquiri').click()
@@ -111,9 +93,9 @@ test.describe('Admin menu bulk editing', () => {
 
   /** The current section is not a destination, so the picker must not offer it. */
   test('the move picker excludes the section being edited', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     const admin = new AdminApp(page)
-    await openCocktails(admin, page)
+    await admin.openMenuSection('E2E Drinks', 'E2E Cocktails', 'E2E Mojito')
 
     await admin.itemCheckbox('E2E Mojito').click()
     await page.getByRole('button', { name: 'Move to' }).click()
@@ -124,7 +106,7 @@ test.describe('Admin menu bulk editing', () => {
   })
 
   test('a read-only viewer gets no checkboxes and no bulk bar', async ({ page, request }) => {
-    await seedBar(request)
+    await seedCocktailMenu(request, { studentPrice: 6, withBeers: true })
     await setUiRole(request, 'VIEWER')
 
     const admin = new AdminApp(page)

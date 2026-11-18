@@ -1,0 +1,74 @@
+package cafe.community.backend.controller;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
+
+import static cafe.community.backend.TestUsers.token;
+import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+/**
+ * Editing or deleting something that is already gone (a stale admin tab after a colleague deleted
+ * it) is the client's 404, not a server error that pages Sentry.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@Transactional
+@TestPropertySource(properties = "app.initial-admin-oid=not-found-admin-oid")
+class NotFoundResponseTest {
+
+    private static final long MISSING = 987_654_321L;
+
+    @Autowired MockMvc mockMvc;
+
+    @ParameterizedTest
+    @ValueSource(strings = {
+            "/api/admin/events/",
+            "/api/admin/vacancies/",
+            "/api/admin/associations/",
+            "/api/admin/board/terms/",
+            "/api/admin/board/members/",
+            "/api/admin/opening-hours/overrides/",
+            "/api/admin/media/",
+            "/api/admin/menu/categories/",
+            "/api/admin/menu/items/",
+            "/api/admin/daily-dish/",
+    })
+    void deletingSomethingThatIsGone_isA404WithAMessage(String path) throws Exception {
+        mockMvc.perform(delete(path + MISSING).with(token("not-found-admin-oid")))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value(containsString("not found: " + MISSING)));
+    }
+
+    @Test
+    void changingAccessOfAUserWhoIsGone_isA404() throws Exception {
+        mockMvc.perform(put("/api/admin/users/" + MISSING + "/access").with(token("not-found-admin-oid"))
+                        .contentType("application/json").content("{\"admin\":false,\"permissions\":{}}"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value("User not found: " + MISSING));
+    }
+
+    /** A missing record named in the body is a bad reference in the request, so it stays a 400. */
+    @Test
+    void aMissingParentCategoryInTheBody_staysA400() throws Exception {
+        mockMvc.perform(post("/api/admin/menu/categories").with(token("not-found-admin-oid"))
+                        .contentType("application/json")
+                        .content("{\"name\":\"Beers\",\"kind\":\"DRINK\",\"bar\":\"HUBBLE\",\"parentId\":" + MISSING + "}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Parent category not found: " + MISSING));
+    }
+}

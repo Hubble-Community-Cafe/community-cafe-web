@@ -14,7 +14,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
+import static cafe.community.backend.TestUsers.token;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -65,8 +65,7 @@ class AssociationControllerTest {
     @Test
     void adminCreate_returnsCreated() throws Exception {
         mockMvc.perform(post("/api/admin/associations")
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"Inter Actief","bar":"HUBBLE"}
@@ -80,8 +79,7 @@ class AssociationControllerTest {
         var a = service.create(req("Old", "HUBBLE"));
 
         mockMvc.perform(put("/api/admin/associations/" + a.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid")))
+                        .with(token("editor-oid"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name":"New","bar":"HUBBLE"}
@@ -95,8 +93,7 @@ class AssociationControllerTest {
         var a = service.create(req("Gone", "HUBBLE"));
 
         mockMvc.perform(delete("/api/admin/associations/" + a.id())
-                        .with(jwt().jwt(j -> j.claim("oid", "editor-oid")
-                                .claim("preferred_username", "editor@test.invalid"))))
+                        .with(token("editor-oid")))
                 .andExpect(status().isNoContent());
     }
 }
