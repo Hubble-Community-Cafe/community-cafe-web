@@ -44,7 +44,9 @@ test('every admin page loads under the Content-Security-Policy', async ({ page, 
 
   for (const route of ADMIN_ROUTES.filter((r) => r !== '/')) {
     await page.goto(route)
-    await expect(page.locator('main')).toBeVisible()
+    // Pages download on demand and show nothing meanwhile, so "no Loading…" alone could pass
+    // before the page even started. Its title (every page has one, PageHeader) proves it rendered.
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     // Let the page's data requests and images finish, so a blocked one is reported: every admin
     // page shows "Loading…" until its data is in, and an image is complete once loaded or failed.
     await expect(page.getByText('Loading…')).toHaveCount(0)
@@ -55,7 +57,9 @@ test('every admin page loads under the Content-Security-Policy', async ({ page, 
   await page.goto('/associations')
   const logo = page.getByRole('img', { name: 'CSP Association' })
   await expect(logo).toBeVisible()
-  expect(await logo.evaluate((img: HTMLImageElement) => img.naturalWidth)).toBeGreaterThan(0)
+  // Visible comes before decoded: an image still loading has its box but no width yet.
+  await expect.poll(() => logo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth))
+    .toBeGreaterThan(0)
 
   await expectNoCspViolations(violations, testInfo)
 })
